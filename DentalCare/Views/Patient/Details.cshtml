@@ -1,0 +1,167 @@
+@model DentalCare.Models.Patient
+@{
+    ViewData["Title"] = "Patient Profile";
+}
+
+<div class="d-flex flex-column gap-5">
+    <!-- Header -->
+    <div class="dental-card shadow-sm border-0">
+        <div class="d-flex flex-column flex-md-row align-items-center gap-4">
+            <div class="dental-avatar bg-primary text-white fw-bold shadow-sm" style="width: 100px; height: 100px; border-radius: 24px; font-size: 40px;">
+                @Model.Name.Substring(0, 1)
+            </div>
+            <div class="flex-grow-1 text-center text-md-start">
+                <div class="d-flex flex-column flex-md-row align-items-center gap-2 mb-2">
+                    <h1 class="h3 fw-bold text-dark mb-0">@Model.Name</h1>
+                    <span class="badge bg-primary-subtle text-primary border rounded-pill px-3 shadow-sm" style="font-size: 10px;">ID: #@Model.Id</span>
+                </div>
+                <p class="text-secondary mb-0 fw-medium">
+                    <span class="fw-bold text-dark">@Model.Age</span> Yrs • 
+                    <span class="fw-bold text-dark">@Model.Gender</span> • 
+                    <span class="fw-bold text-dark">@Model.Phone</span>
+                </p>
+            </div>
+            <div class="d-flex gap-2">
+                @if (User.IsInRole("Doctor") || User.IsInRole("Staff") || User.IsInRole("Admin"))
+                {
+                    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline-secondary border shadow-sm px-4 fw-bold rounded-pill" style="font-size: 11px;">Edit Profile</a>
+                }
+                @if (User.IsInRole("Staff") || User.IsInRole("Admin"))
+                {
+                    <a asp-controller="Appointment" asp-action="Create" asp-route-patientId="@Model.Id" class="btn btn-primary px-4 fw-bold rounded-pill border-0 shadow-sm" style="font-size: 11px;">Book Appointment</a>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Body Information -->
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="d-flex flex-column gap-4">
+                <!-- Medical History -->
+                <div class="dental-card shadow-sm border-0 p-4">
+                    <h3 class="h6 fw-bold text-dark mb-4 d-flex align-items-center gap-2">
+                        <i class="fas fa-file-medical text-primary"></i> Medical History
+                    </h3>
+                    <div class="d-flex flex-column gap-3">
+                        @foreach (var record in Model.MedicalHistory)
+                        {
+                            
+                                var doctorNames = (ViewBag.DoctorNames as Dictionary<string, string>) ?? new Dictionary<string, string>();
+                                var docName = "Unknown";
+                                if (record.DoctorId != null && doctorNames.ContainsKey(record.DoctorId))
+                                {
+                                    docName = doctorNames[record.DoctorId];
+                                }
+                                
+                                if (docName != "Unknown" && !docName.StartsWith("Dr. "))
+                                {
+                                    docName = "Dr. " + docName;
+                                }
+                            
+                            <div class="p-4 bg-light rounded-4 border shadow-sm border-light position-relative">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="badge bg-primary-subtle text-primary mb-2" style="font-size: 9px;">@record.VisitType</span>
+                                    <span class="dental-caption">@record.Date.ToString("dd MMM yyyy")</span>
+                                </div>
+                                <h4 class="h6 fw-bold text-dark mb-2">@record.Diagnosis</h4>
+                                <p class="small text-secondary mb-3 lh-lg">@record.Notes</p>
+                                <div class="pt-3 border-top d-flex justify-content-between align-items-center">
+                                    <span class="dental-caption fw-bold text-primary">@docName</span>
+                                    <span class="dental-caption opacity-50">Record #@record.Id</span>
+                                </div>
+                            </div>
+                        }
+                        @if (!Model.MedicalHistory.Any())
+                        {
+                            <div class="text-center py-5">
+                                <i class="fas fa-file-medical text-light display-4 mb-3 d-block"></i>
+                                <p class="dental-caption">No medical records found.</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Appointments -->
+                <div class="dental-card p-0 shadow-sm border-0 overflow-hidden">
+                    <div class="p-4 border-bottom bg-light">
+                        <h3 class="h6 fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+                            <i class="fas fa-calendar-alt text-primary"></i> Appointments History
+                        </h3>
+                    </div>
+                    <div class="list-group list-group-flush border-top-0">
+                        @foreach (var appt in Model.Appointments)
+                        {
+                           
+                                var doctorNames = (ViewBag.DoctorNames as Dictionary<string, string>) ?? new Dictionary<string, string>();
+                                var docName = "Unknown";
+                                if (!string.IsNullOrEmpty(appt.DoctorId) && doctorNames.ContainsKey(appt.DoctorId))
+                                {
+                                    docName = doctorNames[appt.DoctorId];
+                                }
+                                
+                                if (docName != "Unknown" && !docName.StartsWith("Dr. "))
+                                {
+                                    docName = "Dr. " + docName;
+                                }
+                            
+                            <div class="list-group-item p-4 border-bottom-light transition">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <div>
+                                        <p class="fw-bold text-dark mb-1">@appt.Type</p>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span class="dental-caption">@appt.Date.ToShortDateString()</span>
+                                            <span class="d-inline-block rounded-circle bg-primary opacity-25" style="width: 4px; height: 4px;"></span>
+                                            <span class="fw-bold text-primary small" style="font-size: 10px;">@docName</span>
+                                        </div>
+                                    </div>
+                                    <span class="dental-badge @(appt.Status == "Completed" ? "dental-badge-blue" : "dental-badge-dark")">@appt.Status</span>
+                                </div>
+                            </div>
+                        }
+                        @if (!Model.Appointments.Any())
+                        {
+                            <div class="p-5 text-center">
+                                <i class="far fa-calendar-times text-light display-4 mb-3 d-block"></i>
+                                <p class="dental-caption">No appointments recorded yet.</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar Info -->
+        <div class="col-lg-4">
+            <div class="dental-card shadow-sm border-0 p-4 sticky-top" style="top: 2rem;">
+                <h3 class="h6 fw-bold text-dark mb-4">Contact Information</h3>
+                <div class="d-flex flex-column gap-4">
+                    <div class="d-flex align-items-start gap-3">
+                        <div class="dental-avatar bg-light text-secondary rounded-3" style="width: 32px; height: 32px; flex-shrink: 0;">
+                            <i class="fas fa-envelope small"></i>
+                        </div>
+                        <div>
+                            <p class="dental-caption mb-1">Email Address</p>
+                            <span class="small fw-bold text-dark">@Model.Email</span>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-start gap-3">
+                        <div class="dental-avatar bg-light text-secondary rounded-3" style="width: 32px; height: 32px; flex-shrink: 0;">
+                            <i class="fas fa-phone small"></i>
+                        </div>
+                        <div>
+                            <p class="dental-caption mb-1">Phone Number</p>
+                            <span class="small fw-bold text-dark">@Model.Phone</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <hr class="my-4 opacity-10">
+                
+                <div class="py-2">
+                    <p class="small text-secondary mb-0">Total of <strong>@Model.Appointments.Count</strong> visits since registration.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

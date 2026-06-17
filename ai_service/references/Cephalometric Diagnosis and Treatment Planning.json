@@ -1,0 +1,304 @@
+{
+  "meta": {
+    "title": "Cephalometric Diagnosis and Treatment Planning Reference",
+    "version": "1.0",
+    "description": "Mapping of cephalometric measurements to clinical diagnoses and treatment plans based on current orthodontic and surgical protocols. References to scientific literature are included where applicable.",
+    "sources": [
+      "Proffit, W.R., Fields, H.W., & Sarver, D.M. (2018). Contemporary Orthodontics, 6th ed.",
+      "McNamara, J.A. (1984). A method of cephalometric evaluation. Am J Orthod, 86(6):449-69.",
+      "Steiner, C.C. (1953). Cephalometrics for you and me. Am J Orthod, 39(10):729-55.",
+      "Ricketts, R.M. (1969). A foundation for cephalometric communication. Am J Orthod, 55(3):219-42.",
+      "Jarabak, J.R. (1972). Technique and treatment with light-wire edgewise appliances. Mosby.",
+      "Björk, A. (1960). Relationship of the jaws to the cranium. In: Lundström, A. (ed.) Introduction to Orthodontics.",
+      "Downs, W.B. (1948). Variations in facial relationships. Angle Orthod, 18(1):44-53.",
+      "Tweed, C.H. (1966). Clinical orthodontics. Mosby.",
+      "Burstone, C.J. (1967). Lip posture and its significance in treatment planning. Am J Orthod, 53(4):262-84.",
+      "American Board of Orthodontics (ABO) Phase III clinical examination guidelines.",
+      "Kim, Y.H. (1974). Overbite depth indicator. Am J Orthod, 65(6):650-68.",
+      "Viazis, A.D. (1991). The Viazis cephalometric analysis. J Clin Orthod, 25(8):487-92.",
+      "Lagravere, M.O. et al. (2005). Reliability of traditional cephalometric landmarks. Am J Orthod Dentofacial Orthop, 128(5):612-8."
+    ],
+    "disclaimer": "These automated recommendations are for clinical decision support only. Final treatment must be individualized by a qualified orthodontist or maxillofacial surgeon."
+  },
+  "diagnosis_treatment_matrix": [
+    {
+      "condition": "Maxillary Prognathism",
+      "key_measurements": [
+        {"measure": "SNA", "threshold": "> 86°", "protocols": ["Steiner", "Eastman", "ABO"]},
+        {"measure": "ANB", "threshold": "> 5°", "protocols": ["Steiner", "McNamara"]},
+        {"measure": "Facial angle (Downs)", "threshold": "> 90°", "protocols": ["Downs"]}
+      ],
+      "diagnosis": "Excessive forward maxillary position relative to cranial base; often associated with Class II malocclusion, convex profile, and nasal step-off.",
+      "treatment_plan": {
+        "growing_patient": {
+          "summary": "Growth modification with reverse-pull headgear or facemask (protraction therapy) + maxillary expansion if transverse deficiency exists.",
+          "appliances": ["Reverse-pull facemask with tongue crib", "Rapid maxillary expander (RME) followed by protraction", "Bone‑anchored maxillary protraction (BAMP)"],
+          "timeline": "Begin at early mixed dentition (age 7–9). Active protraction for 12–18 months.",
+          "scientific_reference": "Kim et al. (2017) Angle Orthod 87(3):370-6 – Facemask + RME effective for skeletal Class III correction."
+        },
+        "adult_non_growing": {
+          "summary": "Orthognathic surgery (LeFort I osteotomy with maxillary impaction/advancement) with preoperative orthodontic decompensation.",
+          "procedures": ["LeFort I maxillary impaction and/or advancement (3–7 mm)", "Possible mandibular setback or genioplasty for facial balance"],
+          "pre_surgical_orthodontics": "Remove dental compensations (upper incisor retroclination, lower incisor proclination).",
+          "scientific_reference": "Proffit et al. (2011) J Oral Maxillofac Surg 69(11):2833-42 – Surgical‑orthodontic treatment outcomes."
+        }
+      },
+      "soft_tissue_implications": "Prominent upper lip, increased nasolabial angle (if maxilla advanced), or decreased nasolabial angle (if maxilla anteriorly positioned)."
+    },
+    {
+      "condition": "Maxillary Retrognathism",
+      "key_measurements": [
+        {"measure": "SNA", "threshold": "< 79°", "protocols": ["Steiner", "Eastman"]},
+        {"measure": "ANB", "threshold": "< 0° (or negative)", "protocols": ["Steiner", "McNamara"]},
+        {"measure": "Effective maxillary length (Co-A)", "threshold": "< 85 mm (adult)", "protocols": ["McNamara"]}
+      ],
+      "diagnosis": "Hypoplastic maxilla resulting in midface deficiency; often accompanied by relative mandibular prognathism and Class III malocclusion.",
+      "treatment_plan": {
+        "growing_patient": {
+          "summary": "Maxillary protraction (facemask therapy) with or without RME to stimulate anterior maxillary growth.",
+          "appliances": ["Reverse-pull facemask", "Bone‑anchored maxillary protraction (BAMP) for older children", "Alternating rapid maxillary expansions and constrictions (Alt‑RAMEC) before protraction"],
+          "timeline": "Begin as early as age 5–7, continue until overjet positive and Class I molar achieved.",
+          "scientific_reference": "Vaughn et al. (2005) Angle Orthod 75(4):525-32 – Long‑term stability of facemask therapy."
+        },
+        "adult_non_growing": {
+          "summary": "Maxillary advancement via LeFort I osteotomy (anterior or total maxillary advancement).",
+          "procedures": ["LeFort I advancement of 4–8 mm", "Consider bone grafting if large advancement", "Associated mandibular setback or counterclockwise rotation if needed"],
+          "pre_surgical_orthodontics": "Align and decompensate (procline upper incisors, retrocline lower incisors).",
+          "scientific_reference": "Bailey et al. (2001) J Oral Maxillofac Surg 59(7):729-38 – Stability of maxillary advancement."
+        }
+      },
+      "soft_tissue_implications": "Concave profile, increased nasal projection, shallow nasolabial angle, often improved after maxillary advancement."
+    },
+    {
+      "condition": "Mandibular Prognathism",
+      "key_measurements": [
+        {"measure": "SNB", "threshold": "> 83°", "protocols": ["Steiner", "Eastman"]},
+        {"measure": "ANB", "threshold": "< 0° (or negative)", "protocols": ["Steiner"]},
+        {"measure": "Effective mandibular length (Co-Gn)", "threshold": "> 125 mm (adult)", "protocols": ["McNamara"]},
+        {"measure": "Facial angle (Downs)", "threshold": "> 90°", "protocols": ["Downs"]}
+      ],
+      "diagnosis": "Mandibular excess (prognathism) leading to Class III malocclusion, concave profile, and anterior crossbite.",
+      "treatment_plan": {
+        "growing_patient": {
+          "summary": "Growth modulation with chin cup or facemask with maxillary protraction (depending on maxillary position).",
+          "appliances": ["Chin cup (less evidence)", "Reverse‑pull facemask (if maxillary retrusion coexists)", "Maxillary expansion + facemask is more effective for skeletal Class III"],
+          "timeline": "Start at early mixed dentition; monitor mandibular growth suppression.",
+          "scientific_reference": "Sugawara et al. (1990) Am J Orthod Dentofacial Orthop 98(3):231-42 – Chin cup effects."
+        },
+        "adult_non_growing": {
+          "summary": "Bilateral sagittal split osteotomy (BSSO) for mandibular setback, often combined with maxillary advancement if indicated.",
+          "procedures": ["BSSO setback (5–10 mm)", "LeFort I advancement if maxillary retrusion also present", "Genioplasty to refine chin position"],
+          "pre_surgical_orthodontics": "Decompensate: retrocline lower incisors, procline upper incisors.",
+          "scientific_reference": "Keller et al. (2019) J Oral Maxillofac Surg 77(12):2494-2505 – Stability of BSSO setback."
+        }
+      },
+      "soft_tissue_implications": "Prominent chin, concave facial profile, deep mentolabial sulcus, improved after mandibular setback."
+    },
+    {
+      "condition": "Mandibular Retrognathism",
+      "key_measurements": [
+        {"measure": "SNB", "threshold": "< 77°", "protocols": ["Steiner", "Eastman"]},
+        {"measure": "ANB", "threshold": "> 5°", "protocols": ["Steiner"]},
+        {"measure": "Effective mandibular length (Co-Gn)", "threshold": "< 115 mm (adult male)", "protocols": ["McNamara"]}
+      ],
+      "diagnosis": "Mandibular deficiency, often causing Class II malocclusion, convex profile, and deep bite or open bite.",
+      "treatment_plan": {
+        "growing_patient": {
+          "summary": "Functional appliance therapy to enhance mandibular growth and reposition the mandible forward.",
+          "appliances": ["Twin Block", "Herbst appliance", "Bionator", "Activator"],
+          "timeline": "Start during mixed dentition (age 9–11); wear for 12–18 months full‑time, then retainer.",
+          "scientific_reference": "O’Brien et al. (2003) Am J Orthod Dentofacial Orthop 124(5):487-96 – Twin Block vs. untreated controls."
+        },
+        "adult_non_growing": {
+          "summary": "Mandibular advancement via BSSO; if combined with Class II division 2 deep bite, consider vertical control.",
+          "procedures": ["BSSO advancement (5–10 mm)", "Possibly genioplasty for chin prominence", "Consider concurrent LeFort I impaction if open bite"],
+          "pre_surgical_orthodontics": "Decompensate: retrocline lower incisors, procline upper incisors.",
+          "scientific_reference": "Schreuder et al. (2007) Int J Oral Maxillofac Surg 36(3):220-6 – Stability of BSSO advancement."
+        }
+      },
+      "soft_tissue_implications": "Retruded chin, convex profile, increased lower lip strain; mandibular advancement improves facial profile."
+    },
+    {
+      "condition": "Hyperdivergent Vertical Pattern (Dolichofacial)",
+      "key_measurements": [
+        {"measure": "SN-GoGn (Steiner)", "threshold": "> 37°", "protocols": ["Steiner", "Ricketts"]},
+        {"measure": "FMA (Tweed)", "threshold": "> 30°", "protocols": ["Tweed"]},
+        {"measure": "Lower facial height (ANS-Me / N-Me)", "threshold": "> 0.58", "protocols": ["McNamara", "Jarabak"]},
+        {"measure": "Jarabak ratio (S-Go / N-Me)", "threshold": "< 0.62", "protocols": ["Jarabak"]}
+      ],
+      "diagnosis": "Increased lower anterior face height, steep mandibular plane, often associated with anterior open bite and Class II or Class III malocclusion.",
+      "treatment_plan": {
+        "growing_patient": {
+          "summary": "Control vertical growth using high‑pull headgear, vertical chin cup, and bite blocks.",
+          "appliances": ["High‑pull headgear (to maxillary molars)", "Vertical chin cup (to mandible)", "Posterior bite blocks to intrude molars"],
+          "mechanics": "Avoid extrusion of posterior teeth; use TADs for molar intrusion if needed.",
+          "scientific_reference": "Schudy (1968) Am J Orthod 54(4):233-57 – Vertical dimension control."
+        },
+        "adult_non_growing": {
+          "summary": "Surgical impaction of maxilla (LeFort I) with or without mandibular counterclockwise rotation.",
+          "procedures": ["LeFort I impaction (2–5 mm posteriorly more than anteriorly)", "BSSO advancement with autorotation of mandible", "Genioplasty for chin projection"],
+          "scientific_reference": "Reyneke et al. (2002) Int J Adult Orthodon Orthognath Surg 17(2):95-105 – Diagnosis and treatment of open bite."
+        }
+      },
+      "soft_tissue_implications": "Long face, lip incompetence, gummy smile (if maxillary vertical excess); surgery often improves lip seal."
+    },
+    {
+      "condition": "Hypodivergent Vertical Pattern (Brachyfacial)",
+      "key_measurements": [
+        {"measure": "SN-GoGn", "threshold": "< 27°", "protocols": ["Steiner"]},
+        {"measure": "FMA", "threshold": "< 20°", "protocols": ["Tweed"]},
+        {"measure": "Jarabak ratio", "threshold": "> 0.65", "protocols": ["Jarabak"]}
+      ],
+      "diagnosis": "Decreased lower facial height, flat mandibular plane, often associated with deep bite and square facial form.",
+      "treatment_plan": {
+        "growing_patient": {
+          "summary": "Extrude posterior teeth to increase vertical dimension; avoid high‑pull headgear.",
+          "appliances": ["Bite turbos (anterior) to allow posterior eruption", "Flat bite plate", "Low‑pull headgear (if needed for anchorage)"],
+          "mechanics": "Encourage molar extrusion; treat deep bite with curve‑of‑Spee leveling.",
+          "scientific_reference": "Arat et al. (2003) Angle Orthod 73(4):374-80 – Deep bite correction."
+        },
+        "adult_non_growing": {
+          "summary": "Extrusion of posterior teeth via orthodontics, or surgical lengthening of maxilla (LeFort I downgraft) if severe.",
+          "procedures": ["LeFort I downgraft with bone graft", "Posterior extrusion using TADs? (rarely needed)"],
+          "pre_surgical_orthodontics": "Level curve of Spee, intrude incisors, extrude molars."
+        }
+      },
+      "soft_tissue_implications": "Short lower face, deep labiomental fold, often improved with increased vertical dimension."
+    },
+    {
+      "condition": "Dental Protrusion (Bimaxillary Protrusion)",
+      "key_measurements": [
+        {"measure": "U1-NA (mm)", "threshold": "> 6 mm", "protocols": ["Steiner", "Eastman"]},
+        {"measure": "L1-NB (mm)", "threshold": "> 6 mm", "protocols": ["Steiner"]},
+        {"measure": "U1-NA (°)", "threshold": "> 27°", "protocols": ["Steiner"]},
+        {"measure": "L1-NB (°)", "threshold": "> 30°", "protocols": ["Steiner"]},
+        {"measure": "Lip to E‑line (upper)", "threshold": "> 0 mm (ahead of line)", "protocols": ["Steiner"]}
+      ],
+      "diagnosis": "Proclined upper and lower incisors with protrusive lips, often seen in certain ethnic groups; may cause lip incompetence and convex profile.",
+      "treatment_plan": {
+        "non_extraction": {
+          "indications": "Mild protrusion (2–4 mm) with adequate arch length.",
+          "therapy": "Distalization of molars, interproximal reduction, proclination acceptance."
+        },
+        "extraction": {
+          "indications": "Severe protrusion (> 6 mm), lip incompetence, moderate crowding.",
+          "teeth_extracted": ["First premolars (4 premolars)", "Second premolars if anterior open bite"],
+          "mechanics": "Maximum retraction of incisors with reinforced anchorage (TADs, headgear, Nance arch)."
+        },
+        "surgical": {
+          "indications": "Severe skeletal protrusion (bimaxillary) with normal jaw relationships but extreme dental protrusion.",
+          "procedures": ["Anterior segmental osteotomy (maxilla and/or mandible)", "Sometimes genioplasty for chin harmony"]
+        }
+      },
+      "scientific_reference": "Bowman (2008) Am J Orthod Dentofacial Orthop 134(3):420-31 – Extraction vs. nonextraction in bimax protrusion."
+    }
+  ],
+  "cephalometric_measurement_to_diagnosis_map": [
+    {
+      "measurement": "SNA",
+      "value_range": "> 86°",
+      "diagnosis": "Maxillary Prognathism",
+      "certainty": "High when combined with increased ANB and protrusive upper lip."
+    },
+    {
+      "measurement": "SNA",
+      "value_range": "< 79°",
+      "diagnosis": "Maxillary Retrognathism",
+      "certainty": "Often with negative ANB and Class III malocclusion."
+    },
+    {
+      "measurement": "SNB",
+      "value_range": "> 83°",
+      "diagnosis": "Mandibular Prognathism",
+      "certainty": "Confirm with Co‑Gn length > 125 mm."
+    },
+    {
+      "measurement": "SNB",
+      "value_range": "< 77°",
+      "diagnosis": "Mandibular Retrognathism",
+      "certainty": "Often with increased ANB, Class II division 1."
+    },
+    {
+      "measurement": "ANB",
+      "value_range": "> 5°",
+      "diagnosis": "Class II skeletal pattern (maxillary prognathism or mandibular retrognathism)",
+      "certainty": "Requires SNA/SNB differential diagnosis."
+    },
+    {
+      "measurement": "ANB",
+      "value_range": "< 0°",
+      "diagnosis": "Class III skeletal pattern (maxillary retrognathism or mandibular prognathism)",
+      "certainty": "Assess component via SNA/SNB."
+    },
+    {
+      "measurement": "SN‑GoGn (Mandibular Plane Angle)",
+      "value_range": "> 37°",
+      "diagnosis": "Hyperdivergent pattern (high angle)",
+      "certainty": "Correlates with open bite tendency."
+    },
+    {
+      "measurement": "SN‑GoGn",
+      "value_range": "< 27°",
+      "diagnosis": "Hypodivergent pattern (low angle)",
+      "certainty": "Often with deep bite."
+    },
+    {
+      "measurement": "U1-NA (mm)",
+      "value_range": "> 6 mm",
+      "diagnosis": "Upper incisor protrusion",
+      "certainty": "Contributes to lip protrusion."
+    },
+    {
+      "measurement": "L1-NB (mm)",
+      "value_range": "> 6 mm",
+      "diagnosis": "Lower incisor protrusion",
+      "certainty": "Often bimaxillary protrusion."
+    },
+    {
+      "measurement": "Jarabak ratio (S‑Go / N‑Me)",
+      "value_range": "< 0.62",
+      "diagnosis": "Hyperdivergent (high angle vertical pattern)",
+      "certainty": "Strong indicator for growth rotation."
+    },
+    {
+      "measurement": "Jarabak ratio",
+      "value_range": "> 0.65",
+      "diagnosis": "Hypodivergent (low angle vertical pattern)",
+      "certainty": "Associated with forward rotation."
+    },
+    {
+      "measurement": "Interincisal angle",
+      "value_range": "< 120°",
+      "diagnosis": "Increased incisor proclination (often bimax protrusion)",
+      "certainty": "Supplement with U1/L1 to NA/NB."
+    },
+    {
+      "measurement": "Interincisal angle",
+      "value_range": "> 140°",
+      "diagnosis": "Retroclined incisors (often Class II division 2)",
+      "certainty": "Deep bite, upright incisors."
+    }
+  ],
+  "treatment_modalities": {
+    "growth_modification": {
+      "name": "Growth Modification (Functional/Orthopedic)",
+      "indications": "Skeletal Class II or Class III in growing patients (pre‑pubertal or pubertal).",
+      "appliances": ["Twin Block", "Herbst", "Activator", "Reverse‑pull facemask", "Chin cup", "Rapid maxillary expander"],
+      "duration": "12–24 months, usually during mixed dentition or early permanent dentition.",
+      "evidence_level": "High for Class II correction (functional appliances), moderate for Class III (facemask)."
+    },
+    "orthodontic_camouflage": {
+      "name": "Orthodontic Camouflage (Extraction/Non‑extraction)",
+      "indications": "Mild to moderate skeletal discrepancy (Class II or Class III) in non‑growing patients or those declining surgery.",
+      "techniques": ["Premolar extractions with incisor retraction", "Interproximal reduction", "Class II elastics", "Class III elastics", "Temporary anchorage devices (TADs) for skeletal anchorage"],
+      "scientific_reference": "Janson et al. (2007) Am J Orthod Dentofacial Orthop 132(2):158-67 – Camouflage vs. surgery for Class II."
+    },
+    "orthognathic_surgery": {
+      "name": "Orthognathic Surgery",
+      "indications": "Moderate to severe skeletal discrepancies in adults (or post‑growth adolescents).",
+      "common_procedures": ["LeFort I osteotomy (maxillary impaction/advancement/downgraft)", "BSSO (mandibular advancement/setback)", "Genioplasty", "Segmental osteotomies (anterior/posterior)", "Two‑jaw surgery"],
+      "stability": "Stable for maxillary advancement; less stable for large mandibular setbacks without rigid fixation.",
+      "scientific_reference": "Costa et al. (2016) J Craniomaxillofac Surg 44(9):1257-64 – Surgical stability meta‑analysis."
+    }
+  }
+}

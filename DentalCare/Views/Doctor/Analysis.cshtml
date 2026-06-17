@@ -1,0 +1,1205 @@
+@using DentalCare.Models
+@{
+    ViewData["Title"] = "AI Cephalometric Analysis";
+    var patients = ViewBag.Patients as List<Patient> ?? new List<Patient>();
+    var protocols = ViewBag.Protocols as List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem> ?? new List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>();
+    var selectedId = (int?)(ViewBag.SelectedPatientId);
+}
+
+<style>
+    .analysis-shell .workstation-card { border-radius: 12px; }
+    .analysis-shell .nav-pills .nav-link { border-radius: 8px; color: #64748b; font-size: 12px; font-weight: 800; }
+    .analysis-shell .nav-pills .nav-link.active { background: #0d6efd; color: #fff; }
+    .viewer-stage { background: #101827; border-radius: 8px; min-height: 460px; position: relative; overflow: hidden; }
+    #cephViewer { display: block; width: 100%; height: 460px; cursor: grab; }
+    #cephViewer.dragging { cursor: grabbing; }
+    .viewer-toolbar { border-bottom: 1px solid #e5e7eb; }
+    .metric-tile { background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; }
+    .landmark-row.active { background: #eff6ff; }
+    .review-gate { border-left: 4px solid #f59e0b; }
+    .review-gate.reviewed { border-left-color: #16a34a; }
+    .mono-box { background: #0f172a; color: #dbeafe; border-radius: 8px; padding: 14px; font-size: 12px; white-space: pre-wrap; max-height: 360px; overflow: auto; }
+</style>
+
+<div class="analysis-shell">
+    <div class="d-flex align-items-center justify-content-between mb-4 gap-3">
+        <div>
+            <h1 class="h4 fw-bold text-dark mb-1">AI Cephalometric Analysis</h1>
+            <p class="dental-caption mb-0">AI predicts. Doctor reviews and refines. DentalCare recalculates before saving.</p>
+        </div>
+        <div id="aiStatusBadge" class="badge rounded-pill px-3 py-2 small fw-bold d-flex align-items-center gap-2 opacity-50">
+            <span class="spinner-grow spinner-grow-sm" style="width:8px;height:8px;"></span> Connecting...
+        </div>
+    </div>
+
+    <div class="dental-card border-0 shadow-sm p-4 mb-4 workstation-card">
+        <div class="row align-items-center g-3">
+            <div class="col-md-6">
+                <label class="form-label dental-label d-flex align-items-center gap-2">
+                    <i class="fas fa-user-injured text-primary"></i> Select Patient
+                </label>
+                <select id="patientSelector" class="form-select dental-input border shadow-none" style="font-size:13px;" onchange="onPatientSelected(this)">
+                    <option value="">Choose a patient to auto-fill settings</option>
+                    @foreach (var p in patients)
+                    {
+                        <option value="@p.Id"
+                                data-age="@p.Age"
+                                data-sex="@p.Gender"
+                                data-name="@p.Name"
+                                selected="@(selectedId == p.Id ? "selected" : null)">
+                            @p.Name - @p.Age yrs, @p.Gender
+                        </option>
+                    }
+                </select>
+            </div>
+            <div id="selectedPatientBio" class="col-md-6 d-none">
+                <div class="d-flex align-items-center gap-3 p-3 bg-primary-subtle rounded-3">
+                    <div class="dental-avatar bg-primary text-white fw-bold" style="width:44px;height:44px;border-radius:12px;font-size:18px;" id="patientInitial">?</div>
+                    <div>
+                        <p class="fw-bold text-dark small mb-0" id="patientName">-</p>
+                        <p class="dental-caption mb-0" id="patientMeta">-</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-xl-3 col-lg-4">
+            <div class="d-flex flex-column gap-4">
+                <div class="dental-card border-0 shadow-sm p-0 overflow-hidden workstation-card">
+                    <div id="dropZone"
+                         class="p-5 text-center border-2 border-dashed"
+                         style="border:2px dashed #d1d5db;cursor:pointer;transition:background .2s;"
+                         onclick="document.getElementById('fileInput').click()"
+                         ondragover="event.preventDefault();this.style.background='#eff6ff'"
+                         ondragleave="this.style.background=''"
+                         ondrop="handleDrop(event)">
+                        <div class="dental-avatar bg-primary-subtle text-primary mx-auto mb-3" style="width:56px;height:56px;border-radius:16px;">
+                            <i class="fas fa-cloud-upload-alt fs-4"></i>
+                        </div>
+                        <p class="fw-bold text-dark small mb-1">Drop X-ray here or click to browse</p>
+                        <p class="dental-caption mb-0" style="font-size:11px;">JPEG, PNG, BMP, TIFF supported</p>
+                        <input type="file" id="fileInput" class="d-none" accept="image/jpeg,image/png,image/bmp,image/tiff" onchange="onFileSelected(this)">
+                    </div>
+                    <div id="previewArea" class="d-none p-3 border-top bg-light">
+                        <div class="d-flex align-items-center gap-3">
+                            <img id="previewThumb" src="" class="rounded-3 shadow-sm" style="width:72px;height:72px;object-fit:cover;" />
+                            <div class="flex-grow-1 overflow-hidden">
+                                <p class="small fw-bold text-dark mb-0 text-truncate" id="previewName">-</p>
+                                <p class="dental-caption mb-2" id="previewSize">-</p>
+                                <button class="btn btn-sm btn-outline-danger rounded-pill px-3" style="font-size:10px;" onclick="clearFile()">
+                                    <i class="fas fa-times me-1"></i> Remove
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dental-card border-0 shadow-sm p-4 workstation-card">
+                    <h3 class="h6 fw-bold text-dark mb-4 d-flex align-items-center gap-2">
+                        <i class="fas fa-sliders-h text-primary"></i> Analysis Settings
+                    </h3>
+                    <div class="d-flex flex-column gap-3">
+                        <div>
+                            <label class="form-label dental-label">Patient Age</label>
+                            <div class="position-relative">
+                                <input type="number" id="settingAge" class="dental-input border shadow-none" value="25" min="5" max="80">
+                                <span id="ageAutoIcon" class="position-absolute top-50 end-0 translate-middle-y pe-3 text-success d-none" title="Auto-filled from patient">
+                                    <i class="fas fa-link" style="font-size:11px;"></i>
+                                </span>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="form-label dental-label">Sex</label>
+                            <select id="settingSex" class="form-select dental-input border shadow-none" style="font-size:13px;">
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="form-label dental-label">Ethnic Profile</label>
+                            <select id="settingEthnic" class="form-select dental-input border shadow-none" style="font-size:13px;">
+                                <option value="Caucasian">Caucasian</option>
+                                <option value="African">African</option>
+                                <option value="Asian">Asian</option>
+                                <option value="Arabic">Arabic</option>
+                                <option value="Hispanic">Hispanic</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="form-label dental-label">Analysis Protocol</label>
+                            <select id="settingProtocol" class="form-select dental-input border shadow-none" style="font-size:13px;">
+                                @foreach (var protocol in protocols)
+                                {
+                                    <option value="@protocol.Value">@protocol.Text</option>
+                                }
+                            </select>
+                        </div>
+                        <div>
+                            <label class="form-label dental-label">px to mm Scale</label>
+                            <input type="number" id="settingPxToMm" class="dental-input border shadow-none" value="1.0" step="0.01" min="0.1" max="5">
+                            <button id="autoCalibrateBtn" type="button" class="btn btn-sm btn-outline-secondary rounded-pill mt-2 fw-bold"
+                                    style="font-size:10px;" onclick="autoCalibrate()" disabled>
+                                <i class="fas fa-ruler me-1"></i> Auto-Calibrate
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2 mt-4">
+                        <button id="analyzeBtn" class="btn btn-primary fw-bold py-3 text-uppercase shadow-sm border-0 rounded-3 d-flex align-items-center justify-content-center gap-2"
+                                style="font-size:11px;letter-spacing:1px;" onclick="runAnalysis()" disabled>
+                            <i class="fas fa-microscope"></i> Run AI Analysis
+                        </button>
+                        <button id="recalculateBtn" class="btn btn-outline-primary fw-bold py-2 rounded-3 d-flex align-items-center justify-content-center gap-2"
+                                style="font-size:11px;" onclick="recalculateFromViewer()" disabled>
+                            <i class="fas fa-sync-alt"></i> Recalculate From Edited Landmarks
+                        </button>
+                        <button id="refineBtn" class="btn btn-outline-secondary fw-bold py-2 rounded-3 d-flex align-items-center justify-content-center gap-2"
+                                style="font-size:11px;" onclick="refineLandmarks()" disabled>
+                            <i class="fas fa-crosshairs"></i> Refine Landmarks
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-9 col-lg-8">
+            <div id="loadingPanel" class="dental-card border-0 shadow-sm p-5 text-center d-none workstation-card">
+                <div class="spinner-border text-primary mb-4" style="width:3rem;height:3rem;" role="status"></div>
+                <h3 class="h5 fw-bold text-dark mb-2">Running AI Analysis...</h3>
+                <p class="dental-caption" id="loadingStep">Detecting landmarks...</p>
+                <div class="progress mt-4 rounded-pill" style="height:6px;">
+                    <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-primary" style="width:20%"></div>
+                </div>
+            </div>
+
+            <div id="errorPanel" class="alert alert-danger border-0 shadow-sm rounded-4 d-none">
+                <div class="d-flex align-items-start gap-3">
+                    <i class="fas fa-exclamation-triangle mt-1 text-danger"></i>
+                    <div>
+                        <p class="fw-bold mb-1">Analysis Failed</p>
+                        <p class="small mb-0" id="errorMessage">-</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="emptyPanel" class="dental-card border-0 shadow-sm p-5 text-center workstation-card">
+                <div class="dental-avatar bg-light text-secondary mx-auto mb-4" style="width:72px;height:72px;border-radius:20px;">
+                    <i class="fas fa-x-ray fs-3"></i>
+                </div>
+                <h3 class="h6 fw-bold text-dark mb-2">No Analysis Yet</h3>
+                <p class="dental-caption mb-0">Upload an X-ray and run the AI pipeline to open the clinical workstation.</p>
+            </div>
+
+            <div id="resultsPanel" class="d-none d-flex flex-column gap-4">
+                <div id="reviewGate" class="dental-card border-0 shadow-sm p-3 review-gate workstation-card">
+                    <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+                        <div>
+                            <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+                                <p class="fw-bold small text-dark mb-0">Draft AI Report</p>
+                                <span id="reviewStatusBadge" class="badge bg-warning-subtle text-warning rounded-pill" style="font-size:10px;">Needs clinician review</span>
+                                <span id="editStatusBadge" class="badge bg-secondary-subtle text-secondary rounded-pill d-none" style="font-size:10px;">Landmarks edited - recalculate</span>
+                            </div>
+                            <p class="dental-caption mb-0">Save and PDF export are locked until the clinician confirms review.</p>
+                        </div>
+                        <div class="d-flex flex-wrap gap-2">
+                            <button id="saveReportBtn" type="button" class="btn btn-success btn-sm fw-bold rounded-pill px-3" onclick="saveAnalysisReport()" disabled>
+                                <i class="fas fa-save me-1"></i> Save to Patient
+                            </button>
+                            <button id="exportPdfBtn" type="button" class="btn btn-outline-primary btn-sm fw-bold rounded-pill px-3" onclick="exportAnalysisPdf()" disabled>
+                                <i class="fas fa-file-pdf me-1"></i> Export PDF
+                            </button>
+                        </div>
+                    </div>
+                    <div class="mt-3 p-3 rounded-3 border bg-light">
+                        <div class="form-check">
+                            <input id="doctorReviewCheck" class="form-check-input" type="checkbox" onchange="setDoctorReviewState()">
+                            <label class="form-check-label small fw-bold text-dark" for="doctorReviewCheck">
+                                I reviewed the landmarks, measurements, diagnosis, and treatment suggestions for this patient.
+                            </label>
+                        </div>
+                        <textarea id="doctorReviewNotes" class="form-control mt-3 small" rows="2"
+                                  placeholder="Optional clinician notes, corrections, limitations, or rationale..."
+                                  oninput="setDoctorReviewState()"></textarea>
+                    </div>
+                    <div id="reportActionMessage" class="mt-3 d-none"></div>
+                </div>
+
+                <div class="dental-card border-0 shadow-sm p-3 workstation-card">
+                    <ul class="nav nav-pills gap-2" id="analysisTabs" role="tablist">
+                        <li class="nav-item"><button class="nav-link active" data-bs-toggle="pill" data-bs-target="#tabWorkspace" type="button">Workspace</button></li>
+                        <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#tabSummary" type="button">Clinical Summary</button></li>
+                        <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#tabMeasurements" type="button">Measurements</button></li>
+                        <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#tabTreatment" type="button">Treatment Plan</button></li>
+                        <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#tabGrowth" type="button">Growth</button></li>
+                        <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#tabXai" type="button">Explainable AI</button></li>
+                        <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#tabExports" type="button">Exports</button></li>
+                    </ul>
+                </div>
+
+                <div class="tab-content">
+                    <div class="tab-pane fade show active" id="tabWorkspace">
+                        <div class="row g-4">
+                            <div class="col-xl-8">
+                                <div class="dental-card border-0 shadow-sm p-0 overflow-hidden workstation-card">
+                                    <div class="viewer-toolbar p-3 bg-light d-flex flex-wrap justify-content-between align-items-center gap-2">
+                                        <div class="d-flex flex-wrap gap-2">
+                                            <button class="btn btn-sm btn-outline-secondary rounded-pill" onclick="zoomViewer(1.2)" title="Zoom in"><i class="fas fa-search-plus"></i></button>
+                                            <button class="btn btn-sm btn-outline-secondary rounded-pill" onclick="zoomViewer(0.83)" title="Zoom out"><i class="fas fa-search-minus"></i></button>
+                                            <button class="btn btn-sm btn-outline-secondary rounded-pill" onclick="resetViewer()" title="Reset view"><i class="fas fa-compress-arrows-alt"></i></button>
+                                        </div>
+                                        <div class="d-flex flex-wrap gap-3 small">
+                                            <label class="form-check-label"><input id="toggleLabels" class="form-check-input me-1" type="checkbox" checked onchange="drawViewer()"> Labels</label>
+                                            <label class="form-check-label"><input id="togglePlanes" class="form-check-input me-1" type="checkbox" checked onchange="drawViewer()"> Planes</label>
+                                            <label class="form-check-label"><input id="toggleImage" class="form-check-input me-1" type="checkbox" checked onchange="drawViewer()"> X-ray</label>
+                                        </div>
+                                    </div>
+                                    <div class="viewer-stage">
+                                        <canvas id="cephViewer"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-xl-4">
+                                <div class="dental-card border-0 shadow-sm p-0 overflow-hidden workstation-card">
+                                    <div class="p-3 bg-light border-bottom d-flex justify-content-between align-items-center">
+                                        <span class="fw-bold small text-dark">Landmarks</span>
+                                        <span id="landmarkCount" class="badge bg-primary-subtle text-primary rounded-pill">0</span>
+                                    </div>
+                                    <div class="table-responsive" style="max-height:500px;">
+                                        <table class="table table-hover align-middle mb-0 small">
+                                            <thead class="bg-light sticky-top">
+                                                <tr>
+                                                    <th class="dental-caption px-3">Point</th>
+                                                    <th class="dental-caption text-end">X</th>
+                                                    <th class="dental-caption text-end">Y</th>
+                                                    <th class="dental-caption text-end pe-3">Confidence</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="landmarksTable"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane fade" id="tabSummary">
+                        <div class="dental-card border-0 shadow-sm p-4 workstation-card">
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-3"><div class="metric-tile"><p class="dental-caption mb-1">Skeletal Class</p><p id="resSkeletalClass" class="fw-bold text-dark mb-0">-</p></div></div>
+                                <div class="col-md-3"><div class="metric-tile"><p class="dental-caption mb-1">Vertical Pattern</p><p id="resVerticalPattern" class="fw-bold text-dark mb-0">-</p></div></div>
+                                <div class="col-md-3"><div class="metric-tile"><p class="dental-caption mb-1">AI Confidence</p><p id="resConfidence" class="fw-bold text-dark mb-0">-</p></div></div>
+                                <div class="col-md-3"><div class="metric-tile"><p class="dental-caption mb-1">Protocol</p><p id="resProtocol" class="fw-bold text-dark mb-0">-</p></div></div>
+                            </div>
+                            <h3 class="h6 fw-bold text-dark mb-2">Professional Summary</h3>
+                            <p class="small text-secondary" id="resSummary">-</p>
+                            <div id="resClinicalNotes" class="d-flex flex-column gap-2 mt-3"></div>
+                            <div id="resWarnings" class="d-flex flex-column gap-2 mt-3"></div>
+                            <div id="patientLetterPanel" class="mt-4 d-none">
+                                <h3 class="h6 fw-bold text-dark mb-2">Patient-Friendly Explanation</h3>
+                                <div id="patientLetterText" class="p-3 bg-light rounded-3 small text-secondary"></div>
+                            </div>
+                            <button class="btn btn-outline-primary btn-sm fw-bold rounded-pill mt-3" onclick="generatePatientLetter()">
+                                <i class="fas fa-comment-medical me-1"></i> Generate Patient Explanation
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane fade" id="tabMeasurements">
+                        <div class="dental-card border-0 shadow-sm p-0 overflow-hidden workstation-card">
+                            <div class="p-3 bg-light border-bottom d-flex align-items-center justify-content-between">
+                                <span class="fw-bold small text-dark">Cephalometric Measurements</span>
+                                <span class="badge bg-primary-subtle text-primary rounded-pill" id="measureCount">0 measurements</span>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0 small">
+                                    <thead class="bg-light">
+                                        <tr>
+                                            <th class="px-4 py-2 dental-caption">Measurement</th>
+                                            <th class="px-4 py-2 dental-caption text-end">Value</th>
+                                            <th class="px-4 py-2 dental-caption text-end">Norm</th>
+                                            <th class="px-4 py-2 dental-caption text-end">SD</th>
+                                            <th class="px-4 py-2 dental-caption text-end">Diff</th>
+                                            <th class="px-4 py-2 dental-caption text-end">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="measurementsTable"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane fade" id="tabTreatment">
+                        <div class="dental-card border-0 shadow-sm p-4 workstation-card">
+                            <h3 class="h6 fw-bold text-dark mb-4">Treatment Suggestions</h3>
+                            <div id="treatmentList" class="d-flex flex-column gap-3"></div>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane fade" id="tabGrowth">
+                        <div class="dental-card border-0 shadow-sm p-4 workstation-card">
+                            <div class="row g-3 align-items-end mb-4">
+                                <div class="col-md-4">
+                                    <label class="form-label dental-label">CVM Stage</label>
+                                    <select id="cvmStage" class="form-select dental-input border shadow-none" style="font-size:13px;">
+                                        <option value="">Not available</option>
+                                        <option value="1">CS 1</option>
+                                        <option value="2">CS 2</option>
+                                        <option value="3">CS 3</option>
+                                        <option value="4">CS 4</option>
+                                        <option value="5">CS 5</option>
+                                        <option value="6">CS 6</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <button class="btn btn-outline-primary fw-bold rounded-pill" onclick="calculateGrowth()">
+                                        <i class="fas fa-chart-line me-1"></i> Calculate Growth
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="growthResult" class="row g-3"></div>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane fade" id="tabXai">
+                        <div class="dental-card border-0 shadow-sm p-4 workstation-card">
+                            <div class="d-flex justify-content-between align-items-center gap-3 mb-3">
+                                <div>
+                                    <h3 class="h6 fw-bold text-dark mb-1">Explainable AI Reasoning</h3>
+                                    <p class="dental-caption mb-0">Shows the decision chain behind the diagnosis and treatment direction.</p>
+                                </div>
+                                <button class="btn btn-outline-primary btn-sm fw-bold rounded-pill" onclick="generateXai()">
+                                    <i class="fas fa-brain me-1"></i> Generate XAI
+                                </button>
+                            </div>
+                            <div id="xaiResult" class="d-flex flex-column gap-3"></div>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane fade" id="tabExports">
+                        <div class="row g-4">
+                            <div class="col-lg-6">
+                                <div class="dental-card border-0 shadow-sm p-4 workstation-card h-100">
+                                    <h3 class="h6 fw-bold text-dark mb-3">EHR Clinical Report</h3>
+                                    <div id="ehrReport" class="mono-box"></div>
+                                </div>
+                            </div>
+                            <div class="col-lg-6">
+                                <div class="dental-card border-0 shadow-sm p-4 workstation-card h-100">
+                                    <h3 class="h6 fw-bold text-dark mb-3">Research Exports</h3>
+                                    <div class="d-grid gap-2">
+                                        <button class="btn btn-outline-primary fw-bold rounded-pill" onclick="downloadJson()">
+                                            <i class="fas fa-code me-1"></i> Download JSON Archive
+                                        </button>
+                                        <button class="btn btn-outline-primary fw-bold rounded-pill" onclick="downloadCsv()">
+                                            <i class="fas fa-table me-1"></i> Download CSV Measurements
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    let selectedFile = null;
+    let currentAnalysis = null;
+    let originalLandmarks = [];
+    let selectedLandmarkIndex = -1;
+    let viewerImage = new Image();
+    const viewer = { scale: 1, offsetX: 0, offsetY: 0, draggingPoint: false, panning: false, lastX: 0, lastY: 0 };
+
+    function escapeHtml(value) {
+        return (value ?? '').toString().replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+
+    function formatPct(value) {
+        if (typeof value !== 'number' || Number.isNaN(value)) return '-';
+        const normalized = value > 1 ? value : value * 100;
+        return `${Math.round(Math.max(0, Math.min(100, normalized)))}%`;
+    }
+
+    function showPanel(name) {
+        ['loadingPanel','errorPanel','emptyPanel','resultsPanel'].forEach(id => document.getElementById(id).classList.add('d-none'));
+        document.getElementById(name + 'Panel').classList.remove('d-none');
+    }
+
+    function setProgress(pct, label) {
+        document.getElementById('progressBar').style.width = pct + '%';
+        document.getElementById('loadingStep').textContent = label;
+    }
+
+    function isDoctorReviewed() {
+        return !!document.getElementById('doctorReviewCheck')?.checked;
+    }
+
+    function setDoctorReviewState() {
+        const reviewed = isDoctorReviewed();
+        document.getElementById('saveReportBtn').disabled = !reviewed;
+        document.getElementById('exportPdfBtn').disabled = !reviewed;
+        const badge = document.getElementById('reviewStatusBadge');
+        const gate = document.getElementById('reviewGate');
+        badge.className = `badge ${reviewed ? 'bg-success-subtle text-success' : 'bg-warning-subtle text-warning'} rounded-pill`;
+        badge.style.fontSize = '10px';
+        badge.textContent = reviewed ? 'Clinician reviewed' : 'Needs clinician review';
+        gate.classList.toggle('reviewed', reviewed);
+    }
+
+    function resetReviewState() {
+        const reviewCheck = document.getElementById('doctorReviewCheck');
+        const reviewNotes = document.getElementById('doctorReviewNotes');
+        if (reviewCheck) reviewCheck.checked = false;
+        if (reviewNotes) reviewNotes.value = '';
+        setDoctorReviewState();
+    }
+
+    function markLandmarksEdited() {
+        resetReviewState();
+        document.getElementById('editStatusBadge').classList.remove('d-none');
+        document.getElementById('recalculateBtn').disabled = false;
+    }
+
+    function onPatientSelected(select) {
+        const opt = select.options[select.selectedIndex];
+        const bio = document.getElementById('selectedPatientBio');
+        if (!opt.value) {
+            bio.classList.add('d-none');
+            document.getElementById('ageAutoIcon').classList.add('d-none');
+            return;
+        }
+        const age = parseInt(opt.dataset.age) || 25;
+        const sex = opt.dataset.sex || 'Male';
+        const name = opt.dataset.name || '';
+        document.getElementById('settingAge').value = age;
+        const sexSel = document.getElementById('settingSex');
+        for (let i = 0; i < sexSel.options.length; i++) {
+            if (sexSel.options[i].value === sex) { sexSel.selectedIndex = i; break; }
+        }
+        document.getElementById('patientInitial').textContent = name.charAt(0).toUpperCase();
+        document.getElementById('patientName').textContent = name;
+        document.getElementById('patientMeta').textContent = `${age} yrs - ${sex}`;
+        bio.classList.remove('d-none');
+        document.getElementById('ageAutoIcon').classList.remove('d-none');
+    }
+
+    async function checkAiStatus() {
+        try {
+            const r = await fetch('/Doctor/AiStatus');
+            const d = await r.json();
+            const badge = document.getElementById('aiStatusBadge');
+            badge.className = `badge rounded-pill px-3 py-2 small fw-bold d-flex align-items-center gap-2 ${d.online ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger'}`;
+            badge.innerHTML = `<i class="fas fa-circle" style="font-size:8px;"></i> AI ${d.online ? 'Online' : 'Offline'}`;
+        } catch {
+            const badge = document.getElementById('aiStatusBadge');
+            badge.className = 'badge rounded-pill px-3 py-2 small fw-bold d-flex align-items-center gap-2 bg-secondary-subtle text-secondary';
+            badge.innerHTML = '<i class="fas fa-circle" style="font-size:8px;"></i> Unknown';
+        }
+    }
+
+    function onFileSelected(input) {
+        if (input.files && input.files[0]) setFile(input.files[0]);
+    }
+
+    function handleDrop(e) {
+        e.preventDefault();
+        document.getElementById('dropZone').style.background = '';
+        if (e.dataTransfer.files[0]) setFile(e.dataTransfer.files[0]);
+    }
+
+    function setFile(file) {
+        selectedFile = file;
+        currentAnalysis = null;
+        document.getElementById('previewName').textContent = file.name;
+        document.getElementById('previewSize').textContent = (file.size / 1024).toFixed(1) + ' KB';
+        const reader = new FileReader();
+        reader.onload = e => document.getElementById('previewThumb').src = e.target.result;
+        reader.readAsDataURL(file);
+        document.getElementById('previewArea').classList.remove('d-none');
+        document.getElementById('dropZone').style.display = 'none';
+        document.getElementById('analyzeBtn').disabled = false;
+        document.getElementById('autoCalibrateBtn').disabled = false;
+        document.getElementById('recalculateBtn').disabled = true;
+        document.getElementById('refineBtn').disabled = true;
+        showPanel('empty');
+    }
+
+    function clearFile() {
+        selectedFile = null;
+        currentAnalysis = null;
+        originalLandmarks = [];
+        resetReviewState();
+        document.getElementById('fileInput').value = '';
+        document.getElementById('previewArea').classList.add('d-none');
+        document.getElementById('dropZone').style.display = '';
+        document.getElementById('analyzeBtn').disabled = true;
+        document.getElementById('autoCalibrateBtn').disabled = true;
+        document.getElementById('recalculateBtn').disabled = true;
+        document.getElementById('refineBtn').disabled = true;
+        showPanel('empty');
+    }
+
+    async function runAnalysis() {
+        if (!selectedFile) return;
+        showPanel('loading');
+        setProgress(10, 'Uploading X-ray...');
+        const form = new FormData();
+        form.append('xrayFile', selectedFile);
+        form.append('pxToMm', document.getElementById('settingPxToMm').value);
+        form.append('ethnicProfile', document.getElementById('settingEthnic').value);
+        form.append('patientAge', document.getElementById('settingAge').value);
+        form.append('patientSex', document.getElementById('settingSex').value);
+        form.append('protocolId', document.getElementById('settingProtocol').value);
+
+        const steps = [[20, 'Detecting landmarks...'], [45, 'Calculating measurements...'], [65, 'Classifying diagnosis...'], [80, 'Generating treatment plan...'], [95, 'Rendering overlay...']];
+        let stepIdx = 0;
+        const timer = setInterval(() => stepIdx < steps.length && setProgress(...steps[stepIdx++]), 1500);
+        try {
+            const resp = await fetch('/Doctor/UploadXray', { method: 'POST', body: form });
+            clearInterval(timer);
+            setProgress(100, 'Done!');
+            if (!resp.ok) throw new Error((await resp.json().catch(() => ({}))).error || resp.statusText);
+            const data = await resp.json();
+            hydrateProtocol(data);
+            currentAnalysis = data;
+            originalLandmarks = structuredClone(data.landmarks || []);
+            renderResults(data);
+            showPanel('results');
+        } catch (ex) {
+            clearInterval(timer);
+            document.getElementById('errorMessage').textContent = ex.message;
+            showPanel('error');
+        }
+    }
+
+    function hydrateProtocol(data) {
+        const protocolSelect = document.getElementById('settingProtocol');
+        data.protocolId = data.protocolId || protocolSelect.value;
+        data.protocolName = data.protocolName || protocolSelect.options[protocolSelect.selectedIndex].text;
+    }
+
+    function renderResults(data) {
+        showReportMessage('', '');
+        resetReviewState();
+        document.getElementById('editStatusBadge').classList.add('d-none');
+        document.getElementById('recalculateBtn').disabled = false;
+        document.getElementById('refineBtn').disabled = false;
+
+        renderSummary(data);
+        renderMeasurements(data);
+        renderTreatments(data);
+        renderLandmarks(data);
+        renderEhrReport();
+        setupViewer(data);
+    }
+
+    function renderSummary(data) {
+        document.getElementById('resSkeletalClass').textContent = data.skeletalClass || '-';
+        document.getElementById('resVerticalPattern').textContent = data.verticalPattern || '-';
+        document.getElementById('resConfidence').textContent = formatPct(data.confidenceScore);
+        document.getElementById('resSummary').textContent = data.summary || 'No summary available.';
+        document.getElementById('resProtocol').textContent = data.protocolName || data.protocolId || '-';
+
+        const notes = document.getElementById('resClinicalNotes');
+        notes.innerHTML = '';
+        (data.clinicalNotes || []).forEach(n => notes.insertAdjacentHTML('beforeend', `<div class="alert alert-info py-2 px-3 small border-0 rounded-3 mb-0">${escapeHtml(n)}</div>`));
+
+        const warnings = document.getElementById('resWarnings');
+        warnings.innerHTML = '';
+        (data.warnings || []).forEach(w => warnings.insertAdjacentHTML('beforeend', `<div class="alert alert-warning py-2 px-3 small border-0 rounded-3 mb-0"><i class="fas fa-exclamation-triangle me-2"></i>${escapeHtml(w)}</div>`));
+    }
+
+    function renderMeasurements(data) {
+        const tbody = document.getElementById('measurementsTable');
+        tbody.innerHTML = '';
+        const rows = data.measurementRows || [];
+        const meas = data.measurements || {};
+        const keys = Object.keys(meas);
+        document.getElementById('measureCount').textContent = `${rows.length || keys.length} measurements`;
+
+        if (rows.length) {
+            rows.forEach(r => {
+                const name = r.measurementName || r.measurement || r.name || '-';
+                const unit = r.unit || (name.toLowerCase().includes('mm') ? 'mm' : 'deg');
+                const value = typeof r.value === 'number' ? r.value.toFixed(1) : '-';
+                const norm = typeof r.normalValue === 'number' ? r.normalValue.toFixed(1) : 'N/A';
+                const sd = typeof r.stdDeviation === 'number' ? r.stdDeviation.toFixed(1) : 'N/A';
+                const diff = typeof r.difference === 'number' ? `${r.difference > 0 ? '+' : ''}${r.difference.toFixed(1)}` : 'N/A';
+                const status = normalizeMeasurementStatus(r.status || r.label || diff);
+                const badgeClass = status === 'Increased' ? 'bg-warning-subtle text-warning' : status === 'Decreased' ? 'bg-info-subtle text-info' : 'bg-success-subtle text-success';
+                tbody.insertAdjacentHTML('beforeend', `
+                    <tr>
+                        <td class="px-4 fw-bold text-dark">${escapeHtml(name)}${r.interpretation ? `<div class="text-secondary fw-normal" style="font-size:11px;">${escapeHtml(r.interpretation)}</div>` : ''}</td>
+                        <td class="px-4 text-end text-primary fw-bold">${value} ${escapeHtml(unit)}</td>
+                        <td class="px-4 text-end text-secondary">${norm}</td>
+                        <td class="px-4 text-end text-secondary">${sd}</td>
+                        <td class="px-4 text-end text-secondary">${diff}</td>
+                        <td class="px-4 text-end"><span class="badge ${badgeClass} rounded-pill" style="font-size:10px;">${status}</span></td>
+                    </tr>`);
+            });
+            return;
+        }
+
+        keys.forEach(k => {
+            const unit = k.toLowerCase().includes('mm') ? 'mm' : 'deg';
+            tbody.insertAdjacentHTML('beforeend', `
+                <tr>
+                    <td class="px-4 fw-bold text-dark">${escapeHtml(k)}</td>
+                    <td class="px-4 text-end text-primary fw-bold">${Number(meas[k]).toFixed(1)} ${unit}</td>
+                    <td class="px-4 text-end text-secondary">N/A</td>
+                    <td class="px-4 text-end text-secondary">N/A</td>
+                    <td class="px-4 text-end text-secondary">N/A</td>
+                    <td class="px-4 text-end"><span class="badge bg-success-subtle text-success rounded-pill" style="font-size:10px;">Normal</span></td>
+                </tr>`);
+        });
+    }
+
+    function renderTreatments(data) {
+        const tDiv = document.getElementById('treatmentList');
+        tDiv.innerHTML = '';
+        (data.treatments || []).forEach(t => {
+            const primary = !!t.isPrimary;
+            tDiv.insertAdjacentHTML('beforeend', `
+                <div class="p-4 rounded-3 border ${primary ? 'border-success bg-success-subtle' : 'border-light bg-light'}">
+                    <div class="d-flex justify-content-between align-items-start gap-3 mb-2">
+                        <p class="fw-bold text-dark small mb-0">${escapeHtml(t.treatmentName || 'Treatment')}
+                            ${primary ? '<span class="badge bg-success ms-2 rounded-pill" style="font-size:9px;">Primary</span>' : ''}
+                        </p>
+                        <span class="dental-caption" style="font-size:10px;">${t.durationMonths ? `${t.durationMonths} months` : 'Duration TBD'}</span>
+                    </div>
+                    <div class="d-flex flex-wrap gap-2 mb-2">
+                        ${t.treatmentType ? `<span class="badge bg-primary-subtle text-primary rounded-pill">${escapeHtml(t.treatmentType)}</span>` : ''}
+                        ${t.evidenceLevel ? `<span class="badge bg-secondary-subtle text-secondary rounded-pill">${escapeHtml(t.evidenceLevel)}</span>` : ''}
+                        ${typeof t.successProbability === 'number' ? `<span class="badge bg-success-subtle text-success rounded-pill">Success ${formatPct(t.successProbability)}</span>` : ''}
+                    </div>
+                    <p class="small text-secondary mb-1">${escapeHtml(t.description || '')}</p>
+                    ${t.rationale ? `<p class="dental-caption fst-italic mb-1" style="font-size:11px;">${escapeHtml(t.rationale)}</p>` : ''}
+                    ${t.risks ? `<p class="small text-danger mb-0"><strong>Risks:</strong> ${escapeHtml(t.risks)}</p>` : ''}
+                </div>`);
+        });
+        if (!data.treatments || data.treatments.length === 0)
+            tDiv.innerHTML = '<p class="dental-caption text-center py-3">No treatment suggestions returned.</p>';
+    }
+
+    function renderLandmarks(data) {
+        const table = document.getElementById('landmarksTable');
+        const landmarks = data.landmarks || [];
+        document.getElementById('landmarkCount').textContent = landmarks.length;
+        table.innerHTML = '';
+        landmarks.forEach((l, idx) => {
+            table.insertAdjacentHTML('beforeend', `
+                <tr class="landmark-row ${idx === selectedLandmarkIndex ? 'active' : ''}" onclick="selectLandmark(${idx})">
+                    <td class="px-3 fw-bold text-dark">${escapeHtml(l.name)}</td>
+                    <td class="text-end">${Number(l.x).toFixed(0)}</td>
+                    <td class="text-end">${Number(l.y).toFixed(0)}</td>
+                    <td class="text-end pe-3">${formatPct(l.confidence)}</td>
+                </tr>`);
+        });
+    }
+
+    function setupViewer(data) {
+        if (!data.imageBase64) return;
+        viewerImage = new Image();
+        viewerImage.onload = () => {
+            resizeCanvas();
+            resetViewer();
+        };
+        viewerImage.src = `data:${data.imageContentType || 'image/jpeg'};base64,${data.imageBase64}`;
+    }
+
+    function resizeCanvas() {
+        const canvas = document.getElementById('cephViewer');
+        const rect = canvas.parentElement.getBoundingClientRect();
+        canvas.width = Math.max(320, Math.floor(rect.width));
+        canvas.height = 460;
+    }
+
+    function resetViewer() {
+        const canvas = document.getElementById('cephViewer');
+        if (!viewerImage.width) return;
+        viewer.scale = Math.min(canvas.width / viewerImage.width, canvas.height / viewerImage.height);
+        viewer.offsetX = (canvas.width - viewerImage.width * viewer.scale) / 2;
+        viewer.offsetY = (canvas.height - viewerImage.height * viewer.scale) / 2;
+        drawViewer();
+    }
+
+    function zoomViewer(factor) {
+        viewer.scale *= factor;
+        drawViewer();
+    }
+
+    function imageToScreen(x, y) {
+        return { x: viewer.offsetX + x * viewer.scale, y: viewer.offsetY + y * viewer.scale };
+    }
+
+    function screenToImage(x, y) {
+        return { x: (x - viewer.offsetX) / viewer.scale, y: (y - viewer.offsetY) / viewer.scale };
+    }
+
+    function drawViewer() {
+        const canvas = document.getElementById('cephViewer');
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#101827';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        if (!currentAnalysis || !viewerImage.width) return;
+
+        if (document.getElementById('toggleImage').checked) {
+            ctx.drawImage(viewerImage, viewer.offsetX, viewer.offsetY, viewerImage.width * viewer.scale, viewerImage.height * viewer.scale);
+        }
+
+        if (document.getElementById('togglePlanes').checked) drawPlanes(ctx);
+        (currentAnalysis.landmarks || []).forEach((l, idx) => {
+            const pt = imageToScreen(l.x, l.y);
+            ctx.beginPath();
+            ctx.arc(pt.x, pt.y, idx === selectedLandmarkIndex ? 6 : 4.5, 0, Math.PI * 2);
+            ctx.fillStyle = idx === selectedLandmarkIndex ? '#f59e0b' : '#38bdf8';
+            ctx.fill();
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = '#ffffff';
+            ctx.stroke();
+            if (document.getElementById('toggleLabels').checked) {
+                ctx.font = '11px Inter, Arial';
+                ctx.fillStyle = '#ffffff';
+                ctx.fillText(l.name || '', pt.x + 8, pt.y - 8);
+            }
+        });
+    }
+
+    function drawPlanes(ctx) {
+        const planeDefs = [
+            [['Sella', 'sella', 'S'], ['Nasion', 'nasion', 'N']],
+            [['Porion', 'porion', 'Po'], ['Orbitale', 'orbitale', 'Or']],
+            [['Gonion', 'gonion', 'Go'], ['Menton', 'menton', 'Me']]
+        ];
+        ctx.strokeStyle = 'rgba(244,114,182,.8)';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([6, 5]);
+        planeDefs.forEach(pair => {
+            const a = findLandmark(pair[0]);
+            const b = findLandmark(pair[1]);
+            if (!a || !b) return;
+            const p1 = imageToScreen(a.x, a.y);
+            const p2 = imageToScreen(b.x, b.y);
+            ctx.beginPath();
+            ctx.moveTo(p1.x, p1.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.stroke();
+        });
+        ctx.setLineDash([]);
+    }
+
+    function findLandmark(names) {
+        const normalized = names.map(n => n.toLowerCase());
+        return (currentAnalysis.landmarks || []).find(l => normalized.includes((l.name || '').toLowerCase()));
+    }
+
+    function selectLandmark(idx) {
+        selectedLandmarkIndex = idx;
+        renderLandmarks(currentAnalysis);
+        drawViewer();
+    }
+
+    const canvas = () => document.getElementById('cephViewer');
+    window.addEventListener('resize', () => { if (currentAnalysis) { resizeCanvas(); drawViewer(); } });
+    window.addEventListener('DOMContentLoaded', () => {
+        const sel = document.getElementById('patientSelector');
+        if (sel && sel.value) onPatientSelected(sel);
+        checkAiStatus();
+        setInterval(checkAiStatus, 15000);
+        const c = canvas();
+        c.addEventListener('pointerdown', onViewerDown);
+        c.addEventListener('pointermove', onViewerMove);
+        c.addEventListener('pointerup', onViewerUp);
+        c.addEventListener('pointerleave', onViewerUp);
+    });
+
+    function onViewerDown(e) {
+        if (!currentAnalysis) return;
+        const rect = canvas().getBoundingClientRect();
+        const sx = e.clientX - rect.left;
+        const sy = e.clientY - rect.top;
+        const hit = hitTestLandmark(sx, sy);
+        viewer.lastX = sx;
+        viewer.lastY = sy;
+        if (hit >= 0) {
+            selectedLandmarkIndex = hit;
+            viewer.draggingPoint = true;
+            canvas().setPointerCapture(e.pointerId);
+        } else {
+            viewer.panning = true;
+        }
+        canvas().classList.add('dragging');
+        renderLandmarks(currentAnalysis);
+        drawViewer();
+    }
+
+    function onViewerMove(e) {
+        if (!currentAnalysis || (!viewer.draggingPoint && !viewer.panning)) return;
+        const rect = canvas().getBoundingClientRect();
+        const sx = e.clientX - rect.left;
+        const sy = e.clientY - rect.top;
+        if (viewer.draggingPoint && selectedLandmarkIndex >= 0) {
+            const imgPt = screenToImage(sx, sy);
+            const lm = currentAnalysis.landmarks[selectedLandmarkIndex];
+            lm.x = Math.max(0, Math.min(viewerImage.width, imgPt.x));
+            lm.y = Math.max(0, Math.min(viewerImage.height, imgPt.y));
+            lm.provenance = 'doctor-reviewed';
+            markLandmarksEdited();
+            renderLandmarks(currentAnalysis);
+        } else if (viewer.panning) {
+            viewer.offsetX += sx - viewer.lastX;
+            viewer.offsetY += sy - viewer.lastY;
+        }
+        viewer.lastX = sx;
+        viewer.lastY = sy;
+        drawViewer();
+    }
+
+    function onViewerUp(e) {
+        viewer.draggingPoint = false;
+        viewer.panning = false;
+        canvas().classList.remove('dragging');
+        try { canvas().releasePointerCapture(e.pointerId); } catch {}
+    }
+
+    function hitTestLandmark(sx, sy) {
+        let best = -1;
+        let bestDist = 14;
+        (currentAnalysis.landmarks || []).forEach((l, idx) => {
+            const pt = imageToScreen(l.x, l.y);
+            const dist = Math.hypot(pt.x - sx, pt.y - sy);
+            if (dist < bestDist) {
+                best = idx;
+                bestDist = dist;
+            }
+        });
+        return best;
+    }
+
+    async function autoCalibrate() {
+        if (!selectedFile) return;
+        const btn = document.getElementById('autoCalibrateBtn');
+        const original = btn.innerHTML;
+        try {
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Calibrating';
+            const form = new FormData();
+            form.append('xrayFile', selectedFile);
+            form.append('tickIntervalMm', '10');
+            const resp = await fetch('/Doctor/AutoCalibrate', { method: 'POST', body: form });
+            if (!resp.ok) throw new Error((await resp.json().catch(() => ({}))).error || resp.statusText);
+            const data = await resp.json();
+            const calibration = data.calibration || data.Calibration || data;
+            const scale = calibration.px_to_mm ?? calibration.pxToMm;
+            if (typeof scale !== 'number' || scale <= 0) throw new Error(calibration.message || 'No calibration ruler detected.');
+            document.getElementById('settingPxToMm').value = scale.toFixed(4);
+            showReportMessage('success', calibration.message || `Calibration set to ${scale.toFixed(4)} px/mm.`);
+            if (currentAnalysis?.landmarks?.length) markLandmarksEdited();
+        } catch (ex) {
+            showReportMessage('error', ex.message);
+        } finally {
+            btn.innerHTML = original;
+            btn.disabled = !selectedFile;
+        }
+    }
+
+    async function refineLandmarks() {
+        if (!currentAnalysis?.landmarks?.length) return;
+        const btn = document.getElementById('refineBtn');
+        const original = btn.innerHTML;
+        try {
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Refining';
+            const resp = await fetch('/Doctor/RefineLandmarks', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    imageBase64: currentAnalysis.imageBase64,
+                    imageContentType: currentAnalysis.imageContentType || 'image/jpeg',
+                    landmarks: currentAnalysis.landmarks
+                })
+            });
+            if (!resp.ok) throw new Error((await resp.json().catch(() => ({}))).error || resp.statusText);
+            const data = await resp.json();
+            currentAnalysis.landmarks = data.landmarks || currentAnalysis.landmarks;
+            markLandmarksEdited();
+            renderLandmarks(currentAnalysis);
+            drawViewer();
+            showReportMessage('success', 'Landmarks refined. Recalculate before clinical approval.');
+        } catch (ex) {
+            showReportMessage('error', ex.message);
+        } finally {
+            btn.innerHTML = original;
+            btn.disabled = !currentAnalysis?.landmarks?.length;
+        }
+    }
+
+    async function recalculateFromViewer() {
+        if (!currentAnalysis?.landmarks?.length) return;
+        showPanel('loading');
+        setProgress(15, 'Submitting reviewed landmarks...');
+        try {
+            const resp = await fetch('/Doctor/RecalculateAnalysis', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    imageBase64: currentAnalysis.imageBase64,
+                    imageContentType: currentAnalysis.imageContentType || 'image/jpeg',
+                    pxToMm: parseFloat(document.getElementById('settingPxToMm').value) || 1,
+                    ethnicProfile: document.getElementById('settingEthnic').value,
+                    patientAge: parseInt(document.getElementById('settingAge').value) || 25,
+                    patientSex: document.getElementById('settingSex').value,
+                    protocolId: document.getElementById('settingProtocol').value,
+                    landmarks: currentAnalysis.landmarks
+                })
+            });
+            setProgress(100, 'Recalculated.');
+            if (!resp.ok) throw new Error((await resp.json().catch(() => ({}))).error || resp.statusText);
+            const data = await resp.json();
+            hydrateProtocol(data);
+            currentAnalysis = data;
+            renderResults(data);
+            showPanel('results');
+        } catch (ex) {
+            document.getElementById('errorMessage').textContent = ex.message;
+            showPanel('error');
+        }
+    }
+
+    function normalizeMeasurementStatus(raw) {
+        const value = (raw || '').toString().toLowerCase();
+        if (value.includes('increase') || value.includes('high') || value.startsWith('+')) return 'Increased';
+        if (value.includes('decrease') || value.includes('low') || value.startsWith('-')) return 'Decreased';
+        return 'Normal';
+    }
+
+    function getSelectedPatientId() {
+        const sel = document.getElementById('patientSelector');
+        return sel && sel.value ? parseInt(sel.value) : 0;
+    }
+
+    function buildReportPayload() {
+        const patientId = getSelectedPatientId();
+        if (!patientId) throw new Error('Please select a patient first.');
+        if (!currentAnalysis) throw new Error('Run an AI analysis before saving or exporting.');
+        if (!isDoctorReviewed()) throw new Error('Please review and approve the AI report first.');
+        return {
+            patientId,
+            skeletalClass: currentAnalysis.skeletalClass || '',
+            verticalPattern: currentAnalysis.verticalPattern || '',
+            summary: currentAnalysis.summary || '',
+            confidenceScore: currentAnalysis.confidenceScore || null,
+            protocolId: currentAnalysis.protocolId || document.getElementById('settingProtocol').value,
+            protocolName: currentAnalysis.protocolName || document.getElementById('settingProtocol').options[document.getElementById('settingProtocol').selectedIndex].text,
+            landmarks: currentAnalysis.landmarks || [],
+            clinicalNotes: currentAnalysis.clinicalNotes || [],
+            skeletalDifferential: currentAnalysis.skeletalDifferential || {},
+            warnings: currentAnalysis.warnings || [],
+            measurements: currentAnalysis.measurements || {},
+            measurementRows: currentAnalysis.measurementRows || [],
+            treatments: currentAnalysis.treatments || [],
+            overlayImageBase64: currentAnalysis.overlayImageBase64 || null,
+            isDoctorReviewed: true,
+            reviewNotes: document.getElementById('doctorReviewNotes')?.value || ''
+        };
+    }
+
+    function showReportMessage(type, message) {
+        const div = document.getElementById('reportActionMessage');
+        if (!message) {
+            div.className = 'mt-3 d-none';
+            div.textContent = '';
+            return;
+        }
+        div.className = 'mt-3';
+        div.innerHTML = `<div class="alert ${type === 'success' ? 'alert-success' : 'alert-danger'} border-0 rounded-3 small py-2 mb-0">${escapeHtml(message)}</div>`;
+    }
+
+    async function saveAnalysisReport() {
+        const btn = document.getElementById('saveReportBtn');
+        try {
+            const payload = buildReportPayload();
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Saving...';
+            const resp = await fetch('/Doctor/SaveAnalysisReport', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            const data = await resp.json().catch(() => ({}));
+            if (!resp.ok) throw new Error(data.error || 'Could not save analysis.');
+            showReportMessage('success', `Saved to patient history as record #${data.recordId}.`);
+        } catch (ex) {
+            showReportMessage('error', ex.message);
+        } finally {
+            btn.innerHTML = '<i class="fas fa-save me-1"></i> Save to Patient';
+            setDoctorReviewState();
+        }
+    }
+
+    async function exportAnalysisPdf() {
+        const btn = document.getElementById('exportPdfBtn');
+        try {
+            const payload = buildReportPayload();
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Exporting...';
+            const resp = await fetch('/Doctor/ExportAnalysisPdf', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            if (!resp.ok) throw new Error((await resp.json().catch(() => ({}))).error || 'Could not export PDF.');
+            const blob = await resp.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            const match = (resp.headers.get('Content-Disposition') || '').match(/filename="?([^"]+)"?/i);
+            a.href = url;
+            a.download = match ? match[1] : 'AI_Cephalometric_Report.pdf';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+            showReportMessage('success', 'PDF report exported.');
+        } catch (ex) {
+            showReportMessage('error', ex.message);
+        } finally {
+            btn.innerHTML = '<i class="fas fa-file-pdf me-1"></i> Export PDF';
+            setDoctorReviewState();
+        }
+    }
+
+    async function calculateGrowth() {
+        if (!currentAnalysis) return;
+        const box = document.getElementById('growthResult');
+        box.innerHTML = '<div class="col-12"><div class="alert alert-info border-0">Calculating growth assessment...</div></div>';
+        try {
+            const resp = await fetch('/Doctor/GetGrowthAssessment', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    patientAge: parseInt(document.getElementById('settingAge').value) || 25,
+                    patientSex: document.getElementById('settingSex').value,
+                    cvmStage: document.getElementById('cvmStage').value ? parseInt(document.getElementById('cvmStage').value) : null,
+                    pxToMm: parseFloat(document.getElementById('settingPxToMm').value) || 1,
+                    landmarks: currentAnalysis.landmarks || []
+                })
+            });
+            if (!resp.ok) throw new Error((await resp.json().catch(() => ({}))).error || resp.statusText);
+            const g = await resp.json();
+            box.innerHTML = `
+                <div class="col-md-4"><div class="metric-tile"><p class="dental-caption mb-1">Maturity</p><p class="fw-bold text-dark mb-0">${escapeHtml(g.growthStage || 'Unknown')}</p></div></div>
+                <div class="col-md-4"><div class="metric-tile"><p class="dental-caption mb-1">Growth Phase</p><p class="fw-bold text-dark mb-0">${escapeHtml(g.growthPhase || 'Unknown')}</p></div></div>
+                <div class="col-md-4"><div class="metric-tile"><p class="dental-caption mb-1">Active Growth</p><p class="fw-bold text-dark mb-0">${g.isGrowthActive ? 'Yes' : 'No'}</p></div></div>
+                <div class="col-12"><div class="alert alert-primary border-0">${escapeHtml(g.optimalTreatmentWindow || g.recommendation || 'No timing recommendation returned.')}</div></div>`;
+        } catch (ex) {
+            box.innerHTML = `<div class="col-12"><div class="alert alert-danger border-0">${escapeHtml(ex.message)}</div></div>`;
+        }
+    }
+
+    async function generateXai() {
+        if (!currentAnalysis) return;
+        const box = document.getElementById('xaiResult');
+        box.innerHTML = '<div class="alert alert-info border-0">Generating explanation...</div>';
+        try {
+            const primary = (currentAnalysis.treatments || []).find(t => t.isPrimary) || (currentAnalysis.treatments || [])[0] || {};
+            const resp = await fetch('/Doctor/ExplainDecision', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    skeletalClass: currentAnalysis.skeletalClass || 'Class I',
+                    verticalPattern: currentAnalysis.verticalPattern || 'Normodivergent',
+                    measurements: currentAnalysis.measurements || {},
+                    treatmentName: primary.treatmentName || 'Standard care',
+                    skeletalDifferential: currentAnalysis.skeletalDifferential || {},
+                    successProbability: primary.successProbability || null,
+                    uncertaintyLandmarks: (currentAnalysis.landmarks || []).filter(l => typeof l.confidence === 'number' && l.confidence < 0.75).map(l => l.name)
+                })
+            });
+            if (!resp.ok) throw new Error((await resp.json().catch(() => ({}))).error || resp.statusText);
+            const x = await resp.json();
+            box.innerHTML = `
+                <div class="alert alert-primary border-0">${escapeHtml(x.clinicalConfidence || '')}</div>
+                ${(x.decisionChain || []).map(s => `<div class="p-3 border rounded-3 bg-light"><p class="fw-bold small mb-1">Step ${s.step}: ${escapeHtml(s.factor)}</p><p class="small mb-1"><strong>Evidence:</strong> ${escapeHtml(s.evidence)}</p><p class="small mb-0"><strong>Impact:</strong> ${escapeHtml(s.impact)}</p></div>`).join('')}
+                ${(x.keyDrivers || []).length ? `<div class="p-3 border rounded-3"><p class="fw-bold small mb-2">Key Drivers</p>${x.keyDrivers.map(d => `<span class="badge bg-primary-subtle text-primary rounded-pill me-1">${escapeHtml(d)}</span>`).join('')}</div>` : ''}
+                ${x.alternativeInterpretation ? `<div class="alert alert-secondary border-0">${escapeHtml(x.alternativeInterpretation)}</div>` : ''}`;
+        } catch (ex) {
+            box.innerHTML = `<div class="alert alert-danger border-0">${escapeHtml(ex.message)}</div>`;
+        }
+    }
+
+    async function generatePatientLetter() {
+        if (!currentAnalysis) return;
+        const params = new URLSearchParams({
+            skeletalClass: currentAnalysis.skeletalClass || '',
+            verticalPattern: currentAnalysis.verticalPattern || '',
+            summary: currentAnalysis.summary || '',
+            patientAge: document.getElementById('settingAge').value,
+            patientSex: document.getElementById('settingSex').value,
+            ethnicProfile: document.getElementById('settingEthnic').value
+        });
+        const panel = document.getElementById('patientLetterPanel');
+        const text = document.getElementById('patientLetterText');
+        panel.classList.remove('d-none');
+        text.textContent = 'Generating patient explanation...';
+        try {
+            const resp = await fetch('/Doctor/GetAiNarrative', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: params
+            });
+            if (!resp.ok) throw new Error((await resp.json().catch(() => ({}))).error || resp.statusText);
+            const data = await resp.json();
+            text.textContent = data.narrative || 'No explanation returned.';
+        } catch (ex) {
+            text.textContent = ex.message;
+        }
+    }
+
+    function renderEhrReport() {
+        const data = currentAnalysis || {};
+        const primary = (data.treatments || []).find(t => t.isPrimary) || {};
+        const lines = [
+            'CEPHALOMETRIC AI DIAGNOSTIC REPORT',
+            '==================================',
+            `Protocol: ${data.protocolName || data.protocolId || 'Unknown'}`,
+            `Skeletal Class: ${data.skeletalClass || 'N/A'}`,
+            `Vertical Pattern: ${data.verticalPattern || 'N/A'}`,
+            `AI Confidence: ${formatPct(data.confidenceScore)}`,
+            '',
+            '[SUMMARY]',
+            data.summary || 'No summary available.',
+            '',
+            '[PRIMARY TREATMENT]',
+            primary.treatmentName ? `${primary.treatmentName} (${primary.durationMonths || 'TBD'} months)` : 'No primary treatment returned.',
+            primary.rationale || '',
+            '',
+            '[MEASUREMENTS]',
+            ...(data.measurementRows || []).map(m => `${m.measurementName}: ${Number(m.value).toFixed(1)} ${m.unit || ''} | ${normalizeMeasurementStatus(m.status || m.label || '')}`)
+        ];
+        document.getElementById('ehrReport').textContent = lines.join('\n');
+    }
+
+    function downloadBlob(filename, content, type) {
+        const blob = new Blob([content], { type });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+    }
+
+    function downloadJson() {
+        if (!currentAnalysis) return;
+        downloadBlob('ceph_full_analysis.json', JSON.stringify(currentAnalysis, null, 2), 'application/json');
+    }
+
+    function downloadCsv() {
+        if (!currentAnalysis) return;
+        const rows = currentAnalysis.measurementRows || [];
+        const header = ['measurement','value','unit','normalValue','stdDeviation','difference','status','label'];
+        const csv = [header.join(',')].concat(rows.map(r => header.map(k => `"${(r[k] ?? '').toString().replace(/"/g, '""')}"`).join(','))).join('\n');
+        downloadBlob('ceph_measurements.csv', csv, 'text/csv');
+    }
+</script>
+}

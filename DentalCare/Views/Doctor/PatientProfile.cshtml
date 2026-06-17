@@ -1,0 +1,326 @@
+@model DentalCare.Models.Patient
+@{
+    ViewData["Title"] = "Patient Profile - " + Model.Name;
+    bool hasCeph  = Model.CephPatientId.HasValue && Model.CephPatientId != Guid.Empty;
+    bool isDoctor = User.IsInRole("Doctor");
+    bool isXRay   = ViewBag.VisitType as string == "X-Ray";
+}
+
+<div class="mb-4 d-flex align-items-center justify-content-between gap-3">
+    <a asp-action="Dashboard" class="btn btn-link text-primary fw-bold text-decoration-none p-0 d-flex align-items-center gap-2 small">
+        <i class="fas fa-arrow-left"></i> Back to Dashboard
+    </a>
+    @if (isDoctor && hasCeph)
+    {
+        <span class="badge bg-success-subtle text-success rounded-pill px-3 py-2 small fw-bold d-flex align-items-center gap-2">
+            <i class="fas fa-circle" style="font-size:8px;"></i> Linked to AI System
+        </span>
+    }
+    else if (isDoctor)
+    {
+        <span class="badge bg-secondary-subtle text-secondary rounded-pill px-3 py-2 small fw-bold">
+            Not synced to AI
+        </span>
+    }
+</div>
+
+<div class="row g-4">
+    <!-- ── Left Column ──────────────────────────────────────────── -->
+    <div class="col-lg-4">
+        <div class="d-flex flex-column gap-4">
+
+            <!-- Patient Bio Card -->
+            <div class="dental-card shadow-sm border-0 text-center p-4">
+                <div class="dental-avatar bg-primary text-white fw-bold mx-auto mb-4" style="width: 80px; height: 80px; border-radius: 20px; font-size: 32px;">
+                    @Model.Name[0].ToString().ToUpper()
+                </div>
+                <h2 class="h4 fw-bold text-dark mb-1">@Model.Name</h2>
+                <p class="dental-caption mb-4">Patient ID: #@Model.Id</p>
+                <div class="row text-start border-top pt-4 g-3">
+                    <div class="col-6">
+                        <p class="dental-caption mb-1">Age</p>
+                        <p class="small fw-bold text-dark mb-0">@Model.Age Years</p>
+                    </div>
+                    <div class="col-6">
+                        <p class="dental-caption mb-1">Gender</p>
+                        <p class="small fw-bold text-dark mb-0">@Model.Gender</p>
+                    </div>
+                    <div class="col-12">
+                        <p class="dental-caption mb-1">Contact</p>
+                        <p class="small fw-bold text-dark mb-0">@Model.Phone</p>
+                    </div>
+                    @if (!string.IsNullOrEmpty(Model.Email))
+                    {
+                        <div class="col-12">
+                            <p class="dental-caption mb-1">Email</p>
+                            <p class="small fw-bold text-dark mb-0">@Model.Email</p>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            @if (isDoctor)
+            {
+                <!-- ── AI Integration Panel ──────────────────────── -->
+                <div class="dental-card shadow-sm border-0 p-4">
+                    <h3 class="h6 fw-bold text-dark mb-3 d-flex align-items-center gap-2">
+                        <i class="fas fa-robot text-primary"></i> AI Integration
+                    </h3>
+
+                    @if (hasCeph)
+                    {
+                        <!-- Linked: show actions -->
+                        <p class="dental-caption mb-3" style="font-size:11px;">
+                            <i class="fas fa-link text-success me-1"></i>
+                            Ceph ID: <code class="small">@Model.CephPatientId?.ToString()[..8]…</code>
+                        </p>
+                        <div class="d-flex flex-column gap-2">
+                            @if (isXRay)
+                            {
+                                <a asp-action="Analysis" asp-route-patientId="@Model.Id"
+                                   class="btn btn-success btn-sm fw-bold rounded-pill px-3 shadow-sm text-center">
+                                    <i class="fas fa-microscope me-1"></i> Run Cephalometric Analysis
+                                </a>
+                            }
+                            <button class="btn btn-outline-primary btn-sm fw-bold rounded-pill px-3"
+                                    onclick="loadGrowthAssessment(@Model.Age, '@Model.Gender')">
+                                <i class="fas fa-chart-line me-1"></i> Growth Assessment
+                            </button>
+                        </div>
+                    }
+                    else
+                    {
+                        <!-- Not linked: show sync button -->
+                        <p class="dental-caption mb-3" style="font-size:11px;">
+                            This patient is not yet synced to the AI cephalometric system.
+                        </p>
+                        <button id="syncBtn" class="btn btn-primary btn-sm fw-bold rounded-pill px-3 shadow-sm w-100"
+                                onclick="syncToCeph(@Model.Id)">
+                            <i class="fas fa-sync-alt me-1"></i> Sync to AI System
+                        </button>
+                        <div id="syncResult" class="mt-2 d-none"></div>
+                    }
+                </div>
+
+                <!-- ── Growth Assessment Result ──────────────────── -->
+                <div id="growthPanel" class="dental-card shadow-sm border-0 border-start border-4 border-warning p-4 d-none">
+                    <h3 class="h6 fw-bold text-dark mb-3 d-flex align-items-center gap-2">
+                        <i class="fas fa-chart-line text-warning"></i> Growth Assessment
+                    </h3>
+                    <div id="growthLoading" class="text-center py-3">
+                        <div class="spinner-border spinner-border-sm text-warning" role="status"></div>
+                        <p class="dental-caption mt-2 mb-0">Assessing growth stage...</p>
+                    </div>
+                    <div id="growthContent" class="d-none d-flex flex-column gap-2">
+                        <div class="d-flex justify-content-between">
+                            <span class="dental-caption">Growth Stage</span>
+                            <span class="fw-bold small text-dark" id="growthStage">-</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="dental-caption">Phase</span>
+                            <span class="fw-bold small text-dark" id="growthPhase">-</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="dental-caption">Active Growth?</span>
+                            <span class="fw-bold small" id="growthActive">-</span>
+                        </div>
+                        <hr class="my-2">
+                        <p class="dental-caption mb-1">Optimal Treatment Window</p>
+                        <p class="small fw-bold text-dark mb-0" id="growthWindow">-</p>
+                        <p class="dental-caption mt-2 mb-1">Recommendation</p>
+                        <p class="small text-secondary fst-italic mb-0" id="growthRec">-</p>
+                    </div>
+                    <div id="growthError" class="alert alert-warning border-0 small py-2 d-none"></div>
+                </div>
+
+                <!-- ── New Diagnosis Form ─────────────────────────── -->
+                <div class="dental-card shadow-sm border-0 border-start border-4 border-primary p-4">
+                    <h3 class="h6 fw-bold text-dark mb-4 d-flex align-items-center gap-2">
+                        <i class="fas fa-file-medical text-primary"></i> New Diagnosis
+                    </h3>
+                    <form asp-action="AddDiagnosis" method="post" class="d-flex flex-column gap-3">
+                        <input type="hidden" name="patientId" value="@Model.Id" />
+
+                        <div>
+                            <label class="form-label dental-label">Visit Type</label>
+                            <select name="visitType" class="form-select dental-input border shadow-none" style="font-size: 13px;" asp-items="ViewBag.VisitTypeList"></select>
+                        </div>
+                        <div>
+                            <label class="form-label dental-label">Diagnosis</label>
+                            <textarea name="diagnosis" id="diagnosisField" class="dental-input border shadow-none"
+                                      style="min-height: 100px; font-size: 13px;" placeholder="Primary diagnosis..." required></textarea>
+                        </div>
+                        <div>
+                            <label class="form-label dental-label">Internal Notes</label>
+                            <textarea name="notes" class="dental-input border shadow-none"
+                                      style="min-height: 80px; font-size: 13px;" placeholder="Optional treatment notes..."></textarea>
+                        </div>
+                        <div class="d-grid pt-2">
+                            <button type="submit" class="btn btn-primary fw-bold py-3 text-uppercase shadow-sm border-0 rounded-3"
+                                    style="font-size: 11px; letter-spacing: 1px;">
+                                Save Record
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-info border-0 shadow-sm rounded-4 mb-0">
+                    <p class="fw-bold mb-1 small text-uppercase" style="font-size: 10px;">Notice</p>
+                    <p class="small mb-0 opacity-75">Only authorized Doctors can record new diagnoses and medical records.</p>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- ── Right Column ─────────────────────────────────────────── -->
+    <div class="col-lg-8">
+        <div class="d-flex flex-column gap-4">
+
+            <!-- Medical History -->
+            <div class="dental-card p-0 shadow-sm border-0 overflow-hidden">
+                <div class="p-4 border-bottom bg-light d-flex justify-content-between align-items-center">
+                    <h3 class="h6 fw-bold text-dark mb-0">Medical History</h3>
+                    <span class="badge bg-secondary-subtle text-secondary fw-bold rounded-pill" style="font-size: 10px;">@Model.MedicalHistory.Count Records</span>
+                </div>
+                <div class="p-4 p-md-5">
+                    @if (!Model.MedicalHistory.Any())
+                    {
+                        <div class="text-center py-5">
+                            <div class="dental-avatar bg-light text-secondary mx-auto mb-3" style="width: 64px; height: 64px; border-radius: 16px;">
+                                <i class="fas fa-folder-open fs-4"></i>
+                            </div>
+                            <p class="dental-caption">No previous records found.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="position-relative ps-4 ms-2" style="border-left: 2px solid #f1f3f5;">
+                            @foreach (var record in Model.MedicalHistory)
+                            {
+                                <div class="position-relative mb-5">
+                                    <div class="position-absolute translate-middle-x" style="left: -1.75rem; top: 0.5rem; width: 12px; height: 12px; background: var(--dental-primary); border-radius: 50%; border: 3px solid white; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);"></div>
+                                    <div class="card border-0 shadow-sm rounded-4 p-4">
+                                        <div class="d-flex flex-column flex-md-row justify-content-between align-items-start mb-3">
+                                            <div>
+                                                <span class="badge bg-primary-subtle text-primary border rounded-pill px-3 mb-2" style="font-size: 9px;">@record.VisitType</span>
+                                                <h4 class="h6 fw-bold text-dark mb-0">@record.Diagnosis</h4>
+                                            </div>
+                                            <div class="text-md-end mt-2 mt-md-0">
+                                                <p class="small fw-bold text-dark mb-0">@record.Date.ToString("dd MMM yyyy")</p>
+                                                <p class="dental-caption mb-0" style="font-size: 10px;">@record.Date.ToString("hh:mm tt")</p>
+                                            </div>
+                                        </div>
+                                        <div class="p-3 bg-light rounded-3 border-start border-3 border-light-subtle">
+                                            <p class="small text-secondary mb-0 fst-italic">@record.Notes</p>
+                                        </div>
+                                        <div class="mt-4 pt-4 border-top d-flex justify-content-between align-items-center">
+                                            @{
+                                                var doctorNames = (ViewBag.DoctorNames as Dictionary<string, string>) ?? new Dictionary<string, string>();
+                                                var docName = "Unknown";
+                                                if (record.DoctorId != null && doctorNames.ContainsKey(record.DoctorId))
+                                                    docName = doctorNames[record.DoctorId];
+                                                else if (!string.IsNullOrEmpty(record.DoctorId))
+                                                    docName = record.DoctorId.Length > 8 ? record.DoctorId[..8] : record.DoctorId;
+                                                if (docName != "Unknown" && !docName.StartsWith("Dr. ")) docName = "Dr. " + docName;
+                                            }
+                                            <span class="dental-caption fw-bold text-primary">@docName</span>
+                                            <span class="dental-caption opacity-50">Record #@record.Id</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    const PATIENT_AGE  = @Model.Age;
+    const PATIENT_SEX  = '@Model.Gender';
+    const PATIENT_ID   = @Model.Id;
+
+    // ── Sync to Ceph ────────────────────────────────────────────────
+    async function syncToCeph(patientId) {
+        const btn = document.getElementById('syncBtn');
+        const result = document.getElementById('syncResult');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Syncing...';
+        result.className = 'mt-2';
+        result.textContent = '';
+
+        try {
+            const form = new FormData();
+            form.append('patientId', patientId);
+            const resp = await fetch('/Doctor/SyncToCeph', { method: 'POST', body: form });
+            const data = await resp.json();
+
+            if (resp.ok && data.success) {
+                result.classList.remove('d-none');
+                result.innerHTML = `<div class="alert alert-success border-0 rounded-3 small py-2 mb-0">
+                    <i class="fas fa-check-circle me-1"></i>
+                    ${data.already ? 'Already synced.' : 'Synced! Reload to see AI features.'}
+                </div>`;
+                btn.innerHTML = '<i class="fas fa-check me-1"></i> Synced';
+                btn.classList.replace('btn-primary', 'btn-success');
+                if (!data.already) setTimeout(() => location.reload(), 1500);
+            } else {
+                throw new Error(data.error || 'Sync failed.');
+            }
+        } catch (ex) {
+            result.classList.remove('d-none');
+            result.innerHTML = `<div class="alert alert-danger border-0 rounded-3 small py-2 mb-0">
+                <i class="fas fa-exclamation-triangle me-1"></i> ${ex.message}
+            </div>`;
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-sync-alt me-1"></i> Retry Sync';
+        }
+    }
+
+    // ── Growth Assessment ───────────────────────────────────────────
+    async function loadGrowthAssessment(age, sex) {
+        const panel = document.getElementById('growthPanel');
+        const loading = document.getElementById('growthLoading');
+        const content = document.getElementById('growthContent');
+        const errDiv  = document.getElementById('growthError');
+
+        panel.classList.remove('d-none');
+        loading.classList.remove('d-none');
+        content.classList.add('d-none');
+        errDiv.classList.add('d-none');
+
+        panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+        try {
+            const form = new FormData();
+            form.append('patientAge', age);
+            form.append('patientSex', sex);
+            const resp = await fetch('/Doctor/GetGrowthAssessment', { method: 'POST', body: form });
+            const data = await resp.json();
+
+            if (!resp.ok) throw new Error(data.error || 'Assessment failed.');
+
+            document.getElementById('growthStage').textContent  = data.growthStage  || '-';
+            document.getElementById('growthPhase').textContent  = data.growthPhase  || '-';
+            const activeEl = document.getElementById('growthActive');
+            activeEl.textContent  = data.isGrowthActive ? 'Yes' : 'No';
+            activeEl.className    = 'fw-bold small ' + (data.isGrowthActive ? 'text-warning' : 'text-success');
+            document.getElementById('growthWindow').textContent = data.optimalTreatmentWindow || 'Not specified';
+            document.getElementById('growthRec').textContent    = data.recommendation || 'No specific recommendation.';
+
+            loading.classList.add('d-none');
+            content.classList.remove('d-none');
+        } catch (ex) {
+            loading.classList.add('d-none');
+            errDiv.classList.remove('d-none');
+            errDiv.textContent = ex.message;
+        }
+    }
+</script>
+}

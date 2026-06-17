@@ -1,0 +1,354 @@
+{
+  "version": "1.0",
+  "last_updated": "2025-01-01",
+  "references": [
+    "Steiner CC. Cephalometrics for you and me. Am J Orthod. 1953",
+    "McNamara JA Jr. A method of cephalometric evaluation. Am J Orthod. 1984",
+    "Ricketts RM. The evolution of the Rocky Mountain Data System. 1976",
+    "Burstone CJ. The integumental profile. Am J Orthod. 1958",
+    "Björk A. The face in profile. 1947",
+    "Bishara SE. Textbook of orthodontics. 2001"
+  ],
+  "analysis_protocols": {
+    "Steiner": {
+      "description": "Standard Steiner analysis for skeletal and dental assessment",
+      "required_landmarks": [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16],
+      "measurements": ["SNA", "SNB", "ANB", "FMA", "IMPA", "FMIA", "GoGn-SN", "Upper incisor to NA (mm)", "Lower incisor to NB (mm)", "Upper lip to E-line", "Lower lip to E-line"]
+    },
+    "McNamara": {
+      "description": "McNamara analysis focusing on airway and facial height",
+      "required_landmarks": [1,2,5,6,7,8,9,10,17,18,3,4],
+      "measurements": ["Effective maxillary length", "Effective mandibular length", "Maxillomandibular difference", "Lower anterior facial height", "Upper anterior facial height", "Mandibular plane angle", "Nasolabial angle", "Airway width (PNS-ad1)", "Hyoid position"]
+    },
+    "Ricketts": {
+      "description": "Ricketts analysis including esthetic plane and growth prediction",
+      "required_landmarks": [1,2,4,3,7,8,9,10,11,12,13,14,15,16],
+      "measurements": ["Facial axis angle", "Facial depth", "Mandibular plane angle", "Lower facial height", "Maxillary depth", "Maxillary height", "Interincisal angle", "Upper incisor to A-Pog line (mm)", "Lower incisor to A-Pog line (mm)", "Upper lip to E-plane", "Lower lip to E-plane"]
+    },
+    "Eastman": {
+      "description": "Eastman basic analysis for general screening",
+      "required_landmarks": [1,2,5,6,7,8,9,10,3,4,13,14],
+      "measurements": ["SNA", "SNB", "ANB", "FMA (FH-MP)", "Facial Angle (N-S-Gn)", "Wits appraisal (mm)", "Upper incisor to NA (mm/deg)", "Lower incisor to NB (mm/deg)", "Interincisal angle"]
+    },
+    "Burstone": {
+      "description": "Burstone soft tissue analysis",
+      "required_landmarks": [13,14,15,16,2,7],
+      "measurements": ["Nasolabial angle", "Upper lip to E-line", "Lower lip to E-line", "Labiomental fold", "Soft tissue facial angle", "Z-angle"]
+    }
+  },
+  "norms": {
+    "Steiner": {
+      "SNA": {
+        "unit": "degrees",
+        "description": "Sella-Nasion-A point angle",
+        "reference": {
+          "Caucasian": {
+            "Both": { "mean": 82.0, "sd": 3.5, "range": "75.0-88.0" },
+            "Male": { "mean": 82.5, "sd": 3.5, "range": "75.5-89.0" },
+            "Female": { "mean": 81.5, "sd": 3.5, "range": "74.5-88.0" }
+          },
+          "East Asian": {
+            "Both": { "mean": 83.5, "sd": 3.0, "range": "78.0-89.0" }
+          },
+          "Middle Eastern": {
+            "Both": { "mean": 82.5, "sd": 3.0, "range": "77.0-88.0" }
+          }
+        },
+        "age_adaptation": {
+          "6-9": -1.5,
+          "9-12": -1.0,
+          "12-15": 0.0,
+          "15-18": 0.0,
+          "18+": 0.0
+        }
+      },
+      "SNB": {
+        "unit": "degrees",
+        "description": "Sella-Nasion-B point angle",
+        "reference": {
+          "Caucasian": {
+            "Both": { "mean": 80.0, "sd": 3.5, "range": "73.0-87.0" }
+          },
+          "East Asian": {
+            "Both": { "mean": 81.0, "sd": 3.0, "range": "75.0-87.0" }
+          },
+          "Middle Eastern": {
+            "Both": { "mean": 80.5, "sd": 3.0, "range": "74.5-86.5" }
+          }
+        },
+        "age_adaptation": { "6-9": -1.0, "9-12": -0.5, "12-15": 0.0, "15-18": 0.0, "18+": 0.0 }
+      },
+      "ANB": {
+        "unit": "degrees",
+        "description": "A point-Nasion-B point angle (skeletal relationship)",
+        "reference": {
+          "Caucasian": {
+            "Both": { "mean": 2.0, "sd": 2.0, "range": "0-4.0" }
+          },
+          "East Asian": {
+            "Both": { "mean": 2.5, "sd": 2.0, "range": "0-5.0" }
+          },
+          "Middle Eastern": {
+            "Both": { "mean": 2.0, "sd": 2.0, "range": "0-4.0" }
+          }
+        },
+        "age_adaptation": { "6-9": -0.5, "9-12": -0.5, "12-15": 0.0, "15-18": 0.0, "18+": 0.0 }
+      },
+      "FMA": {
+        "unit": "degrees",
+        "description": "Frankfort-Mandibular plane angle",
+        "reference": {
+          "Caucasian": {
+            "Both": { "mean": 25.0, "sd": 4.0, "range": "17-33" }
+          },
+          "East Asian": {
+            "Both": { "mean": 27.0, "sd": 4.5, "range": "18-36" }
+          },
+          "Middle Eastern": {
+            "Both": { "mean": 26.0, "sd": 4.0, "range": "18-34" }
+          }
+        },
+        "age_adaptation": { "6-9": 2.0, "9-12": 1.0, "12-15": 0.5, "15-18": 0.0, "18+": 0.0 }
+      },
+      "IMPA": {
+        "unit": "degrees",
+        "description": "Incisor mandibular plane angle (lower incisor to GoGn)",
+        "reference": {
+          "Caucasian": {
+            "Both": { "mean": 90.0, "sd": 5.0, "range": "80-100" }
+          },
+          "East Asian": {
+            "Both": { "mean": 92.0, "sd": 5.0, "range": "82-102" }
+          }
+        },
+        "age_adaptation": { "6-9": -3.0, "9-12": -1.5, "12-15": 0.0, "15-18": 0.0, "18+": 0.0 }
+      },
+      "FMIA": {
+        "unit": "degrees",
+        "description": "Frankfort-Mandibular incisor angle",
+        "reference": {
+          "Caucasian": { "Both": { "mean": 65.0, "sd": 5.0, "range": "55-75" } }
+        },
+        "age_adaptation": { "6-9": 3.0, "9-12": 1.5, "12-15": 0.0, "15-18": 0.0, "18+": 0.0 }
+      },
+      "GoGn-SN": {
+        "unit": "degrees",
+        "description": "Gonion-Gnathion to SN plane angle",
+        "reference": {
+          "Caucasian": { "Both": { "mean": 32.0, "sd": 4.0, "range": "24-40" } }
+        },
+        "age_adaptation": { "6-9": 1.5, "9-12": 0.5, "12-15": 0.0, "15-18": 0.0, "18+": 0.0 }
+      },
+      "Upper incisor to NA (mm)": {
+        "unit": "mm",
+        "description": "Horizontal distance from upper incisor tip to NA line",
+        "reference": {
+          "Caucasian": { "Both": { "mean": 4.0, "sd": 2.0, "range": "0-8" } }
+        },
+        "age_adaptation": { "6-9": 2.0, "9-12": 1.0, "12-15": 0.0, "15-18": 0.0, "18+": 0.0 }
+      },
+      "Lower incisor to NB (mm)": {
+        "unit": "mm",
+        "description": "Horizontal distance from lower incisor tip to NB line",
+        "reference": {
+          "Caucasian": { "Both": { "mean": 4.0, "sd": 2.0, "range": "0-8" } }
+        },
+        "age_adaptation": { "6-9": 2.0, "9-12": 1.0, "12-15": 0.0, "15-18": 0.0, "18+": 0.0 }
+      },
+      "Upper lip to E-line": {
+        "unit": "mm",
+        "description": "Horizontal distance from upper lip to esthetic line (tip of nose to soft tissue pogonion)",
+        "reference": {
+          "Caucasian": { "Both": { "mean": -4.0, "sd": 2.0, "range": "-8 to 0" } }
+        },
+        "age_adaptation": { "6-9": 1.0, "9-12": 0.5, "12-15": 0.0, "15-18": 0.0, "18+": 0.0 }
+      },
+      "Lower lip to E-line": {
+        "unit": "mm",
+        "description": "Horizontal distance from lower lip to esthetic line",
+        "reference": {
+          "Caucasian": { "Both": { "mean": -2.0, "sd": 2.0, "range": "-6 to 2" } }
+        },
+        "age_adaptation": { "6-9": 0.5, "9-12": 0.0, "12-15": 0.0, "15-18": 0.0, "18+": 0.0 }
+      }
+    },
+    "McNamara": {
+      "Effective maxillary length": {
+        "unit": "mm",
+        "description": "Distance from condylion to A point",
+        "reference": {
+          "Caucasian": {
+            "Male": {
+              "6-9": { "mean": 80.0, "sd": 3.0 },
+              "9-12": { "mean": 86.0, "sd": 3.5 },
+              "12-15": { "mean": 91.0, "sd": 3.5 },
+              "15-18": { "mean": 95.0, "sd": 3.5 },
+              "18+": { "mean": 96.0, "sd": 3.5 }
+            },
+            "Female": {
+              "6-9": { "mean": 77.0, "sd": 3.0 },
+              "9-12": { "mean": 83.0, "sd": 3.5 },
+              "12-15": { "mean": 87.0, "sd": 3.5 },
+              "15-18": { "mean": 90.0, "sd": 3.5 },
+              "18+": { "mean": 91.0, "sd": 3.5 }
+            }
+          }
+        }
+      },
+      "Effective mandibular length": {
+        "unit": "mm",
+        "description": "Distance from condylion to pogonion",
+        "reference": {
+          "Caucasian": {
+            "Male": {
+              "6-9": { "mean": 95.0, "sd": 3.5 },
+              "9-12": { "mean": 104.0, "sd": 4.0 },
+              "12-15": { "mean": 112.0, "sd": 4.0 },
+              "15-18": { "mean": 118.0, "sd": 4.0 },
+              "18+": { "mean": 120.0, "sd": 4.0 }
+            },
+            "Female": {
+              "6-9": { "mean": 91.0, "sd": 3.5 },
+              "9-12": { "mean": 99.0, "sd": 4.0 },
+              "12-15": { "mean": 106.0, "sd": 4.0 },
+              "15-18": { "mean": 111.0, "sd": 4.0 },
+              "18+": { "mean": 113.0, "sd": 4.0 }
+            }
+          }
+        }
+      },
+      "Maxillomandibular difference": {
+        "unit": "mm",
+        "description": "Effective mandibular length minus effective maxillary length",
+        "reference": {
+          "Caucasian": {
+            "Both": {
+              "6-9": { "mean": 15.0, "sd": 3.0 },
+              "9-12": { "mean": 18.0, "sd": 3.0 },
+              "12-15": { "mean": 21.0, "sd": 3.0 },
+              "15-18": { "mean": 23.0, "sd": 3.0 },
+              "18+": { "mean": 24.0, "sd": 3.0 }
+            }
+          }
+        }
+      },
+      "Lower anterior facial height": {
+        "unit": "mm",
+        "description": "ANS to Me (anterior facial height)",
+        "reference": {
+          "Caucasian": {
+            "Both": {
+              "6-9": { "mean": 55.0, "sd": 4.0 },
+              "9-12": { "mean": 60.0, "sd": 4.0 },
+              "12-15": { "mean": 65.0, "sd": 4.0 },
+              "15-18": { "mean": 68.0, "sd": 4.0 },
+              "18+": { "mean": 70.0, "sd": 4.0 }
+            }
+          }
+        }
+      },
+      "Nasolabial angle": {
+        "unit": "degrees",
+        "description": "Angle between columella and upper lip",
+        "reference": {
+          "Caucasian": { "Both": { "mean": 102.0, "sd": 8.0, "range": "85-115" } }
+        }
+      }
+    },
+    "Ricketts": {
+      "Facial axis angle": {
+        "unit": "degrees",
+        "description": "Angle between Ba-N and Pt-Gn",
+        "reference": {
+          "Caucasian": { "Both": { "mean": 90.0, "sd": 3.0, "range": "84-96" } }
+        }
+      },
+      "Facial depth": {
+        "unit": "degrees",
+        "description": "Angle between FH and N-Pog",
+        "reference": {
+          "Caucasian": { "Both": { "mean": 87.0, "sd": 3.0, "range": "81-93" } }
+        }
+      },
+      "Mandibular plane angle": {
+        "unit": "degrees",
+        "description": "Angle between FH and Go-Me",
+        "reference": {
+          "Caucasian": { "Both": { "mean": 26.0, "sd": 4.0, "range": "18-34" } }
+        }
+      },
+      "Lower facial height": {
+        "unit": "degrees",
+        "description": "Angle between Xi-Pm and ANS-Xi",
+        "reference": {
+          "Caucasian": { "Both": { "mean": 47.0, "sd": 4.0, "range": "39-55" } }
+        }
+      },
+      "Interincisal angle": {
+        "unit": "degrees",
+        "description": "Angle between upper and lower incisors",
+        "reference": {
+          "Caucasian": { "Both": { "mean": 130.0, "sd": 6.0, "range": "118-142" } }
+        }
+      }
+    },
+    "Eastman": {
+      "SNA": { "reference": { "Caucasian": { "Both": { "mean": 81.0, "sd": 5.0, "range": "71-91" } } } },
+      "SNB": { "reference": { "Caucasian": { "Both": { "mean": 78.0, "sd": 5.0, "range": "68-88" } } } },
+      "ANB": { "reference": { "Caucasian": { "Both": { "mean": 3.0, "sd": 2.0, "range": "-1-7" } } } },
+      "FMA (FH-MP)": { "reference": { "Caucasian": { "Both": { "mean": 27.0, "sd": 5.0, "range": "17-37" } } } },
+      "Facial Angle (N-S-Gn)": { "reference": { "Caucasian": { "Both": { "mean": 67.0, "sd": 3.0, "range": "61-73" } } } },
+      "Wits appraisal (mm)": {
+        "unit": "mm",
+        "description": "Horizontal distance between perpendiculars from A and B to occlusal plane",
+        "reference": {
+          "Caucasian": { "Both": { "mean": -1.0, "sd": 2.0, "range": "-5 to 3" } },
+          "East Asian": { "Both": { "mean": -2.0, "sd": 2.0, "range": "-6 to 2" } }
+        }
+      },
+      "Upper incisor to NA (mm/deg)": {
+        "unit": "mm or deg",
+        "description": "Distance or angle from upper incisor to NA line",
+        "reference": { "Caucasian": { "Both": { "mean": 4.0, "sd": 2.0 } } }
+      },
+      "Lower incisor to NB (mm/deg)": {
+        "unit": "mm or deg",
+        "description": "Distance or angle from lower incisor to NB line",
+        "reference": { "Caucasian": { "Both": { "mean": 4.0, "sd": 2.0 } } }
+      },
+      "Interincisal angle": {
+        "reference": { "Caucasian": { "Both": { "mean": 132.0, "sd": 6.0 } } }
+      }
+    },
+    "Burstone": {
+      "Nasolabial angle": {
+        "unit": "degrees",
+        "description": "Angle between columella and upper lip",
+        "reference": { "Caucasian": { "Both": { "mean": 102.0, "sd": 8.0 } } }
+      },
+      "Upper lip to E-line": {
+        "unit": "mm",
+        "description": "Distance from upper lip to Ricketts' esthetic line",
+        "reference": { "Caucasian": { "Both": { "mean": -4.0, "sd": 2.0 } } }
+      },
+      "Lower lip to E-line": {
+        "unit": "mm",
+        "description": "Distance from lower lip to Ricketts' esthetic line",
+        "reference": { "Caucasian": { "Both": { "mean": -2.0, "sd": 2.0 } } }
+      },
+      "Soft tissue facial angle": {
+        "unit": "degrees",
+        "description": "Angle between FH and soft tissue glabella-pogonion",
+        "reference": { "Caucasian": { "Both": { "mean": 87.0, "sd": 3.0 } } }
+      },
+      "Z-angle": {
+        "unit": "degrees",
+        "description": "Angle between FH and line from soft tissue pogonion to most prominent lip",
+        "reference": { "Caucasian": { "Both": { "mean": 75.0, "sd": 5.0 } } }
+      }
+    }
+  },
+  "age_groups": ["6-9", "9-12", "12-15", "15-18", "18+"],
+  "ethnicities": ["Caucasian", "East Asian", "Middle Eastern", "African", "Hispanic"],
+  "genders": ["Male", "Female", "Both"]
+}

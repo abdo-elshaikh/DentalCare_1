@@ -1,0 +1,504 @@
+{
+  "meta": {
+    "description": "Cephalometric norms for multiple analysis protocols. Values are based on standard orthodontic literature (e.g., Steiner, Ricketts, McNamara, Jarabak, etc.) and are intended as clinical references. Age and sex variations are noted where available.",
+    "source": "Compiled from published norms: Graber, Vanarsdall, Vig (2005); McNamara (1984); Ricketts (1969); Steiner (1953); Jarabak (1972); Björk (1960); Downs (1948); Tweed (1966); Eastman Dental Hospital norms; ABO (American Board of Orthodontics) reference values.",
+    "disclaimer": "These norms are for educational/research purposes. Clinical judgment always prevails."
+  },
+  "protocols": {
+    "Steiner": {
+      "description": "Steiner analysis – assesses skeletal and dental relationships using SNA, SNB, ANB, incisor inclinations, and soft tissue profile.",
+      "measurements": [
+        {
+          "name": "SNA (°)",
+          "description": "Sella-Nasion-A point angle; maxillary position relative to cranial base.",
+          "mean": "82.0°",
+          "sd": "3.5°",
+          "age_variation": "Slight decrease after adolescence",
+          "clinical": ">85° = maxillary prognathism; <79° = maxillary retrognathism"
+        },
+        {
+          "name": "SNB (°)",
+          "description": "Sella-Nasion-B point angle; mandibular position relative to cranial base.",
+          "mean": "80.0°",
+          "sd": "3.5°",
+          "clinical": ">83° = mandibular prognathism; <77° = mandibular retrognathism"
+        },
+        {
+          "name": "ANB (°)",
+          "description": "Difference between SNA and SNB; sagittal jaw relationship.",
+          "mean": "2.0°",
+          "sd": "2.0°",
+          "clinical": "0–4° normal; >4° Class II skeletal; <0° Class III skeletal"
+        },
+        {
+          "name": "SN-GoGn (°)",
+          "description": "Mandibular plane angle relative to anterior cranial base.",
+          "mean": "32.0°",
+          "sd": "5.0°",
+          "age_variation": "Increases with age",
+          "clinical": "High angle >37° (hyperdivergent); low angle <27° (hypodivergent)"
+        },
+        {
+          "name": "U1-NA (mm)",
+          "description": "Distance from upper incisor tip to Nasion-A line.",
+          "mean": "4.0 mm",
+          "sd": "2.0 mm",
+          "clinical": ">6 mm = protrusive upper incisors"
+        },
+        {
+          "name": "U1-NA (°)",
+          "description": "Angle between upper incisor axis and Nasion-A line.",
+          "mean": "22.0°",
+          "sd": "5.0°",
+          "clinical": ">27° = upper incisor proclination"
+        },
+        {
+          "name": "L1-NB (mm)",
+          "description": "Distance from lower incisor tip to Nasion-B line.",
+          "mean": "4.0 mm",
+          "sd": "2.0 mm"
+        },
+        {
+          "name": "L1-NB (°)",
+          "description": "Angle between lower incisor axis and Nasion-B line.",
+          "mean": "25.0°",
+          "sd": "5.0°"
+        },
+        {
+          "name": "Interincisal angle (°)",
+          "description": "Angle between upper and lower incisor axes.",
+          "mean": "130.0°",
+          "sd": "8.0°"
+        },
+        {
+          "name": "Pg-NB (mm)",
+          "description": "Distance from pogonion to NB line – chin prominence.",
+          "mean": "2.0 mm",
+          "sd": "2.0 mm"
+        },
+        {
+          "name": "Upper lip to E-line (mm)",
+          "description": "Distance from upper lip to Esthetic line (tip of nose – chin).",
+          "mean": "-1.0 mm (behind line)",
+          "sd": "2.0 mm"
+        },
+        {
+          "name": "Lower lip to E-line (mm)",
+          "description": "Distance from lower lip to Esthetic line.",
+          "mean": "-2.0 mm (behind line)",
+          "sd": "2.0 mm"
+        }
+      ]
+    },
+    "McNamara": {
+      "description": "McNamara analysis – uses craniofacial structural units (maxilla, mandible, face height, incisors). Age‑specific norms.",
+      "measurements": [
+        {
+          "name": "Effective maxillary length (Co-A) (mm)",
+          "description": "Condylion to A point.",
+          "age_norms": {
+            "8y": "83 mm (M) / 81 mm (F)",
+            "10y": "86 mm / 84 mm",
+            "12y": "89 mm / 87 mm",
+            "15y": "93 mm / 90 mm",
+            "adult": "96 mm / 92 mm"
+          },
+          "sd": "~3 mm",
+          "clinical": ">95 mm = maxillary excess; <90 mm = maxillary deficiency"
+        },
+        {
+          "name": "Effective mandibular length (Co-Gn) (mm)",
+          "description": "Condylion to gnathion.",
+          "age_norms": {
+            "8y": "98 mm (M) / 97 mm (F)",
+            "10y": "105 mm / 103 mm",
+            "12y": "112 mm / 109 mm",
+            "15y": "122 mm / 117 mm",
+            "adult": "128 mm / 121 mm"
+          },
+          "sd": "4 mm"
+        },
+        {
+          "name": "Middle cranial fossa length (mm)",
+          "description": "Sella (midpoint) to condylion.",
+          "mean": "18 mm (adult)",
+          "sd": "2 mm"
+        },
+        {
+          "name": "Lower anterior face height (ANS-Me) (mm)",
+          "description": "Anterior nasal spine to menton.",
+          "age_norms": {
+            "8y": "58 mm",
+            "10y": "61 mm",
+            "12y": "65 mm",
+            "15y": "70 mm",
+            "adult": "72 mm"
+          },
+          "sd": "3 mm"
+        },
+        {
+          "name": "Upper incisor to NA (mm)",
+          "description": "Horizontal distance from upper incisor tip to Nasion‑A line.",
+          "mean": "4 mm",
+          "sd": "1.5 mm"
+        },
+        {
+          "name": "Lower incisor to NB (mm)",
+          "description": "Horizontal distance from lower incisor tip to Nasion‑B line.",
+          "mean": "4 mm",
+          "sd": "1.5 mm"
+        },
+        {
+          "name": "Nasolabial angle (°)",
+          "description": "Angle formed by columella and upper lip.",
+          "mean": "102°",
+          "sd": "8°"
+        }
+      ]
+    },
+    "Ricketts": {
+      "description": "Ricketts analysis – uses five reference planes (facial axis, facial depth, mandibular plane, lower facial height, mandibular arc).",
+      "measurements": [
+        {
+          "name": "Facial axis angle (°)",
+          "description": "Angle between Ba-Na and Pt-Gn.",
+          "mean": "90.0°",
+          "sd": "3.0°",
+          "clinical": ">93° = brachyfacial; <87° = dolichofacial"
+        },
+        {
+          "name": "Facial depth angle (°)",
+          "description": "Angle between Frankfort horizontal and Na-Pg.",
+          "mean": "87.0°",
+          "sd": "3.0°"
+        },
+        {
+          "name": "Mandibular plane angle (FH-MP) (°)",
+          "description": "Angle between Frankfort horizontal and mandibular plane (Go-Me).",
+          "mean": "26.0°",
+          "sd": "4.0°"
+        },
+        {
+          "name": "Lower facial height (ANS-Xi-Pm) (°)",
+          "description": "Angle of lower face divergence.",
+          "mean": "47.0°",
+          "sd": "4.0°"
+        },
+        {
+          "name": "Mandibular arc (°)",
+          "description": "Angle of curvature of the mandible (Xi-Pm to Xi-Dc).",
+          "mean": "26.0°",
+          "sd": "4.0°"
+        },
+        {
+          "name": "Convexity (A-Na-Pg) (mm)",
+          "description": "Distance from A point to Na-Pg line.",
+          "mean": "2.0 mm",
+          "sd": "2.0 mm",
+          "clinical": ">5 mm = convex profile"
+        }
+      ]
+    },
+    "Eastman": {
+      "description": "Eastman analysis – similar to Steiner but based on UK Caucasian population.",
+      "measurements": [
+        {
+          "name": "SNA (°)",
+          "mean": "81.0°",
+          "sd": "3.5°"
+        },
+        {
+          "name": "SNB (°)",
+          "mean": "78.0°",
+          "sd": "3.5°"
+        },
+        {
+          "name": "ANB (°)",
+          "mean": "3.0°",
+          "sd": "2.0°"
+        },
+        {
+          "name": "MM angle (SN-GoGn) (°)",
+          "mean": "34.0°",
+          "sd": "5.0°"
+        },
+        {
+          "name": "U1-NA (mm)",
+          "mean": "4.5 mm",
+          "sd": "2.0 mm"
+        },
+        {
+          "name": "L1-NB (mm)",
+          "mean": "4.0 mm",
+          "sd": "2.0 mm"
+        },
+        {
+          "name": "Upper incisor to SN (°)",
+          "mean": "103.0°",
+          "sd": "6.0°"
+        },
+        {
+          "name": "Lower incisor to mandibular plane (°)",
+          "mean": "93.0°",
+          "sd": "6.0°"
+        }
+      ]
+    },
+    "Burstone": {
+      "description": "Burstone analysis – emphasizes facial esthetics and functional occlusal plane, used in orthognathic surgery planning.",
+      "measurements": [
+        {
+          "name": "Horizontal skeletal ratio (S-N / N-Me)",
+          "description": "Balance of anterior face height.",
+          "mean": "0.65"
+        },
+        {
+          "name": "Vertical skeletal ratio (S-Go / N-Me)",
+          "description": "Posterior to anterior face height.",
+          "mean": "0.62"
+        },
+        {
+          "name": "Upper lip to S-line (mm)",
+          "description": "Distance from upper lip to Steiner's S line (midpoint of S-N to Pg).",
+          "mean": "-1.0 mm",
+          "sd": "1.5 mm"
+        },
+        {
+          "name": "Lower lip to S-line (mm)",
+          "mean": "0.0 mm",
+          "sd": "2.0 mm"
+        },
+        {
+          "name": "Nasal projection (mm)",
+          "description": "Distance from pronasale to line through nasion and subnasale.",
+          "mean": "14 mm",
+          "sd": "2 mm"
+        },
+        {
+          "name": "Mentocervical angle (°)",
+          "description": "Angle of cervical posture.",
+          "mean": "100°",
+          "sd": "10°"
+        }
+      ]
+    },
+    "Jarabak": {
+      "description": "Jarabak analysis – uses posterior/anterior face height ratio and cranial base angles for growth assessment.",
+      "measurements": [
+        {
+          "name": "Sum of angles (N-S-Ar + S-Ar-Go + Ar-Go-Me) (°)",
+          "description": "Total cranial deflection.",
+          "mean": "396.0°",
+          "sd": "5.0°",
+          "clinical": "<390° = brachyfacial; >402° = dolichofacial"
+        },
+        {
+          "name": "Saddle angle (N-S-Ar) (°)",
+          "description": "Angle at sella between cranial base and posterior cranial base.",
+          "mean": "123.0°",
+          "sd": "5.0°"
+        },
+        {
+          "name": "Articular angle (S-Ar-Go) (°)",
+          "description": "Angle at articulare.",
+          "mean": "143.0°",
+          "sd": "6.0°"
+        },
+        {
+          "name": "Gonial angle (Ar-Go-Me) (°)",
+          "description": "Angle at gonion.",
+          "mean": "130.0°",
+          "sd": "7.0°"
+        },
+        {
+          "name": "Posterior face height / Anterior face height (S-Go / N-Me) ratio",
+          "description": "Jarabak ratio – lower values indicate vertical growth.",
+          "age_variation": "Increases with age",
+          "mean": "0.62 (adult)",
+          "sd": "0.05",
+          "clinical": "<0.60 = hyperdivergent; >0.65 = hypodivergent"
+        }
+      ]
+    },
+    "Björk": {
+      "description": "Björk analysis – focuses on growth rotations and cranial base synchondroses.",
+      "measurements": [
+        {
+          "name": "Cranial base angle (N-S-Ba) (°)",
+          "description": "Angle at sella between anterior and posterior cranial base.",
+          "mean": "130.0°",
+          "sd": "6.0°"
+        },
+        {
+          "name": "Facial height ratio (S-Go / N-Me)",
+          "description": "Similar to Jarabak ratio.",
+          "mean": "0.63"
+        },
+        {
+          "name": "Inclination of mandibular canal",
+          "description": "Angle between mandibular canal and mandibular plane.",
+          "mean": "10° posteriorly"
+        },
+        {
+          "name": "Shape of antegonial notch",
+          "description": "Descriptive; no numeric norm."
+        }
+      ]
+    },
+    "Downs": {
+      "description": "Downs analysis – uses Frankfort horizontal plane as reference; includes facial angle, angle of convexity, A-B plane angle, etc.",
+      "measurements": [
+        {
+          "name": "Facial angle (FH-Na-Pg) (°)",
+          "description": "Angle between Frankfort horizontal and Nasion-Pogonion line.",
+          "mean": "87.8°",
+          "sd": "3.0°"
+        },
+        {
+          "name": "Angle of convexity (Na-A-Pg) (°)",
+          "description": "Angle at A point between nasion and pogonion.",
+          "mean": "0.0°",
+          "sd": "5.0°",
+          "clinical": "Positive = convex profile"
+        },
+        {
+          "name": "A-B plane angle (AB-Na-Pg) (°)",
+          "description": "Angle between A-B line and Nasion-Pogonion.",
+          "mean": "-4.6°",
+          "sd": "3.0°"
+        },
+        {
+          "name": "Mandibular plane angle (FH-MP) (°)",
+          "mean": "21.9°",
+          "sd": "4.0°"
+        },
+        {
+          "name": "Y-axis (S-Gn to FH) (°)",
+          "description": "Angle between Frankfort horizontal and Sella-Gnathion.",
+          "mean": "59.4°",
+          "sd": "3.8°"
+        },
+        {
+          "name": "Upper incisor to FH (°)",
+          "mean": "110.0°",
+          "sd": "6.0°"
+        },
+        {
+          "name": "Interincisal angle (°)",
+          "mean": "135.0°",
+          "sd": "6.0°"
+        }
+      ]
+    },
+    "Tweed": {
+      "description": "Tweed analysis – based on Frankfort mandibular incisor angle (FMA, FMIA, IMPA).",
+      "measurements": [
+        {
+          "name": "FMA (FH-MP) (°)",
+          "description": "Frankfort horizontal to mandibular plane.",
+          "ideal": "25.0°",
+          "range": "16°–35°",
+          "clinical": ">35° = open bite tendency; <16° = deep bite"
+        },
+        {
+          "name": "IMPA (L1-MP) (°)",
+          "description": "Lower incisor to mandibular plane.",
+          "ideal": "90.0°",
+          "range": "85°–95°",
+          "clinical": ">95° = proclined lower incisors; <85° = retroclined"
+        },
+        {
+          "name": "FMIA (°)",
+          "description": "Frankfort horizontal to lower incisor – derived as 180 - (FMA + IMPA).",
+          "ideal": "65.0°",
+          "clinical": ">70° = lower incisors upright; <60° = procumbent"
+        },
+        {
+          "name": "Tweed triangle",
+          "description": "Interactive relationship: FMA + FMIA + IMPA = 180°."
+        }
+      ]
+    },
+    "ABO_American": {
+      "description": "American Board of Orthodontics (ABO) recommended norms for cephalometric evaluation. Based on Steiner and Downs modifications.",
+      "measurements": [
+        {
+          "name": "SNA (°)",
+          "mean": "82.0°",
+          "range": "78°–86°"
+        },
+        {
+          "name": "SNB (°)",
+          "mean": "80.0°",
+          "range": "76°–84°"
+        },
+        {
+          "name": "ANB (°)",
+          "mean": "2.0°",
+          "range": "0°–4°"
+        },
+        {
+          "name": "SN-GoGn (°)",
+          "mean": "32.0°",
+          "range": "27°–37°"
+        },
+        {
+          "name": "U1-NA (mm)",
+          "mean": "4.0 mm",
+          "range": "2–6 mm"
+        },
+        {
+          "name": "U1-NA (°)",
+          "mean": "22.0°",
+          "range": "15°–29°"
+        },
+        {
+          "name": "L1-NB (mm)",
+          "mean": "4.0 mm",
+          "range": "2–6 mm"
+        },
+        {
+          "name": "L1-NB (°)",
+          "mean": "25.0°",
+          "range": "20°–30°"
+        },
+        {
+          "name": "Interincisal angle (°)",
+          "mean": "130.0°",
+          "range": "120°–140°"
+        },
+        {
+          "name": "Nasolabial angle (°)",
+          "mean": "102°",
+          "range": "90°–115°"
+        }
+      ]
+    }
+  },
+  "landmark_definitions": {
+    "S": "Sella – center of sella turcica",
+    "N": "Nasion – frontonasal suture",
+    "Na": "Nasion (same as N)",
+    "Ba": "Basion – anterior margin of foramen magnum",
+    "A": "A-point (subspinale) – deepest point on maxillary curve",
+    "B": "B-point (supramentale) – deepest point on mandibular curve",
+    "Pog": "Pogonion – most anterior point on mandibular symphysis",
+    "Pg": "Pogonion",
+    "Gn": "Gnathion – midpoint between pogonion and menton",
+    "Me": "Menton – lowest point on mandibular symphysis",
+    "Go": "Gonion – midpoint of mandibular angle",
+    "Ar": "Articulare – intersection of posterior cranial base and mandibular condyle",
+    "Co": "Condylion – most superior point of mandibular condyle",
+    "Pt": "Pterygoid point – anterior border of foramen rotundum",
+    "Or": "Orbitale – lowest point of orbital rim",
+    "Po": "Porion – highest point of external auditory meatus",
+    "ANS": "Anterior nasal spine",
+    "PNS": "Posterior nasal spine",
+    "E-line": "Esthetic line (tip of nose to chin)",
+    "FH": "Frankfort horizontal plane (porion to orbitale)",
+    "SN": "Sella-Nasion line",
+    "MP": "Mandibular plane (Go-Gn or Go-Me)",
+    "U1": "Upper central incisor axis",
+    "L1": "Lower central incisor axis"
+  }
+}

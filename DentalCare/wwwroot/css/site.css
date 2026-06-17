@@ -1,0 +1,242 @@
+/* Global Styles for DentalCare */
+body {
+    padding-bottom: 20px;
+}
+
+/* Reusable Dental Components (Cleaning up Views) */
+
+.hover-primary:hover {
+    color: #0d6efd !important;
+}
+
+.tracking-tighter {
+    letter-spacing: -0.05em;
+}
+
+.transition {
+    transition: all 0.2s ease-in-out;
+}
+
+/* 1. Cards */
+.dental-card {
+    background-color: white;
+    padding: 1.5rem;
+    border-radius: 1rem;
+    border: 1px solid #dee2e6;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    transition: all 0.2s;
+}
+
+    .dental-card:hover {
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    }
+
+/* 2. Typography */
+.dental-label {
+    font-size: 0.875rem;
+    color: #6c757d;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.dental-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #212529;
+}
+
+.dental-caption {
+    font-size: 10px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #adb5bd;
+}
+
+/* 3. Buttons */
+.dental-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.6rem 1.25rem;
+    border-radius: 0.75rem;
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    transition: all 0.2s;
+    cursor: pointer;
+    border: none;
+    text-decoration: none;
+}
+
+.dental-btn-primary {
+    background-color: #0d6efd;
+    color: white;
+    box-shadow: 0 4px 6px rgba(13, 110, 253, 0.15);
+}
+
+    .dental-btn-primary:hover {
+        background-color: #0b5ed7;
+        color: white;
+        transform: translateY(-1px);
+    }
+
+/* 4. Forms */
+.dental-input {
+    width: 100%;
+    padding: 0.8rem 1.2rem;
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 1rem;
+    outline: none;
+    font-weight: 600;
+    color: #212529;
+    transition: all 0.2s;
+    font-size: 0.9rem;
+}
+
+    .dental-input:focus {
+        background-color: white;
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.1);
+    }
+
+/* 5. Avatars */
+.dental-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+}
+
+/* Status Badges */
+.dental-badge {
+    padding: 0.35rem 0.8rem;
+    font-size: 0.7rem;
+    font-weight: 800;
+    border-radius: 50px;
+    text-transform: uppercase;
+}
+
+.dental-badge-green {
+    background-color: #d1e7dd;
+    color: #0f5132;
+}
+
+.dental-badge-blue {
+    background-color: #cfe2ff;
+    color: #084298;
+}
+
+.dental-badge-red {
+    background-color: #f8d7da;
+    color: #842029;
+}
+
+
+.dental-search-container {
+    position: relative;
+    flex: 1;
+}
+
+.dental-search-icon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+}
+
+.dental-search-input {
+    padding-left: 2.75rem !important;
+}
+
+.dental-textarea {
+    min-height: 120px;
+    resize: vertical;
+}
+
+/* 6. Badges & Status */
+.dental-badge {
+    padding: 0.25rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    border-radius: 9999px;
+    display: inline-flex;
+    align-items: center;
+}
+
+.dental-badge-blue {
+    background-color: #eff6ff;
+    color: #2563eb;
+}
+
+.dental-badge-green {
+    background-color: #f0fdf4;
+    color: #16a34a;
+}
+
+.dental-badge-red {
+    background-color: #fef2f2;
+    color: #dc2626;
+}
+
+.dental-badge-gray {
+    background-color: #f3f4f6;
+    color: #4b5563;
+}
+
+/* 7. Layout Containers */
+.dental-container {
+    max-width: 1280px; /* 7xl */
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+
+.dental-grid-3 {
+    display: grid;
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+    gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+    .dental-grid-3 {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+/* 8. Icons & Avatars */
+.dental-card-glass {
+    background-color: rgba(255, 255, 255, 0.5);
+    backdrop-filter: blur(8px);
+}
+
+.dental-card-primary {
+    background-color: #2563eb;
+    color: white;
+}
+
+.dental-hero-gradient {
+    background: linear-gradient(135deg, #eff6ff 0%, #ffffff 100%);
+}
+
+.dental-form-container {
+    max-width: 42rem; /* 2xl */
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* 8. Text Variants */
+.dental-title {
+    font-size: 1.875rem; /* 3xl */
+    font-weight: 800;
+    color: #111827;
+    letter-spacing: -0.025em;
+}
