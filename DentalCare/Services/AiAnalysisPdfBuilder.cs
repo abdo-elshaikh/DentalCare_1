@@ -32,14 +32,6 @@ namespace DentalCare.Services
         private const int FontSizeTableBody   = 9;
 
         // ── Colour palette (PDF DeviceRGB) ────────────────────────────────────────
-        //  Navy    #0D1B3E  – header, section labels, primary text
-        //  Teal    #0A7FAC  – highlight text, accent rule, section pill bg
-        //  Slate   #64748B  – muted / secondary text
-        //  Ink     #1E293B  – body text
-        //  Fog     #F1F5F9  – alternating table row, panel background
-        //  White   #FFFFFF
-        //  Amber   #D97706  – warning accent
-        //  Green   #047857  – primary treatment badge
 
         private const string C_NavyRG   = "0.051 0.106 0.243";   // #0D1B3E
         private const string C_TealRG   = "0.039 0.498 0.675";   // #0A7FAC

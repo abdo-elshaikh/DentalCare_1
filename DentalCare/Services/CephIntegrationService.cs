@@ -869,81 +869,7 @@ namespace DentalCare.Services
         }
 
         // ─────────────────────────────────────────────────────────────
-        // GROWTH ASSESSMENT
         // ─────────────────────────────────────────────────────────────
-
-        /// <summary>
-        /// Calls POST /growth-assessment for a patient.
-        /// Returns a <see cref="CephGrowthResult"/> or null on failure.
-        /// </summary>
-        public async Task<CephGrowthResult?> GetGrowthAssessmentAsync(
-            int patientAge,
-            string patientSex,
-            string? cvmStage = null,
-            IEnumerable<CephLandmarkDto>? landmarks = null,
-            float pxToMm = 1.0f)
-        {
-            try
-            {
-                var req = new
-                {
-                    patient_age = patientAge,
-                    patient_sex = patientSex,
-                    landmarks = landmarks?.Select(l => new
-                    {
-                        name = l.Name,
-                        x = l.X,
-                        y = l.Y,
-                        confidence = l.Confidence
-                    }).ToList(),
-                    cvm_stage = int.TryParse(cvmStage, out var stage) ? stage : (int?)null,
-                    px_to_mm = pxToMm
-                };
-                var resp = await _httpClient.PostAsJsonAsync("/growth-assessment", req, _json);
-                if (!resp.IsSuccessStatusCode) return null;
-                var body = await resp.Content.ReadAsStringAsync();
-                using var doc = JsonDocument.Parse(body);
-
-                var ga = doc.RootElement.TryGetProperty("growth_assessment", out var gae) ? gae : default;
-                var tt = doc.RootElement.TryGetProperty("treatment_timing",   out var tte) ? tte : default;
-                var summary = ga.ValueKind != JsonValueKind.Undefined && ga.TryGetProperty("assessment_summary", out var ase) ? ase : default;
-                var potential = ga.ValueKind != JsonValueKind.Undefined && ga.TryGetProperty("growth_potential", out var gpe) ? gpe : default;
-                var timing = ga.ValueKind != JsonValueKind.Undefined && ga.TryGetProperty("treatment_timing", out var tae) ? tae : default;
-
-                return new CephGrowthResult
-                {
-                    GrowthStage = summary.ValueKind != JsonValueKind.Undefined && summary.TryGetProperty("stage_name", out var stageName)
-                        ? stageName.GetString() ?? ""
-                        : "",
-                    AssessmentConfidence = ReadNullableFloat(summary, "assessment_confidence"),
-                    GrowthPhase = potential.ValueKind != JsonValueKind.Undefined && potential.TryGetProperty("classification", out var phase)
-                        ? phase.GetString() ?? ""
-                        : "",
-                    IsGrowthActive = potential.ValueKind != JsonValueKind.Undefined &&
-                        potential.TryGetProperty("is_actively_growing", out var active) &&
-                        active.GetBoolean(),
-                    RemainingMonths = ReadIntRange(potential, "remaining_months"),
-                    OptimalTreatmentWindow =
-                        timing.ValueKind != JsonValueKind.Undefined && timing.TryGetProperty("recommendation", out var nestedRec)
-                            ? nestedRec.GetString() ?? ""
-                            : tt.ValueKind != JsonValueKind.Undefined && tt.TryGetProperty("treatment_timing", out var topTiming)
-                                ? topTiming.GetString() ?? ""
-                                : "",
-                    OptimalityScore = ReadNullableFloat(timing, "optimality_score") ?? ReadNullableFloat(tt, "optimality_score"),
-                    Recommendation =
-                        tt.ValueKind != JsonValueKind.Undefined && tt.TryGetProperty("recommendations", out var recs) &&
-                        recs.ValueKind == JsonValueKind.Array && recs.GetArrayLength() > 0
-                            ? recs[0].GetString() ?? ""
-                            : "",
-                    GrowthVector = JsonElementToObject(doc.RootElement.TryGetProperty("growth_projection", out var gp) ? gp : default)
-                };
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "GetGrowthAssessmentAsync failed (non-fatal)");
-                return null;
-            }
-        }
 
         public async Task<CephXaiResult?> ExplainDecisionAsync(
             string skeletalClass,
@@ -1017,24 +943,6 @@ namespace DentalCare.Services
             }
         }
 
-        private static List<int> ReadIntRange(JsonElement element, string propertyName)
-        {
-            var result = new List<int>();
-            if (element.ValueKind is JsonValueKind.Undefined or JsonValueKind.Null)
-                return result;
-
-            if (!element.TryGetProperty(propertyName, out var value) || value.ValueKind != JsonValueKind.Array)
-                return result;
-
-            foreach (var item in value.EnumerateArray())
-            {
-                if (item.ValueKind == JsonValueKind.Number && item.TryGetInt32(out var n))
-                    result.Add(n);
-            }
-
-            return result;
-        }
-
         private static object? JsonElementToObject(JsonElement element)
         {
             if (element.ValueKind is JsonValueKind.Undefined or JsonValueKind.Null)
@@ -1045,21 +953,7 @@ namespace DentalCare.Services
     }
 
     // ─────────────────────────────────────────────────────────────────
-    // GROWTH RESULT MODEL
     // ─────────────────────────────────────────────────────────────────
-
-    public class CephGrowthResult
-    {
-        public string GrowthStage            { get; set; } = "";
-        public float? AssessmentConfidence   { get; set; }
-        public string GrowthPhase            { get; set; } = "";
-        public bool   IsGrowthActive         { get; set; }
-        public List<int> RemainingMonths     { get; set; } = new();
-        public string OptimalTreatmentWindow { get; set; } = "";
-        public float? OptimalityScore         { get; set; }
-        public string Recommendation         { get; set; } = "";
-        public object? GrowthVector          { get; set; }
-    }
 
     public class CephXaiResult
     {

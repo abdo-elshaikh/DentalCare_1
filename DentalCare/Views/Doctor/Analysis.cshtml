@@ -232,7 +232,6 @@
                         <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#tabSummary" type="button">Clinical Summary</button></li>
                         <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#tabMeasurements" type="button">Measurements</button></li>
                         <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#tabTreatment" type="button">Treatment Plan</button></li>
-                        <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#tabGrowth" type="button">Growth</button></li>
                         <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#tabXai" type="button">Explainable AI</button></li>
                         <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#tabExports" type="button">Exports</button></li>
                     </ul>
@@ -334,31 +333,6 @@
                         <div class="dental-card border-0 shadow-sm p-4 workstation-card">
                             <h3 class="h6 fw-bold text-dark mb-4">Treatment Suggestions</h3>
                             <div id="treatmentList" class="d-flex flex-column gap-3"></div>
-                        </div>
-                    </div>
-
-                    <div class="tab-pane fade" id="tabGrowth">
-                        <div class="dental-card border-0 shadow-sm p-4 workstation-card">
-                            <div class="row g-3 align-items-end mb-4">
-                                <div class="col-md-4">
-                                    <label class="form-label dental-label">CVM Stage</label>
-                                    <select id="cvmStage" class="form-select dental-input border shadow-none" style="font-size:13px;">
-                                        <option value="">Not available</option>
-                                        <option value="1">CS 1</option>
-                                        <option value="2">CS 2</option>
-                                        <option value="3">CS 3</option>
-                                        <option value="4">CS 4</option>
-                                        <option value="5">CS 5</option>
-                                        <option value="6">CS 6</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-4">
-                                    <button class="btn btn-outline-primary fw-bold rounded-pill" onclick="calculateGrowth()">
-                                        <i class="fas fa-chart-line me-1"></i> Calculate Growth
-                                    </button>
-                                </div>
-                            </div>
-                            <div id="growthResult" class="row g-3"></div>
                         </div>
                     </div>
 
@@ -1063,34 +1037,6 @@
         } finally {
             btn.innerHTML = '<i class="fas fa-file-pdf me-1"></i> Export PDF';
             setDoctorReviewState();
-        }
-    }
-
-    async function calculateGrowth() {
-        if (!currentAnalysis) return;
-        const box = document.getElementById('growthResult');
-        box.innerHTML = '<div class="col-12"><div class="alert alert-info border-0">Calculating growth assessment...</div></div>';
-        try {
-            const resp = await fetch('/Doctor/GetGrowthAssessment', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    patientAge: parseInt(document.getElementById('settingAge').value) || 25,
-                    patientSex: document.getElementById('settingSex').value,
-                    cvmStage: document.getElementById('cvmStage').value ? parseInt(document.getElementById('cvmStage').value) : null,
-                    pxToMm: parseFloat(document.getElementById('settingPxToMm').value) || 1,
-                    landmarks: currentAnalysis.landmarks || []
-                })
-            });
-            if (!resp.ok) throw new Error((await resp.json().catch(() => ({}))).error || resp.statusText);
-            const g = await resp.json();
-            box.innerHTML = `
-                <div class="col-md-4"><div class="metric-tile"><p class="dental-caption mb-1">Maturity</p><p class="fw-bold text-dark mb-0">${escapeHtml(g.growthStage || 'Unknown')}</p></div></div>
-                <div class="col-md-4"><div class="metric-tile"><p class="dental-caption mb-1">Growth Phase</p><p class="fw-bold text-dark mb-0">${escapeHtml(g.growthPhase || 'Unknown')}</p></div></div>
-                <div class="col-md-4"><div class="metric-tile"><p class="dental-caption mb-1">Active Growth</p><p class="fw-bold text-dark mb-0">${g.isGrowthActive ? 'Yes' : 'No'}</p></div></div>
-                <div class="col-12"><div class="alert alert-primary border-0">${escapeHtml(g.optimalTreatmentWindow || g.recommendation || 'No timing recommendation returned.')}</div></div>`;
-        } catch (ex) {
-            box.innerHTML = `<div class="col-12"><div class="alert alert-danger border-0">${escapeHtml(ex.message)}</div></div>`;
         }
     }
 

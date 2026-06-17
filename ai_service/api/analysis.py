@@ -65,17 +65,17 @@ MEASUREMENT_GROUPS = {
     "SNB": "Skeletal",
     "ANB": "Skeletal",
     "FMA (FH-MP)": "Vertical",
-    "Facial Angle (N-S-Gn)": "Growth Pattern",
+    "Facial Angle (N-S-Gn)": "Vertical Pattern",
     "SN-GoGn": "Vertical",
     "IMPA": "Dental",
     "FMIA": "Dental",
     "Interincisal angle": "Dental",
     "Lower anterior facial height": "Vertical",
     "Nasolabial angle": "Soft Tissue",
-    "Articular angle (S-Ar-Go)": "Growth Pattern",
-    "Gonial angle (Ar-Go-Me)": "Growth Pattern",
+    "Articular angle (S-Ar-Go)": "Skeletal Pattern",
+    "Gonial angle (Ar-Go-Me)": "Skeletal Pattern",
     "Posterior face height / Anterior face height (S-Go / N-Me) ratio": "Vertical",
-    "Sum of angles (N-S-Ar + S-Ar-Go + Ar-Go-Me)": "Growth Pattern",
+    "Sum of angles (N-S-Ar + S-Ar-Go + Ar-Go-Me)": "Skeletal Pattern",
 }
 
 MEASUREMENT_UNITS = {
@@ -357,10 +357,10 @@ def _interpret_measurement(
         return "Balanced Incisors", "Angle between upper and lower incisor axes."
     if name == "Facial Angle (N-S-Gn)":
         if diff > sd:
-            return "High Growth Axis", "Approximates facial growth direction using S-N-Gn."
+            return "High Facial Axis", "Approximates vertical facial axis using S-N-Gn."
         if diff < -sd:
-            return "Low Growth Axis", "Approximates facial growth direction using S-N-Gn."
-        return "Balanced Growth Axis", "Approximates facial growth direction using S-N-Gn."
+            return "Low Facial Axis", "Approximates vertical facial axis using S-N-Gn."
+        return "Balanced Facial Axis", "Approximates vertical facial axis using S-N-Gn."
     if name == "Lower anterior facial height":
         if diff > sd:
             return "Increased Lower Face Height", "ANS to menton distance."

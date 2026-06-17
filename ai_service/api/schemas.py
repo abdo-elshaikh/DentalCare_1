@@ -284,10 +284,3 @@ class UpdateCaseRequest(BaseModel):
     protocol_id: Optional[str] = None
 
 
-class GrowthAssessmentRequest(BaseModel):
-    """Request for growth stage assessment."""
-    patient_age: Optional[int] = None
-    patient_sex: Optional[str] = None
-    landmarks: Optional[List[Point]] = None
-    cvm_stage: Optional[int] = None
-    px_to_mm: float = 1.0

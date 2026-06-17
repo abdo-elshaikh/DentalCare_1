@@ -107,7 +107,7 @@ PROTOCOLS: Dict[str, Dict[str, Any]] = {
         "id": "jarabak",
         "name": "Jarabak analysis",
         "view": "lateral",
-        "description": "Jarabak growth assessment using face-height ratio and cranial base angles.",
+        "description": "Jarabak skeletal assessment using face-height ratio and cranial base angles.",
         "norm_protocol": "Jarabak",
         "required_landmark_ids": [1, 2, 8, 10, 19],
         "measurements": [
@@ -121,7 +121,7 @@ PROTOCOLS: Dict[str, Dict[str, Any]] = {
         "id": "vertical_basic",
         "name": "Vertical pattern basic",
         "view": "lateral",
-        "description": "Frankfort-mandibular and growth-axis screening subset.",
+        "description": "Frankfort-mandibular and facial-axis screening subset.",
         "norm_protocol": "Tweed",
         "required_landmark_ids": [1, 2, 3, 4, 8, 9, 10],
         "measurements": ["FMA (FH-MP)", "Facial Angle (N-S-Gn)"],

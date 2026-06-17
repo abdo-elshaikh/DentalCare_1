@@ -46,7 +46,6 @@ from .measurement_analysis import (
     suggest_landmark_refinement,
     generate_measurement_report
 )
-from .growth_stage import generate_growth_report, predict_treatment_timing, calculate_growth_vector_prediction
 
 # Schemas and helpers
 from .schemas import *
@@ -306,28 +305,6 @@ async def measurement_analysis(request: MeasurementsRequest):
              "quality_assessment": quality_report,
              "refinement_suggestions": refinement_suggestions,
              "overall_quality_score": quality_report["summary"]["overall_quality_score"]
-         }
-     except Exception as e:
-         raise HTTPException(status_code=400, detail=str(e))
-
-@app.post("/growth-assessment")
-async def growth_assessment(request: GrowthAssessmentRequest):
-     """Assess growth stage and predict treatment timing."""
-     try:
-         lm_list = [p.model_dump() for p in request.landmarks] if request.landmarks else None
-         growth_report = generate_growth_report(
-             age=request.patient_age,
-             sex=request.patient_sex,
-             cvm_stage=request.cvm_stage,
-             landmarks=lm_list,
-             px_to_mm=request.px_to_mm
-         )
-         treatment_timing = predict_treatment_timing(request.patient_age, request.patient_sex, request.cvm_stage)
-         growth_vector = calculate_growth_vector_prediction(request.patient_age, request.patient_sex)
-         return {
-             "growth_assessment": growth_report,
-             "treatment_timing": treatment_timing,
-             "growth_projection": growth_vector
          }
      except Exception as e:
          raise HTTPException(status_code=400, detail=str(e))
@@ -782,8 +759,8 @@ async def explain_decision_endpoint(request: AiXaiRequestPayload):
             ),
             XAIDecisionStep(
                 step=2,
-                factor="Vertical Growth Pattern",
-                evidence=f"Growth pattern identified as {request.vertical_pattern}.",
+                factor="Vertical Pattern",
+                evidence=f"Vertical pattern identified as {request.vertical_pattern}.",
                 impact="Influenced vertical control, anchorage selection, and elastics direction."
             ),
             XAIDecisionStep(
@@ -798,7 +775,7 @@ async def explain_decision_endpoint(request: AiXaiRequestPayload):
         if abs(request.measurements.get("ANB", 3.0) - 3.0) > 1.5:
             key_drivers.append("ANB Sagittal relationship deviation")
         if abs(request.measurements.get("FMA (FH-MP)", 25.0) - 25.0) > 4.0:
-            key_drivers.append("FMA Vertical growth axis divergence")
+            key_drivers.append("FMA vertical divergence")
         if abs(request.measurements.get("IMPA", 90.0) - 90.0) > 5.0:
             key_drivers.append("Lower incisor mandibular plane angle compensation")
         if not key_drivers:

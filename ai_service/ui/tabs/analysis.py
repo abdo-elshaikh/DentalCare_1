@@ -98,12 +98,11 @@ def render_analysis_tab(landmarks: list):
         return
 
     # Sub-tabs
-    t1, t2, t3, t4, t5 = st.tabs([
+    t1, t2, t3, t4 = st.tabs([
         "📋 Clinical Summary", 
         "📏 Detailed Measurements", 
         "⚕️ Treatment Plan",
-        "🧠 Explainable AI",
-        "📈 Growth & Dev"
+        "🧠 Explainable AI"
     ])
     
     with t1:
@@ -296,41 +295,3 @@ def render_analysis_tab(landmarks: list):
                     st.markdown("#### Alternative Interpretation")
                     st.write(xai_res.get("alternative_interpretation", ""))
 
-    with t5:
-        st.markdown("### 📈 Growth & Development Assessment")
-        
-        col_g1, col_g2 = st.columns(2)
-        with col_g1:
-            cvm_stage = st.selectbox("Cervical Vertebral Maturation (CVM) Stage", options=[None, 1, 2, 3, 4, 5, 6], format_func=lambda x: f"CS {x}" if x else "Not Available")
-        
-        if st.button("Calculate Growth Vector", key="btn_growth"):
-            with st.spinner("Assessing growth stages..."):
-                from ..utils.api_client import get_growth_assessment
-                
-                payload = {
-                    "patient_age": st.session_state.patient_age,
-                    "patient_sex": st.session_state.patient_sex,
-                    "landmarks": landmarks,
-                    "cvm_stage": cvm_stage,
-                    "px_to_mm": st.session_state.px_to_mm
-                }
-                
-                growth_res = get_growth_assessment(payload)
-                if growth_res:
-                    st.success("Growth Assessment Complete")
-                    
-                    assessment = growth_res.get("growth_assessment", {})
-                    timing = growth_res.get("treatment_timing", {})
-                    projection = growth_res.get("growth_projection", {})
-                    
-                    st.markdown("#### Skeletal Maturity")
-                    st.write(assessment.get("maturity_status", "Unknown"))
-                    
-                    st.markdown("#### Treatment Timing Recommendation")
-                    st.info(timing.get("recommendation", "N/A"))
-                    st.write(f"**Phase:** {timing.get('phase', 'N/A')}")
-                    
-                    st.markdown("#### Predicted Growth Vector")
-                    st.write(f"**Vector:** {projection.get('vector', 'N/A')}")
-                    st.write(f"**Magnitude:** {projection.get('magnitude', 'N/A')}")
-                    st.write(f"**Remaining Spurt:** {projection.get('remaining_spurt_potential', 'N/A')}")

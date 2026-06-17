@@ -110,7 +110,7 @@ def build_treatment_plan(
     dental_pattern = diagnostic_report.get("dental_pattern", "balanced incisor inclination")
     diagnostic_code = diagnostic_report.get("diagnostic_code", "CI-NVD-L")
 
-    growing = age is not None and age < 18
+    pediatric = age is not None and age < 18
     young = age is not None and age < 16
     adult = age is not None and age >= 18
 
@@ -127,13 +127,13 @@ def build_treatment_plan(
 
     secondary: List[Dict[str, Any]] = []
 
-    if skeletal_class == "Class II" and growing:
+    if skeletal_class == "Class II" and pediatric:
         primary = _plan_item(
             title="Herbst or Twin Block with vertical control",
-            rationale="Growing Class II patients with vertical excess benefit from mandibular advancement and intrusion control.",
+            rationale="Pediatric Class II patients with vertical excess may benefit from mandibular advancement and intrusion control.",
             evidence_level="II",
             timeline_months="12-18",
-            referrals=["orthodontics", "growth monitoring"],
+            referrals=["orthodontics"],
             contraindications=["advanced skeletal maturity", "noncompliance"],
             alternative="Camouflage mechanics with bite correction",
             evidence_refs=["Pancherz 1997; Herbst appliance outcomes", "Cozza 2004; Twin-block effectiveness"],
@@ -176,12 +176,12 @@ def build_treatment_plan(
     elif skeletal_class == "Class III" and young:
         primary = _plan_item(
             title="Facemask protraction with maxillary expansion",
-            rationale="Early growth modification is the most evidence-supported option for developing Class III cases.",
+            rationale="Early orthopedic protraction is an evidence-supported option for developing Class III cases.",
             evidence_level="II",
             timeline_months="9-18",
-            referrals=["orthodontics", "growth monitoring"],
+            referrals=["orthodontics"],
             contraindications=["advanced skeletal maturity"],
-            alternative="Observation until growth spurt clarifies the pattern",
+            alternative="Observation with serial clinical records if immediate correction is deferred",
             evidence_refs=["Baccetti 2009; facemask RCTs", "Systematic review 2014; protraction facemask"],
         )
         secondary.append(
@@ -263,7 +263,7 @@ def build_treatment_plan(
                 timeline_months="6-18",
                 referrals=["orthodontics"],
                 contraindications=["poor compliance with elastics"],
-                alternative="Observation with growth and posture review",
+                alternative="Observation with vertical control and posture review",
                 evidence_refs=["JCO 2015; vertical control review"],
             )
         )
@@ -276,8 +276,6 @@ def build_treatment_plan(
     next_steps: List[str] = []
     next_steps.append("Confirm clinical records: intraoral photos, study models or digital scans, panoramic radiograph.")
     next_steps.append("Perform periodontal assessment and complete dental health review before orthodontic planning.")
-    if age is not None and age < 18:
-        next_steps.append("Establish growth monitoring schedule and document skeletal maturity (CVS/hand-wrist if available).")
     next_steps.append("Discuss treatment goals with the patient/guardian and obtain informed consent for chosen pathway.")
 
     return {

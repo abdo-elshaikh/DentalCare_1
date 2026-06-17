@@ -163,14 +163,14 @@ def draw_ceph_report(landmarks: List[Dict[str, Any]], measurements: List[Any],
     
     vertical_pattern = "Normodivergent (Average facial height proportions)"
     if fma > 29.0:
-        vertical_pattern = "Hyperdivergent (High angle, vertical growth tendency)"
+        vertical_pattern = "Hyperdivergent (High angle, increased vertical divergence)"
     elif fma < 21.0:
-        vertical_pattern = "Hypodivergent (Low angle, horizontal growth tendency)"
+        vertical_pattern = "Hypodivergent (Low angle, reduced vertical divergence)"
     
     draw.text((45, 250), "Skeletal Sagittal Pattern:", fill=(15, 23, 42), font=bold_font)
     draw.text((220, 250), skeletal_class, fill=(71, 85, 105), font=body_font)
     
-    draw.text((45, 275), "Vertical Growth Pattern:", fill=(15, 23, 42), font=bold_font)
+    draw.text((45, 275), "Vertical Pattern:", fill=(15, 23, 42), font=bold_font)
     draw.text((220, 275), vertical_pattern, fill=(71, 85, 105), font=body_font)
     
     draw.text((45, 300), "SNA (Maxilla relative to cranial base):", fill=(15, 23, 42), font=bold_font)
@@ -190,10 +190,10 @@ def draw_ceph_report(landmarks: List[Dict[str, Any]], measurements: List[Any],
     
     recs = []
     if "Class II" in skeletal_class:
-        recs.append("- Growth modification (Herbst/Twin Block) if patient is in growing stage.")
+        recs.append("- Functional appliance or Class II mechanics when clinically indicated.")
         recs.append("- Dual arch orthodontic alignment with Class II elastics or dental camouflage.")
     elif "Class III" in skeletal_class:
-        recs.append("- Early orthopedic correction with Facemask protraction if patient is growing.")
+        recs.append("- Orthopedic correction with facemask protraction when clinically indicated.")
         recs.append("- Surgical-orthodontic consultation (LeFort I/BSSO) if patient is skeletally mature.")
     else:
         recs.append("- Leveling, aligning, and finishing with standard non-extraction mechanics.")

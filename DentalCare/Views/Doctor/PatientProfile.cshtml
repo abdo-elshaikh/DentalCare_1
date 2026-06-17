@@ -82,10 +82,6 @@
                                     <i class="fas fa-microscope me-1"></i> Run Cephalometric Analysis
                                 </a>
                             }
-                            <button class="btn btn-outline-primary btn-sm fw-bold rounded-pill px-3"
-                                    onclick="loadGrowthAssessment(@Model.Age, '@Model.Gender')">
-                                <i class="fas fa-chart-line me-1"></i> Growth Assessment
-                            </button>
                         </div>
                     }
                     else
@@ -100,37 +96,6 @@
                         </button>
                         <div id="syncResult" class="mt-2 d-none"></div>
                     }
-                </div>
-
-                <!-- ── Growth Assessment Result ──────────────────── -->
-                <div id="growthPanel" class="dental-card shadow-sm border-0 border-start border-4 border-warning p-4 d-none">
-                    <h3 class="h6 fw-bold text-dark mb-3 d-flex align-items-center gap-2">
-                        <i class="fas fa-chart-line text-warning"></i> Growth Assessment
-                    </h3>
-                    <div id="growthLoading" class="text-center py-3">
-                        <div class="spinner-border spinner-border-sm text-warning" role="status"></div>
-                        <p class="dental-caption mt-2 mb-0">Assessing growth stage...</p>
-                    </div>
-                    <div id="growthContent" class="d-none d-flex flex-column gap-2">
-                        <div class="d-flex justify-content-between">
-                            <span class="dental-caption">Growth Stage</span>
-                            <span class="fw-bold small text-dark" id="growthStage">-</span>
-                        </div>
-                        <div class="d-flex justify-content-between">
-                            <span class="dental-caption">Phase</span>
-                            <span class="fw-bold small text-dark" id="growthPhase">-</span>
-                        </div>
-                        <div class="d-flex justify-content-between">
-                            <span class="dental-caption">Active Growth?</span>
-                            <span class="fw-bold small" id="growthActive">-</span>
-                        </div>
-                        <hr class="my-2">
-                        <p class="dental-caption mb-1">Optimal Treatment Window</p>
-                        <p class="small fw-bold text-dark mb-0" id="growthWindow">-</p>
-                        <p class="dental-caption mt-2 mb-1">Recommendation</p>
-                        <p class="small text-secondary fst-italic mb-0" id="growthRec">-</p>
-                    </div>
-                    <div id="growthError" class="alert alert-warning border-0 small py-2 d-none"></div>
                 </div>
 
                 <!-- ── New Diagnosis Form ─────────────────────────── -->
@@ -283,44 +248,5 @@
         }
     }
 
-    // ── Growth Assessment ───────────────────────────────────────────
-    async function loadGrowthAssessment(age, sex) {
-        const panel = document.getElementById('growthPanel');
-        const loading = document.getElementById('growthLoading');
-        const content = document.getElementById('growthContent');
-        const errDiv  = document.getElementById('growthError');
-
-        panel.classList.remove('d-none');
-        loading.classList.remove('d-none');
-        content.classList.add('d-none');
-        errDiv.classList.add('d-none');
-
-        panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-
-        try {
-            const form = new FormData();
-            form.append('patientAge', age);
-            form.append('patientSex', sex);
-            const resp = await fetch('/Doctor/GetGrowthAssessment', { method: 'POST', body: form });
-            const data = await resp.json();
-
-            if (!resp.ok) throw new Error(data.error || 'Assessment failed.');
-
-            document.getElementById('growthStage').textContent  = data.growthStage  || '-';
-            document.getElementById('growthPhase').textContent  = data.growthPhase  || '-';
-            const activeEl = document.getElementById('growthActive');
-            activeEl.textContent  = data.isGrowthActive ? 'Yes' : 'No';
-            activeEl.className    = 'fw-bold small ' + (data.isGrowthActive ? 'text-warning' : 'text-success');
-            document.getElementById('growthWindow').textContent = data.optimalTreatmentWindow || 'Not specified';
-            document.getElementById('growthRec').textContent    = data.recommendation || 'No specific recommendation.';
-
-            loading.classList.add('d-none');
-            content.classList.remove('d-none');
-        } catch (ex) {
-            loading.classList.add('d-none');
-            errDiv.classList.remove('d-none');
-            errDiv.textContent = ex.message;
-        }
-    }
 </script>
 }

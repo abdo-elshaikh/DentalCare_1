@@ -60,15 +60,6 @@ namespace DentalCare.ViewModels
         public float? SuccessProbability { get; set; }
     }
 
-    public class AiGrowthAssessmentRequest
-    {
-        public int PatientAge { get; set; } = 25;
-        public string PatientSex { get; set; } = "Male";
-        public int? CvmStage { get; set; }
-        public float PxToMm { get; set; } = 1.0f;
-        public List<AiLandmarkReportItem> Landmarks { get; set; } = new();
-    }
-
     public class AiExplainDecisionRequest
     {
         public string SkeletalClass { get; set; } = "Class I";

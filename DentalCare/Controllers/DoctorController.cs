@@ -415,49 +415,6 @@ namespace DentalCare.Controllers
         }
 
         /// <summary>
-        /// AJAX: Get growth stage and treatment timing for a patient.
-        /// </summary>
-        [HttpPost]
-        [Authorize(Roles = "Doctor")]
-        public async Task<IActionResult> GetGrowthAssessment([FromBody] AiGrowthAssessmentRequest request)
-        {
-            if (request == null)
-                return BadRequest(new { error = "Missing growth assessment request." });
-
-            var landmarks = request.Landmarks.Select(l => new CephLandmarkDto
-            {
-                Name = l.Name,
-                X = l.X,
-                Y = l.Y,
-                Confidence = l.Confidence,
-                Provenance = l.Provenance,
-                ExpectedErrorMm = l.ExpectedErrorMm
-            });
-
-            var growth = await _cephService.GetGrowthAssessmentAsync(
-                request.PatientAge,
-                request.PatientSex,
-                request.CvmStage?.ToString(),
-                landmarks,
-                request.PxToMm);
-            if (growth == null)
-                return StatusCode(503, new { error = "Growth assessment service unavailable." });
-
-            return Json(new
-            {
-                growthStage            = growth.GrowthStage,
-                assessmentConfidence   = growth.AssessmentConfidence,
-                growthPhase            = growth.GrowthPhase,
-                isGrowthActive         = growth.IsGrowthActive,
-                remainingMonths        = growth.RemainingMonths,
-                optimalTreatmentWindow = growth.OptimalTreatmentWindow,
-                optimalityScore        = growth.OptimalityScore,
-                growthVector           = growth.GrowthVector,
-                recommendation         = growth.Recommendation
-            });
-        }
-
-        /// <summary>
         /// AJAX: Explain why the AI generated its diagnosis and treatment direction.
         /// </summary>
         [HttpPost]

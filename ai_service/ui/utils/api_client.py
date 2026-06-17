@@ -79,17 +79,6 @@ def get_xai_explanation(payload: dict):
         st.error(f"Error generating XAI explanation: {str(e)}")
         return None
 
-def get_growth_assessment(payload: dict):
-    """Call the /growth-assessment endpoint."""
-    url = f"{API_BASE_URL}/growth-assessment"
-    try:
-        response = requests.post(url, json=payload)
-        response.raise_for_status()
-        return response.json()
-    except requests.RequestException as e:
-        st.error(f"Error generating growth assessment: {str(e)}")
-        return None
-
 def create_case(payload: dict):
     """Call the /cases endpoint to save the analysis locally."""
     url = f"{API_BASE_URL}/cases"

@@ -274,7 +274,7 @@ def diagnose_measurements(
         recommendations.append("Consider conservative orthodontic management with monitoring.")
 
     if "Class II" in skeletal_class and age is not None and age < 18:
-        recommendations.append("Assess suitability for growth modification (functional appliance) while monitoring compliance.")
+        recommendations.append("Assess suitability for functional appliance therapy while monitoring compliance.")
     if "Class III" in skeletal_class and age is not None and age >= 18:
         recommendations.append("Consider orthognathic consultation for definitive skeletal correction.")
 

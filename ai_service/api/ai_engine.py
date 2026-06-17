@@ -54,7 +54,7 @@ def _fallback_patient_letter(diagnostic_report: Dict[str, Any], treatment_plan: 
     severity = diagnostic_report.get("severity", "mild")
     treatment_title = primary.get("title", "observation")
     return (
-        f"Your cephalometric analysis suggests {skeletal_class} pattern with {vertical_pattern} growth tendencies. "
+        f"Your cephalometric analysis suggests {skeletal_class} pattern with a {vertical_pattern} vertical pattern. "
         f"The current severity is {severity}. "
         f"The main treatment direction is {treatment_title}."
     )
