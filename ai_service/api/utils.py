@@ -16,6 +16,8 @@ def preprocess_image(image_bytes, target_size=(768, 768)):
     # Read image from bytes
     image_np = np.frombuffer(image_bytes, np.uint8)
     image = cv2.imdecode(image_np, cv2.IMREAD_COLOR)
+    if image is None:
+        raise ValueError("Invalid or unsupported image data")
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     
     # Keep original size for later mapping

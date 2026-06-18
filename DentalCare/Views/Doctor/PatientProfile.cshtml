@@ -1,25 +1,21 @@
 @model DentalCare.Models.Patient
 @{
     ViewData["Title"] = "Patient Profile - " + Model.Name;
-    bool hasCeph  = Model.CephPatientId.HasValue && Model.CephPatientId != Guid.Empty;
     bool isDoctor = User.IsInRole("Doctor");
     bool isXRay   = ViewBag.VisitType as string == "X-Ray";
+    var analysisReportsByMedicalRecordId =
+        ViewBag.AnalysisReportsByMedicalRecordId as Dictionary<int, DentalCare.Models.AiAnalysisReport>
+        ?? new Dictionary<int, DentalCare.Models.AiAnalysisReport>();
 }
 
 <div class="mb-4 d-flex align-items-center justify-content-between gap-3">
     <a asp-action="Dashboard" class="btn btn-link text-primary fw-bold text-decoration-none p-0 d-flex align-items-center gap-2 small">
         <i class="fas fa-arrow-left"></i> Back to Dashboard
     </a>
-    @if (isDoctor && hasCeph)
+    @if (isDoctor)
     {
         <span class="badge bg-success-subtle text-success rounded-pill px-3 py-2 small fw-bold d-flex align-items-center gap-2">
-            <i class="fas fa-circle" style="font-size:8px;"></i> Linked to AI System
-        </span>
-    }
-    else if (isDoctor)
-    {
-        <span class="badge bg-secondary-subtle text-secondary rounded-pill px-3 py-2 small fw-bold">
-            Not synced to AI
+            <i class="fas fa-circle" style="font-size:8px;"></i> AI Ready
         </span>
     }
 </div>
@@ -67,34 +63,15 @@
                         <i class="fas fa-robot text-primary"></i> AI Integration
                     </h3>
 
-                    @if (hasCeph)
+                    <p class="dental-caption mb-3" style="font-size:11px;">
+                        AI analysis uses this patient record directly from DentalCare. No AI-side patient database is required.
+                    </p>
+                    @if (isXRay)
                     {
-                        <!-- Linked: show actions -->
-                        <p class="dental-caption mb-3" style="font-size:11px;">
-                            <i class="fas fa-link text-success me-1"></i>
-                            Ceph ID: <code class="small">@Model.CephPatientId?.ToString()[..8]…</code>
-                        </p>
-                        <div class="d-flex flex-column gap-2">
-                            @if (isXRay)
-                            {
-                                <a asp-action="Analysis" asp-route-patientId="@Model.Id"
-                                   class="btn btn-success btn-sm fw-bold rounded-pill px-3 shadow-sm text-center">
-                                    <i class="fas fa-microscope me-1"></i> Run Cephalometric Analysis
-                                </a>
-                            }
-                        </div>
-                    }
-                    else
-                    {
-                        <!-- Not linked: show sync button -->
-                        <p class="dental-caption mb-3" style="font-size:11px;">
-                            This patient is not yet synced to the AI cephalometric system.
-                        </p>
-                        <button id="syncBtn" class="btn btn-primary btn-sm fw-bold rounded-pill px-3 shadow-sm w-100"
-                                onclick="syncToCeph(@Model.Id)">
-                            <i class="fas fa-sync-alt me-1"></i> Sync to AI System
-                        </button>
-                        <div id="syncResult" class="mt-2 d-none"></div>
+                        <a asp-action="Analysis" asp-route-patientId="@Model.Id"
+                           class="btn btn-success btn-sm fw-bold rounded-pill px-3 shadow-sm text-center w-100">
+                            <i class="fas fa-microscope me-1"></i> Run Cephalometric Analysis
+                        </a>
                     }
                 </div>
 
@@ -191,7 +168,16 @@
                                                 if (docName != "Unknown" && !docName.StartsWith("Dr. ")) docName = "Dr. " + docName;
                                             }
                                             <span class="dental-caption fw-bold text-primary">@docName</span>
-                                            <span class="dental-caption opacity-50">Record #@record.Id</span>
+                                            <div class="d-flex align-items-center gap-3">
+                                                @if (analysisReportsByMedicalRecordId.TryGetValue(record.Id, out var analysisReport))
+                                                {
+                                                    <a asp-action="AnalysisDetails" asp-route-id="@analysisReport.Id"
+                                                       class="btn btn-outline-primary btn-sm fw-bold rounded-pill px-3">
+                                                        <i class="fas fa-chart-line me-1"></i> Analysis Details
+                                                    </a>
+                                                }
+                                                <span class="dental-caption opacity-50">Record #@record.Id</span>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -212,41 +198,5 @@
     const PATIENT_ID   = @Model.Id;
 
     // ── Sync to Ceph ────────────────────────────────────────────────
-    async function syncToCeph(patientId) {
-        const btn = document.getElementById('syncBtn');
-        const result = document.getElementById('syncResult');
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Syncing...';
-        result.className = 'mt-2';
-        result.textContent = '';
-
-        try {
-            const form = new FormData();
-            form.append('patientId', patientId);
-            const resp = await fetch('/Doctor/SyncToCeph', { method: 'POST', body: form });
-            const data = await resp.json();
-
-            if (resp.ok && data.success) {
-                result.classList.remove('d-none');
-                result.innerHTML = `<div class="alert alert-success border-0 rounded-3 small py-2 mb-0">
-                    <i class="fas fa-check-circle me-1"></i>
-                    ${data.already ? 'Already synced.' : 'Synced! Reload to see AI features.'}
-                </div>`;
-                btn.innerHTML = '<i class="fas fa-check me-1"></i> Synced';
-                btn.classList.replace('btn-primary', 'btn-success');
-                if (!data.already) setTimeout(() => location.reload(), 1500);
-            } else {
-                throw new Error(data.error || 'Sync failed.');
-            }
-        } catch (ex) {
-            result.classList.remove('d-none');
-            result.innerHTML = `<div class="alert alert-danger border-0 rounded-3 small py-2 mb-0">
-                <i class="fas fa-exclamation-triangle me-1"></i> ${ex.message}
-            </div>`;
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-sync-alt me-1"></i> Retry Sync';
-        }
-    }
-
 </script>
 }

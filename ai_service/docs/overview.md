@@ -45,7 +45,7 @@ ai_service/
 ├── models/                # PyTorch model weights & configs
 │   └── best_model.pth      # 19-landmark HRNet-W32 weights
 ├── training/              # Multi-GPU training scripts
-├── data/                  # SQLite database & sample folders
+├── data/                  # Sample folders only; no AI-service database
 ├── app.py                 # Streamlit clinical interface
 ├── config.yaml            # Global system configuration
 ├── .env                   # Environment variables (API keys, paths)
@@ -280,7 +280,6 @@ ai_service/
 │   ├── calibration.py      # المعايرة اليدوية
 │   ├── calibration_auto.py # المعايرة التلقائية
 │   ├── anatomical_norms.py # Procrustes + Mahalanobis shape validation
-│   └── repository.py       # SQLite case storage
 ├── ui/                     # Streamlit Frontend
 │   ├── tabs/               # علامات التبويب (Viewer, Editor, Calibration...)
 │   └── utils/api.py        # موصل HTTP للخلفية

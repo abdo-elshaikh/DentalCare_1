@@ -170,8 +170,8 @@ def get_protocol_norms_preview(protocol_id: str) -> List[Dict[str, Any]]:
         preview.append(
             {
                 "measurement": measurement,
-                "mean": norm.get("mean"),
-                "sd": norm.get("sd"),
+                "mean": norm.get("norm_mean"),
+                "sd": norm.get("norm_sd"),
                 "range": norm.get("range"),
                 "clinical": norm.get("clinical"),
                 "source": norm.get("source"),

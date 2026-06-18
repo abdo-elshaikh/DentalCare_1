@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-This project is an AI-assisted cephalometric analysis platform. Its central machine-learning component is an HRNet-based landmark detector that predicts 19 anatomical landmarks on lateral cephalometric radiographs. Around that detector, the repository adds preprocessing, heatmap post-processing, optional sub-pixel offset refinement, anatomical validation, cephalometric measurement computation, protocol-based normative comparison, diagnosis generation, treatment suggestions, report export, and case storage.
+This project is an AI-assisted cephalometric analysis platform. Its central machine-learning component is an HRNet-based landmark detector that predicts 19 anatomical landmarks on lateral cephalometric radiographs. Around that detector, the repository adds preprocessing, heatmap post-processing, optional sub-pixel offset refinement, anatomical validation, cephalometric measurement computation, protocol-based normative comparison, diagnosis generation, treatment suggestions, and report output.
 
 The most important point is that the system is not a single monolithic "diagnostic AI model." It is a layered pipeline:
 
@@ -27,7 +27,7 @@ The operational workflow is distributed across several modules:
 | Protocols and norms | `api/protocols.py`, `api/norms.py`, `references/*.json` | Steiner, Tweed, Downs, McNamara, Jarabak, Eastman, ABO-style reference mappings |
 | Diagnosis | `api/diagnostic_engine.py` | Skeletal class, vertical pattern, severity, craniofacial pattern, ICD-10 suggestions |
 | Treatment reasoning | `api/treatment_engine.py` | Rule-based treatment-plan suggestions |
-| API | `api/main.py` | FastAPI endpoints for detection, measurements, diagnosis, reports, and case repository |
+| API | `api/main.py` | Stateless FastAPI endpoints for detection, measurements, diagnosis, reports, and overlays |
 | UI | `ui/*` | Streamlit clinical workspace |
 
 This separation is generally strong: model inference is kept distinct from clinical interpretation. That is important because landmark detection uncertainty and diagnostic reasoning have different failure modes.

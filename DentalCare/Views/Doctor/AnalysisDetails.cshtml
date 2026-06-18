@@ -1,0 +1,285 @@
+@model DentalCare.Models.AiAnalysisReport
+@using DentalCare.Models
+@using DentalCare.ViewModels
+@using System.Text.Json
+@{
+    ViewData["Title"] = "AI Analysis Details";
+    var patient = ViewBag.Patient as Patient;
+    var doctorName = ViewBag.DoctorName as string ?? "Unknown";
+    var measurements = SafeDeserialize(Model.MeasurementRowsJson, new List<AiMeasurementReportItem>());
+    var treatments = SafeDeserialize(Model.TreatmentsJson, new List<AiTreatmentReportItem>());
+    var landmarks = SafeDeserialize(Model.LandmarksJson, new List<AiLandmarkReportItem>());
+    var clinicalNotes = SafeDeserialize(Model.ClinicalNotesJson, new List<string>());
+    var warnings = SafeDeserialize(Model.WarningsJson, new List<string>());
+    var skeletalDifferential = SafeDeserialize(Model.SkeletalDifferentialJson, new Dictionary<string, float>());
+    var originalImageUrl = Url.Action("AnalysisImage", "Doctor", new { id = Model.Id, kind = "original" });
+    var overlayImageUrl = Url.Action("AnalysisImage", "Doctor", new { id = Model.Id, kind = "overlay" });
+}
+
+@functions {
+    private static T SafeDeserialize<T>(string? json, T fallback)
+    {
+        if (string.IsNullOrWhiteSpace(json)) return fallback;
+        try
+        {
+            return JsonSerializer.Deserialize<T>(
+                json,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? fallback;
+        }
+        catch
+        {
+            return fallback;
+        }
+    }
+}
+
+<style>
+    .metric-tile { background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; }
+</style>
+
+<div class="mb-4 d-flex align-items-center justify-content-between gap-3 flex-wrap">
+    <a asp-action="PatientProfile" asp-route-id="@Model.PatientId"
+       class="btn btn-link text-primary fw-bold text-decoration-none p-0 d-flex align-items-center gap-2 small">
+        <i class="fas fa-arrow-left"></i> Back to Patient
+    </a>
+    <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-2 small fw-bold">
+        Analysis #@Model.Id
+    </span>
+</div>
+
+<div class="dental-card border-0 shadow-sm p-4 mb-4">
+    <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+        <div>
+            <h1 class="h4 fw-bold text-dark mb-1">AI Cephalometric Analysis</h1>
+            <p class="dental-caption mb-0">
+                @(patient?.Name ?? $"Patient #{Model.PatientId}") · @Model.CreatedAt.ToString("dd MMM yyyy, hh:mm tt") · @doctorName
+            </p>
+        </div>
+        <div class="text-end">
+            <p class="dental-caption mb-1">Protocol</p>
+            <p class="fw-bold text-dark mb-0">@Model.ProtocolName</p>
+        </div>
+    </div>
+
+    <div class="row g-3 mt-3">
+        <div class="col-md-4">
+            <div class="metric-tile h-100">
+                <p class="dental-caption mb-1">Skeletal Class</p>
+                <p class="fw-bold text-dark mb-0">@Model.SkeletalClass</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="metric-tile h-100">
+                <p class="dental-caption mb-1">Vertical Pattern</p>
+                <p class="fw-bold text-dark mb-0">@Model.VerticalPattern</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="metric-tile h-100">
+                <p class="dental-caption mb-1">Confidence</p>
+                <p class="fw-bold text-dark mb-0">@(Model.ConfidenceScore.HasValue ? Model.ConfidenceScore.Value.ToString("P0") : "N/A")</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-xl-5">
+        <div class="d-flex flex-column gap-4">
+            <div class="dental-card border-0 shadow-sm p-4">
+                <h2 class="h6 fw-bold text-dark mb-3">Saved Images</h2>
+                <div class="d-flex flex-column gap-3">
+                    <div>
+                        <p class="dental-caption mb-2">Original X-Ray</p>
+                        @if (Model.OriginalImage is { Length: > 0 })
+                        {
+                            <img src="@originalImageUrl" alt="Original X-Ray" class="img-fluid rounded-3 border bg-light mb-2" />
+                            <a href="@originalImageUrl" class="btn btn-outline-primary btn-sm fw-bold rounded-pill px-3">
+                                <i class="fas fa-download me-1"></i> Open Original
+                            </a>
+                        }
+                        else
+                        {
+                            <p class="small text-muted mb-0">No original image was saved.</p>
+                        }
+                    </div>
+                    <div>
+                        <p class="dental-caption mb-2">AI Overlay</p>
+                        @if (Model.OverlayImage is { Length: > 0 })
+                        {
+                            <img src="@overlayImageUrl" alt="AI Overlay" class="img-fluid rounded-3 border bg-light mb-2" />
+                            <a href="@overlayImageUrl" class="btn btn-outline-primary btn-sm fw-bold rounded-pill px-3">
+                                <i class="fas fa-eye me-1"></i> Open Overlay
+                            </a>
+                        }
+                        else
+                        {
+                            <p class="small text-muted mb-0">No overlay image was saved.</p>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="dental-card border-0 shadow-sm p-4">
+                <h2 class="h6 fw-bold text-dark mb-3">Clinical Notes</h2>
+                @if (clinicalNotes.Any())
+                {
+                    <ul class="small text-secondary mb-0">
+                        @foreach (var note in clinicalNotes)
+                        {
+                            <li>@note</li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <p class="small text-muted mb-0">No clinical notes saved.</p>
+                }
+
+                @if (warnings.Any())
+                {
+                    <div class="alert alert-warning border-0 rounded-3 small mt-3 mb-0">
+                        <p class="fw-bold mb-2">Warnings</p>
+                        <ul class="mb-0">
+                            @foreach (var warning in warnings)
+                            {
+                                <li>@warning</li>
+                            }
+                        </ul>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-7">
+        <div class="d-flex flex-column gap-4">
+            <div class="dental-card border-0 shadow-sm p-4">
+                <h2 class="h6 fw-bold text-dark mb-3">Summary</h2>
+                <p class="small text-secondary mb-0" style="white-space: pre-wrap;">@Model.Summary</p>
+                @if (!string.IsNullOrWhiteSpace(Model.ReviewNotes))
+                {
+                    <div class="p-3 bg-light rounded-3 mt-3">
+                        <p class="dental-caption mb-1">Doctor Review Notes</p>
+                        <p class="small text-secondary mb-0">@Model.ReviewNotes</p>
+                    </div>
+                }
+            </div>
+
+            <div class="dental-card border-0 shadow-sm p-4">
+                <h2 class="h6 fw-bold text-dark mb-3">Measurements</h2>
+                @if (measurements.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle mb-0">
+                            <thead>
+                                <tr class="dental-caption">
+                                    <th>Measurement</th>
+                                    <th>Value</th>
+                                    <th>Norm</th>
+                                    <th>Diff</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in measurements.OrderBy(m => m.MeasurementName))
+                                {
+                                    <tr>
+                                        <td class="fw-bold small">@item.MeasurementName</td>
+                                        <td class="small">@item.Value.ToString("0.0") @item.Unit</td>
+                                        <td class="small">@(item.NormalValue.HasValue ? item.NormalValue.Value.ToString("0.0") : "N/A")</td>
+                                        <td class="small">@(item.Difference.HasValue ? item.Difference.Value.ToString("+0.0;-0.0;0.0") : "N/A")</td>
+                                        <td><span class="badge bg-light text-dark border rounded-pill">@item.Status</span></td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <p class="small text-muted mb-0">No measurements saved.</p>
+                }
+            </div>
+
+            <div class="dental-card border-0 shadow-sm p-4">
+                <h2 class="h6 fw-bold text-dark mb-3">Treatment Options</h2>
+                @if (treatments.Any())
+                {
+                    <div class="d-flex flex-column gap-3">
+                        @foreach (var treatment in treatments)
+                        {
+                            <div class="p-3 bg-light rounded-3">
+                                <div class="d-flex justify-content-between gap-3 flex-wrap">
+                                    <p class="fw-bold text-dark small mb-1">@treatment.TreatmentName</p>
+                                    @if (treatment.IsPrimary)
+                                    {
+                                        <span class="badge bg-success-subtle text-success rounded-pill">Primary</span>
+                                    }
+                                </div>
+                                <p class="small text-secondary mb-2">@treatment.Description</p>
+                                <p class="dental-caption mb-0">@treatment.DurationMonths months · @treatment.EvidenceLevel</p>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <p class="small text-muted mb-0">No treatment options saved.</p>
+                }
+            </div>
+
+            <div class="dental-card border-0 shadow-sm p-4">
+                <h2 class="h6 fw-bold text-dark mb-3">Landmarks</h2>
+                @if (landmarks.Any())
+                {
+                    <div class="table-responsive" style="max-height: 360px;">
+                        <table class="table table-sm align-middle mb-0">
+                            <thead>
+                                <tr class="dental-caption">
+                                    <th>Name</th>
+                                    <th>X</th>
+                                    <th>Y</th>
+                                    <th>Confidence</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var landmark in landmarks.OrderBy(l => l.Name))
+                                {
+                                    <tr>
+                                        <td class="fw-bold small">@landmark.Name</td>
+                                        <td class="small">@landmark.X.ToString("0.0")</td>
+                                        <td class="small">@landmark.Y.ToString("0.0")</td>
+                                        <td class="small">@(landmark.Confidence.HasValue ? landmark.Confidence.Value.ToString("P0") : "N/A")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <p class="small text-muted mb-0">No landmarks saved.</p>
+                }
+            </div>
+
+            @if (skeletalDifferential.Any())
+            {
+                <div class="dental-card border-0 shadow-sm p-4">
+                    <h2 class="h6 fw-bold text-dark mb-3">Skeletal Differential</h2>
+                    <div class="row g-2">
+                        @foreach (var item in skeletalDifferential.OrderByDescending(i => i.Value))
+                        {
+                            <div class="col-md-4">
+                                <div class="metric-tile">
+                                    <p class="dental-caption mb-1">@item.Key</p>
+                                    <p class="fw-bold text-dark mb-0">@item.Value.ToString("P0")</p>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>

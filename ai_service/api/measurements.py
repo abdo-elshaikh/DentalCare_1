@@ -16,7 +16,12 @@ import random
 import math
 from typing import Any, Dict, List, Optional, Tuple
 
-from .analysis import compute_cephalometric_measurements
+from .analysis import (
+    MEASUREMENT_GROUPS,
+    MEASUREMENT_UNITS,
+    classify_measurement,
+    compute_cephalometric_measurements,
+)
 from .norms import get_norm_tuple
 
 
@@ -130,27 +135,41 @@ def summary_report(
       "px_to_mm": px_to_mm,
     }
     """
+    from .protocols import get_protocol
+
+    protocol = get_protocol(protocol_id)
     mc = compute_measurements_with_uncertainty(landmarks, px_to_mm, samples=samples, base_sigma_px=base_sigma_px)
+    measurement_names = [name for name in protocol["measurements"] if name in mc]
     rows = []
-    for name, stats in mc.items():
+    for name in measurement_names:
+        stats = mc[name]
         value = stats.get("value")
         mean = stats.get("mean")
         sd = stats.get("sd")
         norm_mean, norm_sd, meta = get_norm_tuple(protocol_id, name, ethnic_profile)
+        classification = classify_measurement(
+            name,
+            value,
+            ethnic_profile=ethnic_profile,
+            protocol_id=protocol_id,
+        )
         # compute z-score using combined uncertainty (measurement sd + normative sd)
         combined_sd = math.sqrt((sd or 0.0) ** 2 + (norm_sd or 0.0) ** 2)
         z = abs((mean - norm_mean) / (combined_sd or 1.0))
-        status = "normal" if z <= 1.0 else "mild" if z <= 2.0 else "severe"
+        severity = "normal" if z <= 1.0 else "mild" if z <= 2.0 else "severe"
         rows.append(
             {
                 "measurement": name,
+                "group": MEASUREMENT_GROUPS.get(name, "Other"),
+                "unit": MEASUREMENT_UNITS.get(name, ""),
                 "value": round(value, 3),
                 "mean": mean,
                 "sd": sd,
                 "norm_mean": norm_mean,
                 "norm_sd": norm_sd,
                 "z_score": round(z, 3),
-                "status": status,
+                "uncertainty_severity": severity,
+                **classification,
             }
         )
 
@@ -158,4 +177,7 @@ def summary_report(
         "measurements": rows,
         "landmark_count": len(landmarks),
         "px_to_mm": px_to_mm,
+        "protocol_id": protocol_id,
+        "is_protocol_ready": len(measurement_names) == len(protocol["measurements"]),
+        "missing_measurements": [name for name in protocol["measurements"] if name not in mc],
     }

@@ -4,10 +4,6 @@ namespace DentalCare.ViewModels
 {
     public class RegisterViewModel
     {
-        [Required(ErrorMessage = "يرجى إدخال الاسم الكامل للطبيب وليس الإيميل")]
-        [Display(Name = "اسم الطبيب الكامل (مثال: د. أحمد محمد)")]
-        public string FullName { get; set; } = string.Empty;
-
         [Required(ErrorMessage = "الإيميل مطلوب")]
         [EmailAddress(ErrorMessage = "صيغة الإيميل غير صحيحة")]
         [Display(Name = "الإيميل")]
@@ -24,8 +20,5 @@ namespace DentalCare.ViewModels
         [Display(Name = "تأكيد كلمة المرور")]
         [Compare("Password", ErrorMessage = "كلمة المرور غير متطابقة.")]
         public string ConfirmPassword { get; set; } = string.Empty;
-
-        [Required]
-        public string Role { get; set; } = "Doctor";
     }
 }

@@ -12,13 +12,13 @@ namespace DentalCare.Models
 
         [Required(ErrorMessage = "من فضلك تأكد من اختيار نوع الزيارة من القائمة")]
         [Display(Name = "نوع الزيارة")]
-        public string Type { get; set; } 
-        public string Status { get; set; } 
+        public string Type { get; set; } = string.Empty; 
+        public string Status { get; set; } = string.Empty; 
         public int PatientId { get; set; }
 
         [Required(ErrorMessage = "من فضلك تأكد من اختيار طبيب من القائمة")]
         [Display(Name = "الطبيب المعالج")] 
-        public string DoctorId { get; set; }
+        public string DoctorId { get; set; } = string.Empty;
         public Patient? Patient { get; set; }
     }
 }

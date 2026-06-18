@@ -1,0 +1,117 @@
+@model DentalCare.ViewModels.AdminUsersViewModel
+@{
+    ViewData["Title"] = "Manage Users";
+}
+
+<div class="d-flex align-items-center justify-content-between gap-3 flex-wrap mb-4">
+    <div>
+        <h1 class="h4 fw-bold text-dark mb-1">Manage Users</h1>
+        <p class="dental-caption mb-0">Create clinic users and control their access roles.</p>
+    </div>
+    <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-2 fw-bold">
+        @Model.Users.Count Users
+    </span>
+</div>
+
+@if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
+{
+    <div class="alert alert-info border-0 rounded-3 shadow-sm small">@Model.StatusMessage</div>
+}
+
+<div asp-validation-summary="All" class="text-danger small mb-3"></div>
+
+<div class="row g-4">
+    <div class="col-lg-4">
+        <div class="dental-card border-0 shadow-sm p-4">
+            <h2 class="h6 fw-bold text-dark mb-4 d-flex align-items-center gap-2">
+                <i class="fas fa-user-plus text-primary"></i> New User
+            </h2>
+            <form asp-action="CreateUser" method="post" class="d-flex flex-column gap-3">
+                <div>
+                    <label asp-for="NewUser.Email" class="form-label dental-label">Email</label>
+                    <input asp-for="NewUser.Email" class="form-control dental-input border shadow-none" autocomplete="email" />
+                    <span asp-validation-for="NewUser.Email" class="text-danger small"></span>
+                </div>
+                <div>
+                    <label asp-for="NewUser.Password" class="form-label dental-label">Password</label>
+                    <input asp-for="NewUser.Password" class="form-control dental-input border shadow-none" autocomplete="new-password" />
+                    <span asp-validation-for="NewUser.Password" class="text-danger small"></span>
+                </div>
+                <div>
+                    <label asp-for="NewUser.Role" class="form-label dental-label">Role</label>
+                    <select asp-for="NewUser.Role" class="form-select dental-input border shadow-none">
+                        @foreach (var role in Model.Roles)
+                        {
+                            <option value="@role">@role</option>
+                        }
+                    </select>
+                    <span asp-validation-for="NewUser.Role" class="text-danger small"></span>
+                </div>
+                <button type="submit" class="btn btn-primary fw-bold py-3 rounded-3">
+                    <i class="fas fa-plus me-1"></i> Create User
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <div class="dental-card border-0 shadow-sm p-0 overflow-hidden">
+            <div class="p-4 border-bottom bg-light">
+                <h2 class="h6 fw-bold text-dark mb-0">Clinic Users</h2>
+            </div>
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead class="bg-white">
+                        <tr class="dental-caption">
+                            <th class="px-4 py-3">User</th>
+                            <th class="px-4 py-3">Current Role</th>
+                            <th class="px-4 py-3">Change Role</th>
+                            <th class="px-4 py-3 text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var user in Model.Users)
+                        {
+                            var currentRole = user.Roles.FirstOrDefault() ?? "No role";
+                            <tr>
+                                <td class="px-4">
+                                    <p class="small fw-bold text-dark mb-0">@user.Email</p>
+                                    <p class="dental-caption mb-0" style="font-size:10px;">@user.Id</p>
+                                </td>
+                                <td class="px-4">
+                                    <span class="badge bg-primary-subtle text-primary rounded-pill px-3">@currentRole</span>
+                                </td>
+                                <td class="px-4">
+                                    <form asp-action="UpdateRole" method="post" class="d-flex align-items-center gap-2">
+                                        <input type="hidden" name="userId" value="@user.Id" />
+                                        <select name="role" class="form-select form-select-sm dental-input border shadow-none" style="min-width:110px;">
+                                            @foreach (var role in Model.Roles)
+                                            {
+                                                <option value="@role" selected="@(user.Roles.Contains(role) ? "selected" : null)">@role</option>
+                                            }
+                                        </select>
+                                        <button type="submit" class="btn btn-outline-primary btn-sm fw-bold rounded-pill px-3">
+                                            Save
+                                        </button>
+                                    </form>
+                                </td>
+                                <td class="px-4 text-end">
+                                    <form asp-action="DeleteUser" method="post" onsubmit="return confirm('Delete this user?');">
+                                        <input type="hidden" name="userId" value="@user.Id" />
+                                        <button type="submit" class="btn btn-outline-danger btn-sm fw-bold rounded-pill px-3">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

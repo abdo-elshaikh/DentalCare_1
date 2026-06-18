@@ -1,9 +1,14 @@
 @using DentalCare.Models
 @{
     ViewData["Title"] = "AI Cephalometric Analysis";
-    var patients = ViewBag.Patients as List<Patient> ?? new List<Patient>();
+    var selectedPatient = ViewBag.SelectedPatient as Patient;
     var protocols = ViewBag.Protocols as List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem> ?? new List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>();
-    var selectedId = (int?)(ViewBag.SelectedPatientId);
+    var selectedPatientId = selectedPatient?.Id;
+    var patientAge = selectedPatient?.Age > 0 ? selectedPatient.Age : 25;
+    var patientSex = string.Equals(selectedPatient?.Gender, "Female", StringComparison.OrdinalIgnoreCase) ? "Female" : "Male";
+    var patientInitial = string.IsNullOrWhiteSpace(selectedPatient?.Name)
+        ? "?"
+        : char.ToUpperInvariant(selectedPatient!.Name.Trim()[0]).ToString();
 }
 
 <style>
@@ -32,36 +37,69 @@
         </div>
     </div>
 
+    <input type="hidden" id="selectedPatientId" value="@(selectedPatientId?.ToString() ?? string.Empty)" />
+
     <div class="dental-card border-0 shadow-sm p-4 mb-4 workstation-card">
-        <div class="row align-items-center g-3">
-            <div class="col-md-6">
-                <label class="form-label dental-label d-flex align-items-center gap-2">
-                    <i class="fas fa-user-injured text-primary"></i> Select Patient
-                </label>
-                <select id="patientSelector" class="form-select dental-input border shadow-none" style="font-size:13px;" onchange="onPatientSelected(this)">
-                    <option value="">Choose a patient to auto-fill settings</option>
-                    @foreach (var p in patients)
-                    {
-                        <option value="@p.Id"
-                                data-age="@p.Age"
-                                data-sex="@p.Gender"
-                                data-name="@p.Name"
-                                selected="@(selectedId == p.Id ? "selected" : null)">
-                            @p.Name - @p.Age yrs, @p.Gender
-                        </option>
-                    }
-                </select>
-            </div>
-            <div id="selectedPatientBio" class="col-md-6 d-none">
-                <div class="d-flex align-items-center gap-3 p-3 bg-primary-subtle rounded-3">
-                    <div class="dental-avatar bg-primary text-white fw-bold" style="width:44px;height:44px;border-radius:12px;font-size:18px;" id="patientInitial">?</div>
+        @if (selectedPatient is null)
+        {
+            <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="dental-avatar bg-warning-subtle text-warning fw-bold" style="width:52px;height:52px;border-radius:14px;">
+                        <i class="fas fa-user-slash"></i>
+                    </div>
                     <div>
-                        <p class="fw-bold text-dark small mb-0" id="patientName">-</p>
-                        <p class="dental-caption mb-0" id="patientMeta">-</p>
+                        <h2 class="h6 fw-bold text-dark mb-1">No Patient Selected</h2>
+                        <p class="dental-caption mb-0">Open analysis from an X-Ray appointment or patient profile to attach the report to a patient.</p>
+                    </div>
+                </div>
+                <a asp-action="Dashboard" class="dental-btn dental-btn-primary py-2 px-3">
+                    <i class="fas fa-calendar-day me-1"></i> Dashboard
+                </a>
+            </div>
+        }
+        else
+        {
+            <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="dental-avatar bg-primary text-white fw-bold" style="width:56px;height:56px;border-radius:16px;font-size:20px;">
+                        @patientInitial
+                    </div>
+                    <div>
+                        <h2 class="h5 fw-bold text-dark mb-1">@selectedPatient.Name</h2>
+                        <p class="dental-caption mb-0">Patient #@selectedPatient.Id</p>
+                    </div>
+                </div>
+                <a asp-action="PatientProfile" asp-route-id="@selectedPatient.Id" class="btn btn-outline-primary btn-sm fw-bold rounded-pill px-3">
+                    <i class="fas fa-id-card me-1"></i> Profile
+                </a>
+            </div>
+            <div class="row g-3 mt-3">
+                <div class="col-sm-6 col-lg-3">
+                    <div class="metric-tile">
+                        <p class="dental-caption mb-1">Age</p>
+                        <p class="fw-bold text-dark mb-0">@selectedPatient.Age years</p>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-lg-3">
+                    <div class="metric-tile">
+                        <p class="dental-caption mb-1">Gender</p>
+                        <p class="fw-bold text-dark mb-0">@selectedPatient.Gender</p>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-lg-3">
+                    <div class="metric-tile">
+                        <p class="dental-caption mb-1">Phone</p>
+                        <p class="fw-bold text-dark mb-0">@(!string.IsNullOrWhiteSpace(selectedPatient.Phone) ? selectedPatient.Phone : "-")</p>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-lg-3">
+                    <div class="metric-tile">
+                        <p class="dental-caption mb-1">Email</p>
+                        <p class="fw-bold text-dark mb-0 text-truncate">@(!string.IsNullOrWhiteSpace(selectedPatient.Email) ? selectedPatient.Email : "-")</p>
                     </div>
                 </div>
             </div>
-        </div>
+        }
     </div>
 
     <div class="row g-4">
@@ -104,8 +142,8 @@
                         <div>
                             <label class="form-label dental-label">Patient Age</label>
                             <div class="position-relative">
-                                <input type="number" id="settingAge" class="dental-input border shadow-none" value="25" min="5" max="80">
-                                <span id="ageAutoIcon" class="position-absolute top-50 end-0 translate-middle-y pe-3 text-success d-none" title="Auto-filled from patient">
+                                <input type="number" id="settingAge" class="dental-input border shadow-none" value="@patientAge" min="5" max="80">
+                                <span id="ageAutoIcon" class="position-absolute top-50 end-0 translate-middle-y pe-3 text-success @(selectedPatient is null ? "d-none" : string.Empty)" title="From patient record">
                                     <i class="fas fa-link" style="font-size:11px;"></i>
                                 </span>
                             </div>
@@ -113,8 +151,8 @@
                         <div>
                             <label class="form-label dental-label">Sex</label>
                             <select id="settingSex" class="form-select dental-input border shadow-none" style="font-size:13px;">
-                                <option value="Male">Male</option>
-                                <option value="Female">Female</option>
+                                <option value="Male" selected="@(patientSex == "Male" ? "selected" : null)">Male</option>
+                                <option value="Female" selected="@(patientSex == "Female" ? "selected" : null)">Female</option>
                             </select>
                         </div>
                         <div>
@@ -439,29 +477,6 @@
         document.getElementById('recalculateBtn').disabled = false;
     }
 
-    function onPatientSelected(select) {
-        const opt = select.options[select.selectedIndex];
-        const bio = document.getElementById('selectedPatientBio');
-        if (!opt.value) {
-            bio.classList.add('d-none');
-            document.getElementById('ageAutoIcon').classList.add('d-none');
-            return;
-        }
-        const age = parseInt(opt.dataset.age) || 25;
-        const sex = opt.dataset.sex || 'Male';
-        const name = opt.dataset.name || '';
-        document.getElementById('settingAge').value = age;
-        const sexSel = document.getElementById('settingSex');
-        for (let i = 0; i < sexSel.options.length; i++) {
-            if (sexSel.options[i].value === sex) { sexSel.selectedIndex = i; break; }
-        }
-        document.getElementById('patientInitial').textContent = name.charAt(0).toUpperCase();
-        document.getElementById('patientName').textContent = name;
-        document.getElementById('patientMeta').textContent = `${age} yrs - ${sex}`;
-        bio.classList.remove('d-none');
-        document.getElementById('ageAutoIcon').classList.remove('d-none');
-    }
-
     async function checkAiStatus() {
         try {
             const r = await fetch('/Doctor/AiStatus');
@@ -496,7 +511,7 @@
         reader.readAsDataURL(file);
         document.getElementById('previewArea').classList.remove('d-none');
         document.getElementById('dropZone').style.display = 'none';
-        document.getElementById('analyzeBtn').disabled = false;
+        document.getElementById('analyzeBtn').disabled = !hasSelectedPatient();
         document.getElementById('autoCalibrateBtn').disabled = false;
         document.getElementById('recalculateBtn').disabled = true;
         document.getElementById('refineBtn').disabled = true;
@@ -520,6 +535,11 @@
 
     async function runAnalysis() {
         if (!selectedFile) return;
+        if (!hasSelectedPatient()) {
+            document.getElementById('errorMessage').textContent = 'Open analysis from an X-Ray appointment or patient profile before running AI analysis.';
+            showPanel('error');
+            return;
+        }
         showPanel('loading');
         setProgress(10, 'Uploading X-ray...');
         const form = new FormData();
@@ -605,7 +625,11 @@
                 const sd = typeof r.stdDeviation === 'number' ? r.stdDeviation.toFixed(1) : 'N/A';
                 const diff = typeof r.difference === 'number' ? `${r.difference > 0 ? '+' : ''}${r.difference.toFixed(1)}` : 'N/A';
                 const status = normalizeMeasurementStatus(r.status || r.label || diff);
-                const badgeClass = status === 'Increased' ? 'bg-warning-subtle text-warning' : status === 'Decreased' ? 'bg-info-subtle text-info' : 'bg-success-subtle text-success';
+                const badgeClass = status === 'Severe' ? 'bg-danger-subtle text-danger'
+                    : status === 'Mild' ? 'bg-warning-subtle text-warning'
+                    : status === 'Increased' ? 'bg-warning-subtle text-warning'
+                    : status === 'Decreased' ? 'bg-info-subtle text-info'
+                    : 'bg-success-subtle text-success';
                 tbody.insertAdjacentHTML('beforeend', `
                     <tr>
                         <td class="px-4 fw-bold text-dark">${escapeHtml(name)}${r.interpretation ? `<div class="text-secondary fw-normal" style="font-size:11px;">${escapeHtml(r.interpretation)}</div>` : ''}</td>
@@ -782,8 +806,6 @@
     const canvas = () => document.getElementById('cephViewer');
     window.addEventListener('resize', () => { if (currentAnalysis) { resizeCanvas(); drawViewer(); } });
     window.addEventListener('DOMContentLoaded', () => {
-        const sel = document.getElementById('patientSelector');
-        if (sel && sel.value) onPatientSelected(sel);
         checkAiStatus();
         setInterval(checkAiStatus, 15000);
         const c = canvas();
@@ -948,14 +970,20 @@
 
     function normalizeMeasurementStatus(raw) {
         const value = (raw || '').toString().toLowerCase();
+        if (value.includes('severe')) return 'Severe';
+        if (value.includes('mild')) return 'Mild';
         if (value.includes('increase') || value.includes('high') || value.startsWith('+')) return 'Increased';
         if (value.includes('decrease') || value.includes('low') || value.startsWith('-')) return 'Decreased';
         return 'Normal';
     }
 
     function getSelectedPatientId() {
-        const sel = document.getElementById('patientSelector');
-        return sel && sel.value ? parseInt(sel.value) : 0;
+        const patientIdInput = document.getElementById('selectedPatientId');
+        return patientIdInput && patientIdInput.value ? parseInt(patientIdInput.value) : 0;
+    }
+
+    function hasSelectedPatient() {
+        return getSelectedPatientId() > 0;
     }
 
     function buildReportPayload() {
@@ -978,13 +1006,16 @@
             measurements: currentAnalysis.measurements || {},
             measurementRows: currentAnalysis.measurementRows || [],
             treatments: currentAnalysis.treatments || [],
+            originalImageBase64: currentAnalysis.imageBase64 || null,
+            originalImageContentType: currentAnalysis.imageContentType || null,
+            originalImageFileName: selectedFile?.name || '',
             overlayImageBase64: currentAnalysis.overlayImageBase64 || null,
             isDoctorReviewed: true,
             reviewNotes: document.getElementById('doctorReviewNotes')?.value || ''
         };
     }
 
-    function showReportMessage(type, message) {
+    function showReportMessage(type, message, allowHtml = false) {
         const div = document.getElementById('reportActionMessage');
         if (!message) {
             div.className = 'mt-3 d-none';
@@ -992,7 +1023,7 @@
             return;
         }
         div.className = 'mt-3';
-        div.innerHTML = `<div class="alert ${type === 'success' ? 'alert-success' : 'alert-danger'} border-0 rounded-3 small py-2 mb-0">${escapeHtml(message)}</div>`;
+        div.innerHTML = `<div class="alert ${type === 'success' ? 'alert-success' : 'alert-danger'} border-0 rounded-3 small py-2 mb-0">${allowHtml ? message : escapeHtml(message)}</div>`;
     }
 
     async function saveAnalysisReport() {
@@ -1004,7 +1035,8 @@
             const resp = await fetch('/Doctor/SaveAnalysisReport', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
             const data = await resp.json().catch(() => ({}));
             if (!resp.ok) throw new Error(data.error || 'Could not save analysis.');
-            showReportMessage('success', `Saved to patient history as record #${data.recordId}.`);
+            const detailsUrl = `/Doctor/AnalysisDetails/${data.analysisReportId}`;
+            showReportMessage('success', `Saved to patient history as record #${data.recordId} and analysis #${data.analysisReportId}. <a href="${detailsUrl}" class="alert-link">View analysis details</a>.`, true);
         } catch (ex) {
             showReportMessage('error', ex.message);
         } finally {
@@ -1143,7 +1175,7 @@
     function downloadCsv() {
         if (!currentAnalysis) return;
         const rows = currentAnalysis.measurementRows || [];
-        const header = ['measurement','value','unit','normalValue','stdDeviation','difference','status','label'];
+        const header = ['measurementName','value','unit','normalValue','stdDeviation','difference','status','label'];
         const csv = [header.join(',')].concat(rows.map(r => header.map(k => `"${(r[k] ?? '').toString().replace(/"/g, '""')}"`).join(','))).join('\n');
         downloadBlob('ceph_measurements.csv', csv, 'text/csv');
     }

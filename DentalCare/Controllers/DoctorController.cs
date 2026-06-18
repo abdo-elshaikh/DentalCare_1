@@ -7,15 +7,21 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System.Text;
+using System.Text.Json;
 
 namespace DentalCare.Controllers
 {
     [Authorize(Roles = "Doctor,Staff")]
     public class DoctorController : Controller
     {
+        private const long MaxXrayBytes = 15 * 1024 * 1024;
+        private const int MaxImageBase64Chars = 22 * 1024 * 1024;
+        private static readonly JsonSerializerOptions ReportJsonOptions = new(JsonSerializerDefaults.Web);
+
         private readonly IRepository<Patient> _patientRepository;
         private readonly IRepository<Appointment> _appointmentRepository;
         private readonly IRepository<MedicalRecord> _medicalRecordRepository;
+        private readonly IRepository<AiAnalysisReport> _aiAnalysisReportRepository;
         private readonly UserManager<IdentityUser> _userManager;
         private readonly CephIntegrationService _cephService;
 
@@ -23,12 +29,14 @@ namespace DentalCare.Controllers
             IRepository<Patient> patientRepository,
             IRepository<Appointment> appointmentRepository,
             IRepository<MedicalRecord> medicalRecordRepository,
+            IRepository<AiAnalysisReport> aiAnalysisReportRepository,
             UserManager<IdentityUser> userManager,
             CephIntegrationService cephService)
         {
             _patientRepository = patientRepository;
             _appointmentRepository = appointmentRepository;
             _medicalRecordRepository = medicalRecordRepository;
+            _aiAnalysisReportRepository = aiAnalysisReportRepository;
             _userManager = userManager;
             _cephService = cephService;
         }
@@ -41,7 +49,10 @@ namespace DentalCare.Controllers
             string? doctorId = null;
             if (User.IsInRole("Doctor"))
             {
-                var user = await _userManager.FindByNameAsync(User.Identity.Name);
+                var userName = User.Identity?.Name;
+                var user = string.IsNullOrWhiteSpace(userName)
+                    ? null
+                    : await _userManager.FindByNameAsync(userName);
                 doctorId = user?.Id;
             }
 
@@ -77,6 +88,21 @@ namespace DentalCare.Controllers
             var pendingList = processedAppointments.Where(a => a.Status != "Completed").OrderBy(a => a.Date).ToList();
             var completedList = processedAppointments.Where(a => a.Status == "Completed").OrderByDescending(a => a.Date).ToList();
 
+            var completedXrayPatientIds = completedList
+                .Where(a => IsXrayAppointment(a.Type))
+                .Select(a => a.PatientId)
+                .Distinct()
+                .ToList();
+            var latestAnalysisReportByPatientId = new Dictionary<int, AiAnalysisReport>();
+            if (completedXrayPatientIds.Count > 0)
+            {
+                var reports = await _aiAnalysisReportRepository.FindAsync(r => completedXrayPatientIds.Contains(r.PatientId));
+                latestAnalysisReportByPatientId = reports
+                    .Where(r => r.CreatedAt.Date == today)
+                    .GroupBy(r => r.PatientId)
+                    .ToDictionary(g => g.Key, g => g.OrderByDescending(r => r.CreatedAt).First());
+            }
+
             // Pagination for the waiting list
             var totalItems = pendingList.Count;
             var pagedItems = pendingList
@@ -88,6 +114,7 @@ namespace DentalCare.Controllers
             ViewBag.CurrentPage = pageNumber;
             ViewBag.TotalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
             ViewBag.CompletedList = completedList;
+            ViewBag.LatestAnalysisReportByPatientId = latestAnalysisReportByPatientId;
 
             return View(pagedItems);
         }
@@ -101,11 +128,18 @@ namespace DentalCare.Controllers
             var history = await _medicalRecordRepository.FindAsync(m => m.PatientId == id);
             patient.MedicalHistory = history.OrderByDescending(m => m.Date).ToList();
 
+            var analysisReports = await _aiAnalysisReportRepository.FindAsync(r => r.PatientId == id);
+            ViewBag.AnalysisReportsByMedicalRecordId = analysisReports
+                .Where(r => r.MedicalRecordId.HasValue)
+                .GroupBy(r => r.MedicalRecordId!.Value)
+                .ToDictionary(g => g.Key, g => g.OrderByDescending(r => r.CreatedAt).First());
+
             // Load doctor names for display
             var doctors = await _userManager.GetUsersInRoleAsync("Doctor");
             var doctorNamesDict = doctors.ToDictionary(
                 d => d.Id,
-                d => {
+                d =>
+                {
                     var name = d.UserName ?? "Unknown";
                     if (name.Contains("@")) name = name.Split('@')[0];
                     if (!name.StartsWith("Dr. ", StringComparison.OrdinalIgnoreCase) && name != "Unknown")
@@ -122,10 +156,42 @@ namespace DentalCare.Controllers
             return View(patient);
         }
 
+        public async Task<IActionResult> AnalysisDetails(int id)
+        {
+            var report = await _aiAnalysisReportRepository.GetByIdAsync(id);
+            if (report == null) return NotFound();
+
+            var patient = await _patientRepository.GetByIdAsync(report.PatientId);
+            if (patient == null) return NotFound();
+
+            ViewBag.Patient = patient;
+            ViewBag.DoctorName = await GetDoctorDisplayNameAsync(report.DoctorId);
+            return View(report);
+        }
+
+        public async Task<IActionResult> AnalysisImage(int id, string kind)
+        {
+            var report = await _aiAnalysisReportRepository.GetByIdAsync(id);
+            if (report == null) return NotFound();
+
+            if (string.Equals(kind, "overlay", StringComparison.OrdinalIgnoreCase))
+            {
+                if (report.OverlayImage == null || report.OverlayImage.Length == 0) return NotFound();
+                return File(report.OverlayImage, report.OverlayImageContentType ?? "image/png");
+            }
+
+            if (report.OriginalImage == null || report.OriginalImage.Length == 0) return NotFound();
+            return File(
+                report.OriginalImage,
+                report.OriginalImageContentType ?? "application/octet-stream",
+                report.OriginalImageFileName ?? $"analysis-{report.Id}-xray");
+        }
+
         private async Task<List<dynamic>> GetDoctorsAsync()
         {
             var doctors = await _userManager.GetUsersInRoleAsync("Doctor");
-            return doctors.Select(d => {
+            return doctors.Select(d =>
+            {
                 var name = d.UserName;
                 if (!string.IsNullOrEmpty(name))
                 {
@@ -144,7 +210,10 @@ namespace DentalCare.Controllers
         [HttpPost]
         public async Task<IActionResult> AddDiagnosis(int patientId, string visitType, string diagnosis, string notes)
         {
-            var user = await _userManager.FindByNameAsync(User.Identity.Name);
+            var userName = User.Identity?.Name;
+            var user = string.IsNullOrWhiteSpace(userName)
+                ? null
+                : await _userManager.FindByNameAsync(userName);
 
             // 1. Save the medical record
             var record = new MedicalRecord
@@ -154,7 +223,7 @@ namespace DentalCare.Controllers
                 VisitType = visitType,
                 Diagnosis = diagnosis,
                 Notes = notes,
-                DoctorId = user?.Id ?? User.Identity.Name // Fallback to name if user not found (unlikely)
+                DoctorId = user?.Id ?? userName ?? "Unknown"
             };
 
             await _medicalRecordRepository.AddAsync(record);
@@ -181,9 +250,13 @@ namespace DentalCare.Controllers
         [Authorize(Roles = "Doctor")]
         public async Task<IActionResult> Analysis(int? patientId = null)
         {
-            var patients = await _patientRepository.GetAllAsync();
-            ViewBag.Patients = patients.OrderBy(p => p.Name).ToList();
-            ViewBag.SelectedPatientId = patientId;
+            Patient? selectedPatient = null;
+            if (patientId.HasValue)
+            {
+                selectedPatient = await _patientRepository.GetByIdAsync(patientId.Value);
+            }
+
+            ViewBag.SelectedPatient = selectedPatient;
             ViewBag.Protocols = GetProtocolOptions();
             return View();
         }
@@ -216,6 +289,9 @@ namespace DentalCare.Controllers
             if (xrayFile == null || xrayFile.Length == 0)
                 return BadRequest(new { error = "No file uploaded." });
 
+            if (xrayFile.Length > MaxXrayBytes)
+                return BadRequest(new { error = "X-ray file is too large. Please upload an image under 15 MB." });
+
             // Validate file type
             var allowed = new[] { "image/jpeg", "image/png", "image/bmp", "image/tiff" };
             if (!allowed.Contains(xrayFile.ContentType))
@@ -235,28 +311,29 @@ namespace DentalCare.Controllers
 
                 return Json(new
                 {
-                    success          = true,
-                    imageBase64      = Convert.ToBase64String(imageBytes),
+                    success = true,
+                    imageBase64 = Convert.ToBase64String(imageBytes),
                     imageContentType = xrayFile.ContentType,
-                    skeletalClass    = result.SkeletalClass,
-                    verticalPattern  = result.VerticalPattern,
-                    summary          = result.Summary,
-                    confidenceScore  = result.ConfidenceScore,
-                    protocolId       = result.ProtocolId,
-                    protocolName     = GetProtocolDisplayName(result.ProtocolId),
-                    landmarks        = result.Landmarks,
-                    clinicalNotes    = result.ClinicalNotes,
+                    skeletalClass = result.SkeletalClass,
+                    verticalPattern = result.VerticalPattern,
+                    summary = result.Summary,
+                    confidenceScore = result.ConfidenceScore,
+                    protocolId = result.ProtocolId,
+                    protocolName = GetProtocolDisplayName(result.ProtocolId),
+                    landmarks = result.Landmarks,
+                    clinicalNotes = result.ClinicalNotes,
                     skeletalDifferential = result.SkeletalDifferential,
-                    warnings         = result.Warnings,
-                    measurements     = result.Measurements,
-                    measurementRows  = result.MeasurementRows,
-                    treatments       = result.Treatments,
+                    warnings = result.Warnings,
+                    measurements = result.Measurements,
+                    measurementRows = result.MeasurementRows,
+                    treatments = result.Treatments,
                     overlayImageBase64 = result.OverlayImageBase64
                 });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { error = ex.Message });
+                Console.WriteLine($"AI upload analysis failed: {ex.Message}");
+                return StatusCode(500, new { error = "AI analysis failed. Please try again or check the AI service logs." });
             }
         }
 
@@ -270,6 +347,9 @@ namespace DentalCare.Controllers
 
             if (string.IsNullOrWhiteSpace(request.ImageBase64))
                 return BadRequest(new { error = "The original X-ray image is required for recalculation overlays." });
+
+            if (IsBase64PayloadTooLarge(request.ImageBase64))
+                return BadRequest(new { error = "X-ray image payload is too large. Please re-upload an image under 15 MB." });
 
             var landmarks = request.Landmarks.Select(l => new CephLandmarkDto
             {
@@ -295,22 +375,22 @@ namespace DentalCare.Controllers
 
             return Json(new
             {
-                success          = true,
-                imageBase64      = request.ImageBase64,
+                success = true,
+                imageBase64 = request.ImageBase64,
                 imageContentType = request.ImageContentType,
-                skeletalClass    = result.SkeletalClass,
-                verticalPattern  = result.VerticalPattern,
-                summary          = result.Summary,
-                confidenceScore  = result.ConfidenceScore,
-                protocolId       = result.ProtocolId,
-                protocolName     = GetProtocolDisplayName(result.ProtocolId),
-                landmarks        = result.Landmarks,
-                clinicalNotes    = result.ClinicalNotes,
+                skeletalClass = result.SkeletalClass,
+                verticalPattern = result.VerticalPattern,
+                summary = result.Summary,
+                confidenceScore = result.ConfidenceScore,
+                protocolId = result.ProtocolId,
+                protocolName = GetProtocolDisplayName(result.ProtocolId),
+                landmarks = result.Landmarks,
+                clinicalNotes = result.ClinicalNotes,
                 skeletalDifferential = result.SkeletalDifferential,
-                warnings         = result.Warnings,
-                measurements     = result.Measurements,
-                measurementRows  = result.MeasurementRows,
-                treatments       = result.Treatments,
+                warnings = result.Warnings,
+                measurements = result.Measurements,
+                measurementRows = result.MeasurementRows,
+                treatments = result.Treatments,
                 overlayImageBase64 = result.OverlayImageBase64
             });
         }
@@ -322,6 +402,9 @@ namespace DentalCare.Controllers
         {
             if (xrayFile == null || xrayFile.Length == 0)
                 return BadRequest(new { error = "No file uploaded for calibration." });
+
+            if (xrayFile.Length > MaxXrayBytes)
+                return BadRequest(new { error = "X-ray file is too large. Please upload an image under 15 MB." });
 
             using var stream = xrayFile.OpenReadStream();
             var result = await _cephService.AutoCalibrateAsync(stream, xrayFile.ContentType, xrayFile.FileName, tickIntervalMm);
@@ -338,6 +421,12 @@ namespace DentalCare.Controllers
         {
             if (request == null || request.Landmarks.Count == 0)
                 return BadRequest(new { error = "No landmarks were provided for refinement." });
+
+            if (string.IsNullOrWhiteSpace(request.ImageBase64))
+                return BadRequest(new { error = "The original X-ray image is required for refinement." });
+
+            if (IsBase64PayloadTooLarge(request.ImageBase64))
+                return BadRequest(new { error = "X-ray image payload is too large. Please re-upload an image under 15 MB." });
 
             var landmarks = request.Landmarks.Select(l => new CephLandmarkDto
             {
@@ -366,30 +455,6 @@ namespace DentalCare.Controllers
         {
             var healthy = await _cephService.IsHealthyAsync();
             return Json(new { online = healthy });
-        }
-
-        /// <summary>
-        /// AJAX: Sync a patient to the Ceph AI system (creates a CephPatientId if missing).
-        /// </summary>
-        [HttpPost]
-        [Authorize(Roles = "Doctor")]
-        public async Task<IActionResult> SyncToCeph(int patientId)
-        {
-            var patient = await _patientRepository.GetByIdAsync(patientId);
-            if (patient == null)
-                return NotFound(new { error = "Patient not found." });
-
-            if (patient.CephPatientId.HasValue && patient.CephPatientId != Guid.Empty)
-                return Json(new { success = true, cephPatientId = patient.CephPatientId, already = true });
-
-            var cephId = await _cephService.CreatePatientInCephAsync(patient);
-            if (!cephId.HasValue)
-                return StatusCode(503, new { error = "AI service unavailable or patient sync failed." });
-
-            patient.CephPatientId = cephId;
-            await _patientRepository.SaveAsync();
-
-            return Json(new { success = true, cephPatientId = cephId });
         }
 
         /// <summary>
@@ -459,21 +524,78 @@ namespace DentalCare.Controllers
             var user = !string.IsNullOrWhiteSpace(User.Identity?.Name)
                 ? await _userManager.FindByNameAsync(User.Identity.Name)
                 : null;
+            var doctorId = user?.Id ?? User.Identity?.Name ?? "AI Analysis";
+            var createdAt = DateTime.Now;
+
+            if (!TryDecodeImage(request.OriginalImageBase64, out var originalImage, out var originalImageError))
+                return BadRequest(new { error = originalImageError });
+
+            if (!TryDecodeImage(request.OverlayImageBase64, out var overlayImage, out var overlayImageError))
+                return BadRequest(new { error = overlayImageError });
 
             var record = new MedicalRecord
             {
                 PatientId = patient.Id,
-                Date = DateTime.Now,
+                Date = createdAt,
                 VisitType = "X-Ray",
                 Diagnosis = BuildAnalysisDiagnosis(request),
                 Notes = BuildAnalysisNotes(request),
-                DoctorId = user?.Id ?? User.Identity?.Name ?? "AI Analysis"
+                DoctorId = doctorId
             };
+
+            // Mark the pending appointment for today as Completed if it exists
+            var today = DateTime.Today;
+            var appointments = await _appointmentRepository.FindAsync(a =>
+                a.PatientId == patient.Id &&
+                a.Date.Date == today &&
+                a.Status != "Completed");
+            var appointment = appointments.FirstOrDefault();
+            if (appointment != null)
+            {
+                appointment.Status = "Completed";
+                await _appointmentRepository.SaveAsync();
+            }
 
             await _medicalRecordRepository.AddAsync(record);
             await _medicalRecordRepository.SaveAsync();
 
-            return Json(new { success = true, recordId = record.Id });
+            var analysisReport = new AiAnalysisReport
+            {
+                PatientId = patient.Id,
+                MedicalRecordId = record.Id,
+                CreatedAt = createdAt,
+                DoctorId = doctorId,
+                ProtocolId = request.ProtocolId,
+                ProtocolName = string.IsNullOrWhiteSpace(request.ProtocolName)
+                    ? GetProtocolDisplayName(request.ProtocolId)
+                    : request.ProtocolName,
+                SkeletalClass = request.SkeletalClass,
+                VerticalPattern = request.VerticalPattern,
+                Summary = request.Summary,
+                ConfidenceScore = request.ConfidenceScore,
+                ReviewNotes = request.ReviewNotes,
+                LandmarksJson = JsonSerializer.Serialize(request.Landmarks, ReportJsonOptions),
+                MeasurementsJson = JsonSerializer.Serialize(request.Measurements, ReportJsonOptions),
+                MeasurementRowsJson = JsonSerializer.Serialize(request.MeasurementRows, ReportJsonOptions),
+                TreatmentsJson = JsonSerializer.Serialize(request.Treatments, ReportJsonOptions),
+                ClinicalNotesJson = JsonSerializer.Serialize(request.ClinicalNotes, ReportJsonOptions),
+                WarningsJson = JsonSerializer.Serialize(request.Warnings, ReportJsonOptions),
+                SkeletalDifferentialJson = JsonSerializer.Serialize(request.SkeletalDifferential, ReportJsonOptions),
+                OriginalImage = originalImage,
+                OriginalImageContentType = string.IsNullOrWhiteSpace(request.OriginalImageContentType)
+                    ? null
+                    : request.OriginalImageContentType,
+                OriginalImageFileName = string.IsNullOrWhiteSpace(request.OriginalImageFileName)
+                    ? null
+                    : Path.GetFileName(request.OriginalImageFileName),
+                OverlayImage = overlayImage,
+                OverlayImageContentType = overlayImage == null ? null : "image/png"
+            };
+
+            await _aiAnalysisReportRepository.AddAsync(analysisReport);
+            await _aiAnalysisReportRepository.SaveAsync();
+
+            return Json(new { success = true, recordId = record.Id, analysisReportId = analysisReport.Id });
         }
 
         /// <summary>
@@ -507,6 +629,62 @@ namespace DentalCare.Controllers
             var skeletalClass = string.IsNullOrWhiteSpace(request.SkeletalClass) ? "Unclassified" : request.SkeletalClass;
             var verticalPattern = string.IsNullOrWhiteSpace(request.VerticalPattern) ? "Unknown vertical pattern" : request.VerticalPattern;
             return $"AI Cephalometric Analysis ({GetProtocolDisplayName(request.ProtocolId)}): {skeletalClass} / {verticalPattern}";
+        }
+
+        private static bool IsXrayAppointment(string? type)
+        {
+            return string.Equals(type, "X-Ray", StringComparison.OrdinalIgnoreCase) ||
+                   string.Equals(type, "Xray", StringComparison.OrdinalIgnoreCase) ||
+                   string.Equals(type, "X Ray", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private async Task<string> GetDoctorDisplayNameAsync(string doctorId)
+        {
+            if (string.IsNullOrWhiteSpace(doctorId))
+                return "Unknown";
+
+            var user = await _userManager.FindByIdAsync(doctorId);
+            var name = user?.UserName ?? doctorId;
+            if (name.Contains("@")) name = name.Split('@')[0];
+            if (!name.StartsWith("Dr. ", StringComparison.OrdinalIgnoreCase) && name != "Unknown")
+                name = "Dr. " + name;
+            return name;
+        }
+
+        private static bool IsBase64PayloadTooLarge(string imageBase64)
+        {
+            var comma = imageBase64.IndexOf(',');
+            var payloadLength = comma >= 0 ? imageBase64.Length - comma - 1 : imageBase64.Length;
+            return payloadLength > MaxImageBase64Chars;
+        }
+
+        private static bool TryDecodeImage(string? imageBase64, out byte[]? imageBytes, out string? error)
+        {
+            imageBytes = null;
+            error = null;
+
+            if (string.IsNullOrWhiteSpace(imageBase64))
+                return true;
+
+            if (IsBase64PayloadTooLarge(imageBase64))
+            {
+                error = "The analysis image payload is too large. Please upload an image under 15 MB.";
+                return false;
+            }
+
+            var comma = imageBase64.IndexOf(',');
+            var payload = comma >= 0 ? imageBase64[(comma + 1)..] : imageBase64;
+
+            try
+            {
+                imageBytes = Convert.FromBase64String(payload);
+                return true;
+            }
+            catch (FormatException)
+            {
+                error = "One of the analysis images could not be decoded.";
+                return false;
+            }
         }
 
         private static string BuildAnalysisNotes(AiAnalysisReportRequest request)
@@ -630,6 +808,7 @@ namespace DentalCare.Controllers
                 new("McNamara Screening", "mcnamara"),
                 new("Jarabak Analysis", "jarabak"),
                 new("Vertical Pattern Basic", "vertical_basic")
+
             };
         }
 

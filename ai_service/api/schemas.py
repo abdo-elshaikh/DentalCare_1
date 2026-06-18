@@ -3,6 +3,8 @@
 from pydantic import BaseModel, Field
 from typing import List, Dict, Any, Optional
 
+MAX_IMAGE_BASE64_LENGTH = 22 * 1024 * 1024
+
 
 class LandmarkPointRequest(BaseModel):
     """A single landmark point with coordinates."""
@@ -24,7 +26,7 @@ class LandmarkResponsePoint(BaseModel):
 class LandmarkDetectionRequest(BaseModel):
     """Request for landmark detection from image."""
     session_id: str
-    image_base64: str
+    image_base64: str = Field(..., max_length=MAX_IMAGE_BASE64_LENGTH)
     pixel_spacing_mm: Optional[float] = None
 
 
@@ -48,6 +50,7 @@ class AiDiagnosisClassificationRequest(BaseModel):
     session_id: str
     measurements: Dict[str, float]
     protocol_id: str = "core_lateral"
+    population: Optional[str] = "Caucasian"
 
 
 class DiagnosisResponseModel(BaseModel):
@@ -60,14 +63,15 @@ class DiagnosisResponseModel(BaseModel):
     vertical_pattern: str
     maxillary_position: str
     mandibular_position: str
-    upper_incisor_inclination: str
-    lower_incisor_inclination: str
-    soft_tissue_profile: str
+    upper_incisor_inclination: Optional[str] = None
+    lower_incisor_inclination: Optional[str] = None
+    soft_tissue_profile: Optional[str] = None
     overjet_mm: Optional[float] = None
     overjet_classification: Optional[str] = None
     overbite_mm: Optional[float] = None
     overbite_classification: Optional[str] = None
     confidence_score: float
+    severity: Optional[str] = None
     summary: str
     warnings: List[str] = Field(default_factory=list)
     clinical_notes: List[str] = Field(default_factory=list)
@@ -81,7 +85,8 @@ class AiTreatmentSuggestionRequest(BaseModel):
     vertical_pattern: str
     measurements: Dict[str, float]
     patient_age: float
-    image_base64: Optional[str] = None
+    severity: Optional[str] = None
+    image_base64: Optional[str] = Field(default=None, max_length=MAX_IMAGE_BASE64_LENGTH)
 
 
 class TreatmentDto(BaseModel):
@@ -161,7 +166,7 @@ class AiOverlayImagePayload(BaseModel):
 class AiOverlayRequestPayload(BaseModel):
     """Request for overlay image generation."""
     session_id: str
-    image_base64: str
+    image_base64: str = Field(..., max_length=MAX_IMAGE_BASE64_LENGTH)
     landmarks: Dict[str, LandmarkPointRequest]
     measurements: List[AiOverlayMeasurementPayload]
     patient_label: Optional[str] = None
@@ -177,34 +182,8 @@ class AiOverlayResponsePayload(BaseModel):
     render_ms: int
 
 
-class PatientIntegrationRequest(BaseModel):
-    """Patient payload sent by the DentalCare ASP.NET application."""
-    firstName: str
-    lastName: Optional[str] = ""
-    dateOfBirth: Optional[str] = None
-    gender: Optional[str] = None
-    phone: Optional[str] = None
-    email: Optional[str] = None
-    medicalRecordNo: str
-
-
-class PatientIntegrationResponse(BaseModel):
-    """Stored patient identity returned to DentalCare."""
-    id: str
-    firstName: str
-    lastName: Optional[str] = ""
-    dateOfBirth: Optional[str] = None
-    gender: Optional[str] = None
-    phone: Optional[str] = None
-    email: Optional[str] = None
-    medicalRecordNo: str
-    created_at: str
-    updated_at: str
-
-
-# Legacy/compatibility schemas
 class Point(BaseModel):
-    """Legacy point representation."""
+    """Point representation used by calibration and protocol validation."""
     id: Optional[int] = None
     x: float
     y: float
@@ -219,34 +198,13 @@ class CalibrateRequest(BaseModel):
     real_distance_mm: float
 
 
-class AnalysisRequest(BaseModel):
-    """Request for cephalometric analysis."""
-    landmarks: List[Point]
-    px_to_mm: float = 1.0
-    ethnic_profile: str = "Caucasian"
-    protocol_id: str = "core_lateral"
-
-
-class MeasurementsRequest(AnalysisRequest):
-    """Request for measurements with uncertainty."""
-    samples: int = 200
-    base_sigma_px: float = 2.0
-
-
 class ProtocolValidateRequest(BaseModel):
     """Request to validate landmarks against protocol."""
     landmarks: List[Point]
 
 
-class DiagnoseRequest(AnalysisRequest):
-    """Request for full diagnostic analysis."""
-    patient_age: Optional[int] = None
-    patient_sex: Optional[str] = None
-    provider: str = "auto"
-
-
 class InterpretRequest(BaseModel):
-    """Request for diagnostic interpretation."""
+    """Request for patient-facing diagnostic explanation."""
     diagnostic_report: Optional[Dict[str, Any]] = None
     landmarks: Optional[List[Point]] = None
     px_to_mm: float = 1.0
@@ -255,32 +213,3 @@ class InterpretRequest(BaseModel):
     patient_age: Optional[int] = None
     patient_sex: Optional[str] = None
     provider: str = "auto"
-
-
-class ExportRequest(AnalysisRequest):
-    """Request to export analysis results."""
-    patient_identifier: str = "patient"
-    analysis_type: str = "Core lateral cephalometric screening"
-
-
-class CreateCaseRequest(AnalysisRequest):
-    """Request to create a case in repository."""
-    patient_identifier: str
-    analysis_type: str = "Core lateral cephalometric screening"
-    patient_age: Optional[int] = None
-    patient_sex: Optional[str] = None
-    status: str = "done"
-    comment: str = ""
-    filename: Optional[str] = None
-
-
-class UpdateCaseRequest(BaseModel):
-    """Request to update a case."""
-    status: Optional[str] = None
-    comment: Optional[str] = None
-    landmarks: Optional[List[Point]] = None
-    px_to_mm: Optional[float] = None
-    ethnic_profile: Optional[str] = None
-    protocol_id: Optional[str] = None
-
-

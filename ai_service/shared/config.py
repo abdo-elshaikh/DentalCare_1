@@ -27,9 +27,6 @@ class Settings(BaseSettings):
     min_landmark_confidence: float = Field(default=0.50, env="MIN_LANDMARK_CONFIDENCE")
     require_calibration: bool = Field(default=True, env="REQUIRE_CALIBRATION")
     
-    # Database
-    db_path: str = Field(default="data/cases.sqlite3", env="DB_PATH")
-    
     class Config:
         env_file = ".env"
         case_sensitive = False

@@ -16,6 +16,9 @@ namespace DentalCare.ViewModels
         public Dictionary<string, float> Measurements { get; set; } = new();
         public List<AiMeasurementReportItem> MeasurementRows { get; set; } = new();
         public List<AiTreatmentReportItem> Treatments { get; set; } = new();
+        public string? OriginalImageBase64 { get; set; }
+        public string? OriginalImageContentType { get; set; }
+        public string? OriginalImageFileName { get; set; }
         public string? OverlayImageBase64 { get; set; }
         public bool IsDoctorReviewed { get; set; }
         public string ReviewNotes { get; set; } = "";

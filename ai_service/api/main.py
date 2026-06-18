@@ -12,40 +12,29 @@ if __name__ == "__main__" and __package__ is None:
     __package__ = "api"
 
 import base64
+import binascii
 import socket
 from io import BytesIO
 from contextlib import asynccontextmanager
 from urllib.parse import urlparse
 
 from fastapi import FastAPI, UploadFile, File, HTTPException, Form
-from fastapi.responses import Response
-from PIL import Image
+from PIL import Image, UnidentifiedImageError
 import uvicorn
 
-from shared.landmarks import LANDMARK_SHORTS
 from ui.utils.image_utils import annotate_image, draw_cartoon_outline
 
 # Relative imports
 from .model import load_model, run_inference
-from .utils import preprocess_image, postprocess_landmarks, validate_anatomical_shape_constraints, refine_landmarks
-from .analysis import build_analysis_report
-from .diagnostic_engine import build_diagnostic_report, diagnose_measurements
+from .utils import preprocess_image, postprocess_landmarks, refine_landmarks
+from .diagnostic_engine import diagnose_measurements
 from .calibration import compute_px_to_mm
 from .calibration_auto import auto_detect_px_to_mm
-from .ai_engine import generate_narrative_diagnosis, generate_patient_explanation
-from .reporting import build_result_zip
-from .repository import create_case, delete_case, get_case, init_db, list_cases, update_case, upsert_patient
+from .ai_engine import generate_patient_explanation
 from .protocols import get_protocol, get_protocol_norms_preview, list_protocols, validate_protocol_landmarks
 from .norms import list_reference_protocols, get_norm_tuple
 from .treatment_engine import build_treatment_plan
 from .measurements import summary_report
-from .measurement_analysis import (
-    detect_measurement_outliers,
-    calculate_confidence_intervals,
-    assess_measurement_quality,
-    suggest_landmark_refinement,
-    generate_measurement_report
-)
 
 # Schemas and helpers
 from .schemas import *
@@ -65,11 +54,31 @@ from .drawing import pil_to_base64, draw_wiggle_chart, draw_measurement_table, d
 # Global model storage
 ml_models = {}
 
+
+def _severity_from_measurements(measurements: dict[str, float]) -> str:
+    """Fallback severity estimate when the caller has not supplied diagnosis severity."""
+    anb = measurements.get("ANB")
+    fma = measurements.get("FMA (FH-MP)")
+    impa = measurements.get("IMPA")
+    deviations = []
+    if anb is not None:
+        deviations.append(abs(float(anb) - 3.0) / 2.0)
+    if fma is not None:
+        deviations.append(abs(float(fma) - 25.0) / 5.0)
+    if impa is not None:
+        deviations.append(abs(float(impa) - 90.0) / 5.0)
+
+    max_dev = max(deviations, default=0.0)
+    if max_dev >= 2.5:
+        return "severe"
+    if max_dev >= 1.5:
+        return "moderate"
+    return "mild"
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifecycle manager."""
     # Startup
-    init_db()
     model_path = os.path.join(os.path.dirname(__file__), '..', 'models', 'best_model.pth')
     if os.path.exists(model_path):
         ml_models["hrnet"] = load_model(model_path)
@@ -84,33 +93,18 @@ async def lifespan(app: FastAPI):
 
 # Initialize FastAPI app
 app = FastAPI(title="Cephalometric Landmark Detection API", lifespan=lifespan)
-init_db()
 
 @app.get("/")
 def read_root():
-    return {"message": "API is running. Send POST request to /predict."}
+    return {"message": "API is running. Use /docs for active endpoints."}
 
 @app.get("/health")
 def health_check():
-    return {"status": "ok"}
-
-@app.post("/api/integration/patient", response_model=PatientIntegrationResponse)
-async def integration_patient(request: PatientIntegrationRequest):
-    """Create or update a DentalCare patient in the AI service registry."""
-    try:
-        return upsert_patient(
-            first_name=request.firstName,
-            last_name=request.lastName or "",
-            date_of_birth=request.dateOfBirth,
-            gender=request.gender,
-            phone=request.phone,
-            email=request.email,
-            medical_record_no=request.medicalRecordNo,
-        )
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    model_loaded = "hrnet" in ml_models
+    return {
+        "status": "ok" if model_loaded else "degraded",
+        "model_loaded": model_loaded,
+    }
 
 @app.get("/protocols")
 async def protocols():
@@ -168,222 +162,6 @@ async def auto_calibrate(
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-@app.post("/predict")
-async def predict(
-    file: UploadFile = File(...),
-    px_to_mm: float = Form(1.0),
-    ethnic_profile: str = Form("Caucasian"),
-    protocol_id: str = Form("core_lateral"),
-):
-    """
-    [LEGACY COMPATIBILITY ENDPOINT]
-    Runs landmark detection, anatomical validation, and builds the analysis report in a single request.
-    Deprecated: Use fine-grained routes (/ai/detect-landmarks, /ai/calculate-measurements) instead.
-    """
-    if "hrnet" not in ml_models:
-        raise HTTPException(status_code=500, detail="Model is not loaded.")
-        
-    try:
-        # Read image contents
-        contents = await file.read()
-        
-        # Preprocess
-        tensor, original_size = preprocess_image(contents)
-        
-        # Inference
-        heatmaps, offsets = run_inference(ml_models["hrnet"], tensor)
-        
-        # Postprocess
-        landmarks = postprocess_landmarks(heatmaps, original_size, offsets=offsets)
-        
-        # Anatomical Shape Check
-        shape_check = validate_anatomical_shape_constraints(landmarks)
-        
-        return {
-            "filename": file.filename, 
-            "landmarks": landmarks,
-            "shape_validation": shape_check,
-            "analysis": build_analysis_report(
-                landmarks,
-                px_to_mm=px_to_mm,
-                ethnic_profile=ethnic_profile,
-                protocol_id=protocol_id,
-            ),
-            "message": "Prediction successful"
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.post("/analyze")
-async def analyze(request: AnalysisRequest):
-    """
-    [LEGACY COMPATIBILITY ENDPOINT]
-    Calculate protocol measurements from existing landmark coordinates.
-    Deprecated: Use fine-grained route /ai/calculate-measurements instead.
-    """
-    try:
-        lm_list = [p.model_dump() for p in request.landmarks]
-        return {
-            "analysis": build_analysis_report(
-                lm_list,
-                px_to_mm=request.px_to_mm,
-                ethnic_profile=request.ethnic_profile,
-                protocol_id=request.protocol_id,
-            )
-        }
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
-
-@app.post("/measurements")
-async def measurements_endpoint(request: MeasurementsRequest):
-     """Compute measurements with Monte-Carlo uncertainty estimates and z-scores."""
-     try:
-         lm_list = [p.model_dump() for p in request.landmarks]
-         report = summary_report(
-             lm_list,
-             px_to_mm=request.px_to_mm,
-             samples=request.samples,
-             base_sigma_px=request.base_sigma_px,
-             ethnic_profile=request.ethnic_profile,
-             protocol_id=request.protocol_id,
-         )
-         return {"measurements": report}
-     except Exception as e:
-         raise HTTPException(status_code=400, detail=str(e))
-
-@app.post("/measurement-analysis")
-async def measurement_analysis(request: MeasurementsRequest):
-     """Advanced measurement quality analysis with confidence intervals and outlier detection."""
-     try:
-         lm_list = [p.model_dump() for p in request.landmarks]
-         
-         # Get basic measurements with uncertainty
-         measurements_with_uncertainty = summary_report(
-             lm_list,
-             px_to_mm=request.px_to_mm,
-             samples=request.samples,
-             base_sigma_px=request.base_sigma_px,
-             ethnic_profile=request.ethnic_profile,
-             protocol_id=request.protocol_id,
-         )
-         
-         # Calculate confidence intervals
-         measurements_with_ci = calculate_confidence_intervals(
-             {
-                 m["measurement"]: {
-                     "value": m.get("value"),
-                     "mean": m.get("mean"),
-                     "sd": m.get("sd")
-                 }
-                 for m in measurements_with_uncertainty.get("measurements", [])
-             }
-         )
-         
-         # Assess quality
-         quality_reports = assess_measurement_quality(
-             measurements_with_ci,
-             protocol_id=request.protocol_id,
-             ethnic_profile=request.ethnic_profile,
-             px_to_mm=request.px_to_mm
-         )
-         
-         # Suggest refinements
-         refinement_suggestions = suggest_landmark_refinement(
-             quality_reports,
-             lm_list
-         )
-         
-         # Generate report
-         quality_report = generate_measurement_report(
-             measurements_with_ci,
-             quality_reports,
-             ethnic_profile=request.ethnic_profile
-         )
-         
-         return {
-             "measurements_with_ci": measurements_with_ci,
-             "quality_assessment": quality_report,
-             "refinement_suggestions": refinement_suggestions,
-             "overall_quality_score": quality_report["summary"]["overall_quality_score"]
-         }
-     except Exception as e:
-         raise HTTPException(status_code=400, detail=str(e))
-
-@app.post("/diagnose")
-async def diagnose(request: DiagnoseRequest):
-    try:
-        lm_list = [p.model_dump() for p in request.landmarks]
-        analysis = build_analysis_report(
-            lm_list,
-            px_to_mm=request.px_to_mm,
-            ethnic_profile=request.ethnic_profile,
-            protocol_id=request.protocol_id,
-        )
-        diagnosis = build_diagnostic_report(
-            lm_list,
-            px_to_mm=request.px_to_mm,
-            ethnic_profile=request.ethnic_profile,
-            protocol_id=request.protocol_id,
-            age=request.patient_age,
-            sex=request.patient_sex,
-        )
-        treatment_plan = build_treatment_plan(diagnosis, age=request.patient_age, sex=request.patient_sex)
-        narrative = generate_narrative_diagnosis(diagnosis, treatment_plan, provider=request.provider)
-        return {
-            "analysis": analysis,
-            "diagnosis": diagnosis,
-            "treatment_plan": treatment_plan,
-            "narrative": narrative,
-        }
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
-
-@app.post("/ai-interpret")
-async def ai_interpret(request: InterpretRequest):
-    """
-    [LEGACY COMPATIBILITY ENDPOINT]
-    Generate a full diagnostic interpretation and narrative explanation.
-    Deprecated: Use specific endpoint routes (/ai/explain-decision or /patient-letter) instead.
-    """
-    try:
-        lm_list = [p.model_dump() for p in request.landmarks] if request.landmarks else None
-        report, treatment_plan = build_diagnostic_context(
-            landmarks=lm_list,
-            diagnostic_report=request.diagnostic_report,
-            px_to_mm=request.px_to_mm,
-            ethnic_profile=request.ethnic_profile,
-            protocol_id=request.protocol_id,
-            patient_age=request.patient_age,
-            patient_sex=request.patient_sex,
-        )
-        narrative = generate_narrative_diagnosis(report, treatment_plan, provider=request.provider)
-        return {"narrative": narrative, "diagnostic_report": report, "treatment_plan": treatment_plan}
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
-
-@app.post("/treatment-plan")
-async def treatment_plan_endpoint(request: InterpretRequest):
-    """
-    [LEGACY COMPATIBILITY ENDPOINT]
-    Retrieve treatment plan suggestions from diagnostic reports.
-    Deprecated: Use fine-grained route /ai/suggest-treatment instead.
-    """
-    try:
-        lm_list = [p.model_dump() for p in request.landmarks] if request.landmarks else None
-        report, treatment_plan = build_diagnostic_context(
-            landmarks=lm_list,
-            diagnostic_report=request.diagnostic_report,
-            px_to_mm=request.px_to_mm,
-            ethnic_profile=request.ethnic_profile,
-            protocol_id=request.protocol_id,
-            patient_age=request.patient_age,
-            patient_sex=request.patient_sex,
-        )
-        ai_summary = generate_narrative_diagnosis(report, treatment_plan, provider=request.provider)
-        return {"diagnostic_report": report, "treatment_plan": treatment_plan, "ai_summary": ai_summary}
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
-
 @app.post("/patient-letter")
 async def patient_letter_endpoint(request: InterpretRequest):
     try:
@@ -401,137 +179,6 @@ async def patient_letter_endpoint(request: InterpretRequest):
         return {"patient_letter": letter, "diagnostic_report": report, "treatment_plan": treatment_plan}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
-
-@app.post("/export")
-async def export_results(request: ExportRequest):
-    """Package landmarks and measurements as a WeDoCeph-style result ZIP."""
-    try:
-        lm_list = [p.model_dump() for p in request.landmarks]
-        analysis = build_analysis_report(
-            lm_list,
-            px_to_mm=request.px_to_mm,
-            ethnic_profile=request.ethnic_profile,
-            protocol_id=request.protocol_id,
-        )
-        zip_bytes = build_result_zip(
-            lm_list,
-            analysis,
-            metadata={
-                "patient_identifier": request.patient_identifier,
-                "analysis_type": request.analysis_type,
-                "ethnic_profile": request.ethnic_profile,
-                "px_to_mm": request.px_to_mm,
-            },
-        )
-        safe_name = "".join(ch if ch.isalnum() or ch in ("-", "_") else "_" for ch in request.patient_identifier)
-        return Response(
-            content=zip_bytes,
-            media_type="application/zip",
-            headers={"Content-Disposition": f'attachment; filename="{safe_name}_ceph_results.zip"'},
-        )
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
-
-@app.post("/cases")
-async def create_repository_case(request: CreateCaseRequest):
-    """Save a completed or draft analysis to the local case repository."""
-    try:
-        lm_list = [p.model_dump() for p in request.landmarks]
-        analysis = build_analysis_report(
-            lm_list,
-            px_to_mm=request.px_to_mm,
-            ethnic_profile=request.ethnic_profile,
-            protocol_id=request.protocol_id,
-        )
-        return {
-            "case": create_case(
-                patient_identifier=request.patient_identifier,
-                patient_age=request.patient_age,
-                patient_sex=request.patient_sex,
-                analysis_type=request.analysis_type,
-                status=request.status,
-                comment=request.comment,
-                px_to_mm=request.px_to_mm,
-                ethnic_profile=request.ethnic_profile,
-                filename=request.filename,
-                landmarks=lm_list,
-                analysis=analysis,
-            )
-        }
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
-
-@app.get("/cases")
-async def list_repository_cases(status: str = None, query: str = None, limit: int = 100):
-    try:
-        return {"cases": list_cases(status=status, query=query, limit=limit)}
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
-
-@app.get("/cases/{case_id}")
-async def get_repository_case(case_id: int):
-    case = get_case(case_id)
-    if not case:
-        raise HTTPException(status_code=404, detail="case not found")
-    return {"case": case}
-
-@app.patch("/cases/{case_id}")
-async def update_repository_case(case_id: int, request: UpdateCaseRequest):
-    try:
-        lm_list = None
-        analysis = None
-        if request.landmarks is not None:
-            lm_list = [p.model_dump() for p in request.landmarks]
-            current = get_case(case_id)
-            if not current:
-                raise HTTPException(status_code=404, detail="case not found")
-            scale = request.px_to_mm if request.px_to_mm is not None else current["px_to_mm"]
-            profile = request.ethnic_profile if request.ethnic_profile is not None else current["ethnic_profile"]
-            selected_protocol = request.protocol_id if request.protocol_id is not None else current["analysis"].get("protocol_id", "core_lateral")
-            analysis = build_analysis_report(
-                lm_list,
-                px_to_mm=scale,
-                ethnic_profile=profile,
-                protocol_id=selected_protocol,
-            )
-
-        case = update_case(case_id, status=request.status, comment=request.comment, landmarks=lm_list, analysis=analysis)
-        if not case:
-            raise HTTPException(status_code=404, detail="case not found")
-        return {"case": case}
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
-
-@app.delete("/cases/{case_id}")
-async def delete_repository_case(case_id: int):
-    if not delete_case(case_id):
-        raise HTTPException(status_code=404, detail="case not found")
-    return {"deleted": True}
-
-@app.get("/cases/{case_id}/export")
-async def export_repository_case(case_id: int):
-    case = get_case(case_id)
-    if not case:
-        raise HTTPException(status_code=404, detail="case not found")
-    zip_bytes = build_result_zip(
-        case["landmarks"],
-        case["analysis"],
-        metadata={
-            "case_id": case["id"],
-            "patient_identifier": case["patient_identifier"],
-            "analysis_type": case["analysis_type"],
-            "ethnic_profile": case["ethnic_profile"],
-            "px_to_mm": case["px_to_mm"],
-        },
-    )
-    safe_name = "".join(ch if ch.isalnum() or ch in ("-", "_") else "_" for ch in case["patient_identifier"])
-    return Response(
-        content=zip_bytes,
-        media_type="application/zip",
-        headers={"Content-Disposition": f'attachment; filename="{safe_name}_case_{case_id}_results.zip"'},
-    )
 
 @app.post('/refine')
 async def refine(file: UploadFile = File(...), landmarks: str = Form(...), 
@@ -567,18 +214,25 @@ async def detect_landmarks_endpoint(request: LandmarkDetectionRequest):
     if "hrnet" not in ml_models:
         raise HTTPException(status_code=500, detail="HRNet model not loaded on server.")
     try:
-        image_bytes = base64.b64decode(request.image_base64)
+        try:
+            image_bytes = base64.b64decode(request.image_base64, validate=True)
+        except (binascii.Error, ValueError):
+            raise HTTPException(status_code=400, detail="Invalid base64 image payload.")
+
         tensor, original_size = preprocess_image(image_bytes)
         heatmaps, offsets = run_inference(ml_models["hrnet"], tensor)
         landmarks = postprocess_landmarks(heatmaps, original_size, offsets=offsets)
         
         mapped_landmarks = landmark_ids_to_response_dict(landmarks)
         return LandmarkDetectionResponse(landmarks=mapped_landmarks)
+    except HTTPException:
+        raise
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         import traceback
-        err_msg = f"{str(e)}\n{traceback.format_exc()}"
-        print(err_msg)
-        raise HTTPException(status_code=500, detail=err_msg)
+        print(f"Landmark detection failed: {str(e)}\n{traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail="Landmark detection failed.")
 
 
 @app.post("/ai/calculate-measurements")
@@ -608,8 +262,9 @@ async def classify_diagnosis_endpoint(request: AiDiagnosisClassificationRequest)
         selected_protocol = request.protocol_id or "core_lateral"
         get_protocol(selected_protocol)
         rows = []
+        ethnic_profile = request.population or "Caucasian"
         for name, value in request.measurements.items():
-            norm_mean, norm_sd, meta = get_norm_tuple(selected_protocol, name, "Caucasian")
+            norm_mean, norm_sd, meta = get_norm_tuple(selected_protocol, name, ethnic_profile)
             difference = value - norm_mean
             status = "normal"
             label = "Normal"
@@ -627,8 +282,8 @@ async def classify_diagnosis_endpoint(request: AiDiagnosisClassificationRequest)
             rows.append({
                 "measurement": name,
                 "value": value,
-                "mean": value,
-                "sd": 0.0,
+                "mean": norm_mean,
+                "sd": norm_sd,
                 "norm_mean": norm_mean,
                 "norm_sd": norm_sd,
                 "difference": difference,
@@ -639,7 +294,7 @@ async def classify_diagnosis_endpoint(request: AiDiagnosisClassificationRequest)
         
         measurements_report = {
             "measurements": rows,
-            "ethnic_profile": "Caucasian",
+            "ethnic_profile": ethnic_profile,
             "protocol_id": selected_protocol,
             "landmarks": [],
             "px_to_mm": 1.0
@@ -652,6 +307,8 @@ async def classify_diagnosis_endpoint(request: AiDiagnosisClassificationRequest)
         impa = request.measurements.get("IMPA", 90.0)
         
         sk_class = diagnosis.get("skeletal_class", "Class I")
+        warnings = list(diagnosis.get("recommendations", []))
+        warnings.append("Overjet, overbite, upper incisor inclination, and soft-tissue profile are not calculated from the current staged endpoint payload.")
         
         return DiagnosisResponseModel(
             skeletal_class=sk_class,
@@ -662,16 +319,17 @@ async def classify_diagnosis_endpoint(request: AiDiagnosisClassificationRequest)
             vertical_pattern=diagnosis.get("vertical_pattern", "Normodivergent"),
             maxillary_position=classify_maxillary_position(sna),
             mandibular_position=classify_mandibular_position(snb),
-            upper_incisor_inclination="Normal",
-            lower_incisor_inclination=classify_lower_incisor_inclination(impa),
-            soft_tissue_profile="Normal",
-            overjet_mm=2.0,
-            overjet_classification="Normal",
-            overbite_mm=2.0,
-            overbite_classification="Normal",
+            upper_incisor_inclination=None,
+            lower_incisor_inclination=classify_lower_incisor_inclination(impa) if "IMPA" in request.measurements else None,
+            soft_tissue_profile=None,
+            overjet_mm=None,
+            overjet_classification=None,
+            overbite_mm=None,
+            overbite_classification=None,
             confidence_score=diagnosis.get("confidence", 0.90),
+            severity=diagnosis.get("severity"),
             summary=diagnosis.get("professional_summary", ""),
-            warnings=diagnosis.get("recommendations", []),
+            warnings=warnings,
             clinical_notes=[f.get("interpretation") for f in diagnosis.get("findings", []) if f.get("interpretation")],
             skeletal_differential=classify_skeletal_differential(sk_class)
         )
@@ -693,7 +351,7 @@ async def suggest_treatment_endpoint(request: AiTreatmentSuggestionRequest):
         diagnostic_report = {
             "skeletal_class": request.skeletal_class,
             "vertical_pattern": request.vertical_pattern,
-            "severity": "moderate",
+            "severity": request.severity or _severity_from_measurements(request.measurements),
             "dental_pattern": dental_pattern,
             "diagnostic_code": "CI-NVD-M"
         }
@@ -802,8 +460,12 @@ async def explain_decision_endpoint(request: AiXaiRequestPayload):
 async def generate_overlays_endpoint(request: AiOverlayRequestPayload):
     """Generate overlay images for visualization."""
     try:
-        image_bytes = base64.b64decode(request.image_base64)
-        orig_img = Image.open(BytesIO(image_bytes))
+        try:
+            image_bytes = base64.b64decode(request.image_base64, validate=True)
+            orig_img = Image.open(BytesIO(image_bytes))
+            orig_img.load()
+        except (binascii.Error, ValueError, UnidentifiedImageError):
+            raise HTTPException(status_code=400, detail="Invalid base64 image payload.")
         
         lm_list = landmark_names_to_ids(request.landmarks)
         image_items = []
@@ -842,6 +504,8 @@ async def generate_overlays_endpoint(request: AiOverlayRequestPayload):
                 ))
         
         return AiOverlayResponsePayload(session_id=request.session_id, images=image_items, render_ms=120)
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

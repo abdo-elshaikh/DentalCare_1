@@ -3,6 +3,7 @@ using DentalCare.Interfaces;
 using DentalCare.Repositories;
 using DentalCare.Services;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace DentalCare
@@ -42,7 +43,10 @@ namespace DentalCare
                 options.AccessDeniedPath = "/Account/AccessDenied";
             });
 
-            builder.Services.AddControllersWithViews();
+            builder.Services.AddControllersWithViews(options =>
+            {
+                options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute());
+            });
             builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
             builder.Services.AddHttpClient<CephIntegrationService>();
             var app = builder.Build();
@@ -55,12 +59,47 @@ namespace DentalCare
                 await db.Database.MigrateAsync();
 
                 var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-                string[] roles = { "Doctor", "Staff" };
+                string[] roles = { "Admin", "Doctor", "Staff" };
                 foreach (var role in roles)
                 {
                     if (!await roleManager.RoleExistsAsync(role))
                     {
                         await roleManager.CreateAsync(new IdentityRole(role));
+                    }
+                }
+
+                var userManager = scope.ServiceProvider.GetRequiredService<UserManager<IdentityUser>>();
+                var adminEmail = app.Configuration["SeedAdmin:Email"] ?? "admin@dentalcare.local";
+                var adminPassword = app.Configuration["SeedAdmin:Password"] ?? "Admin@12345";
+
+                if (!string.IsNullOrWhiteSpace(adminEmail) && !string.IsNullOrWhiteSpace(adminPassword))
+                {
+                    var adminUser = await userManager.FindByEmailAsync(adminEmail);
+                    if (adminUser == null)
+                    {
+                        adminUser = new IdentityUser
+                        {
+                            UserName = adminEmail,
+                            Email = adminEmail,
+                            EmailConfirmed = true
+                        };
+
+                        var result = await userManager.CreateAsync(adminUser, adminPassword);
+                        if (!result.Succeeded)
+                        {
+                            var errors = string.Join("; ", result.Errors.Select(e => e.Description));
+                            throw new InvalidOperationException($"Could not seed admin user: {errors}");
+                        }
+                    }
+                    else if (!adminUser.EmailConfirmed)
+                    {
+                        adminUser.EmailConfirmed = true;
+                        await userManager.UpdateAsync(adminUser);
+                    }
+
+                    if (!await userManager.IsInRoleAsync(adminUser, "Admin"))
+                    {
+                        await userManager.AddToRoleAsync(adminUser, "Admin");
                     }
                 }
             }
@@ -82,6 +121,7 @@ namespace DentalCare
 
             app.UseRouting();
 
+            app.UseAuthentication();
             app.UseAuthorization();
             app.MapControllerRoute(
                 name: "default",

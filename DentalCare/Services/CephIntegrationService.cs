@@ -1,4 +1,3 @@
-using DentalCare.Models;
 using System.Net.Http.Headers;
 using System.Text.Json;
 
@@ -38,7 +37,14 @@ namespace DentalCare.Services
             try
             {
                 var resp = await _httpClient.GetAsync("/health");
-                return resp.IsSuccessStatusCode;
+                if (!resp.IsSuccessStatusCode)
+                    return false;
+
+                var body = await resp.Content.ReadAsStringAsync();
+                using var doc = JsonDocument.Parse(body);
+                return doc.RootElement.TryGetProperty("model_loaded", out var loaded)
+                    ? loaded.ValueKind == JsonValueKind.True
+                    : true;
             }
             catch { return false; }
         }
@@ -46,44 +52,6 @@ namespace DentalCare.Services
         // ─────────────────────────────────────────────────────────────
         // PATIENT SYNC
         // ─────────────────────────────────────────────────────────────
-
-        /// <summary>
-        /// Creates or syncs a DentalCare patient in the Ceph patient registry.
-        /// Returns the CephPatientId (Guid) on success, null on failure.
-        /// </summary>
-        public async Task<Guid?> CreatePatientInCephAsync(Patient patient)
-        {
-            try
-            {
-                var request = new
-                {
-                    firstName = patient.Name.Split(' ').FirstOrDefault() ?? patient.Name,
-                    lastName  = patient.Name.Split(' ').Skip(1).FirstOrDefault() ?? "",
-                    dateOfBirth = DateOnly.FromDateTime(DateTime.Today.AddYears(-patient.Age)),
-                    gender    = patient.Gender == "Male" ? "Male" : "Female",
-                    phone     = patient.Phone,
-                    email     = patient.Email ?? $"{patient.Phone}@temp.com",
-                    medicalRecordNo = $"DC-{patient.Id}"
-                };
-
-                var response = await _httpClient.PostAsJsonAsync("/api/integration/patient", request);
-                var content  = await response.Content.ReadAsStringAsync();
-
-                if (response.IsSuccessStatusCode)
-                {
-                    using var json = JsonDocument.Parse(content);
-                    return json.RootElement.GetProperty("id").GetGuid();
-                }
-
-                _logger.LogWarning("Ceph patient sync failed: {Status} {Body}", response.StatusCode, content);
-                return null;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Ceph patient sync exception");
-                return null;
-            }
-        }
 
         // ─────────────────────────────────────────────────────────────
         // X-RAY PIPELINE
@@ -228,7 +196,8 @@ namespace DentalCare.Services
                 {
                     session_id   = sessionId,
                     measurements = measurements,
-                    protocol_id  = protocolId
+                    protocol_id  = protocolId,
+                    population   = ethnicProfile
                 };
                 var diagResp = await _httpClient.PostAsJsonAsync("/ai/classify-diagnosis", diagReq, _json);
                 var diagBody = await diagResp.Content.ReadAsStringAsync();
@@ -236,6 +205,7 @@ namespace DentalCare.Services
                 string skeletalClass   = "Class I";
                 string verticalPattern = "Normodivergent";
                 string summary         = "";
+                string severity        = "mild";
                 float? confidenceScore = null;
                 List<string> warnings  = new();
                 List<string> clinicalNotes = new();
@@ -247,6 +217,7 @@ namespace DentalCare.Services
                     skeletalClass   = dd.RootElement.TryGetProperty("skeletal_class",   out var sc) ? sc.GetString() ?? skeletalClass  : skeletalClass;
                     verticalPattern = dd.RootElement.TryGetProperty("vertical_pattern", out var vp) ? vp.GetString() ?? verticalPattern : verticalPattern;
                     summary         = dd.RootElement.TryGetProperty("summary",          out var s)  ? s.GetString()  ?? ""               : "";
+                    severity        = dd.RootElement.TryGetProperty("severity",         out var sev) ? sev.GetString() ?? severity       : severity;
                     confidenceScore = ReadNullableFloat(dd.RootElement, "confidence_score");
                     if (dd.RootElement.TryGetProperty("warnings", out var wArr))
                         foreach (var w in wArr.EnumerateArray())
@@ -280,7 +251,8 @@ namespace DentalCare.Services
                     skeletal_class   = skeletalClass,
                     vertical_pattern = verticalPattern,
                     patient_age      = (float)patientAge,
-                    measurements     = measurements
+                    measurements     = measurements,
+                    severity
                 };
                 var treatResp = await _httpClient.PostAsJsonAsync("/ai/suggest-treatment", treatReq, _json);
                 var treatBody = await treatResp.Content.ReadAsStringAsync();
@@ -501,7 +473,8 @@ namespace DentalCare.Services
                 {
                     session_id = sessionId,
                     measurements,
-                    protocol_id = protocolId
+                    protocol_id = protocolId,
+                    population = ethnicProfile
                 };
                 var diagResp = await _httpClient.PostAsJsonAsync("/ai/classify-diagnosis", diagReq, _json);
                 var diagBody = await diagResp.Content.ReadAsStringAsync();
@@ -509,6 +482,7 @@ namespace DentalCare.Services
                 var skeletalClass = "Class I";
                 var verticalPattern = "Normodivergent";
                 var summary = "";
+                var severity = "mild";
                 float? confidenceScore = null;
                 var warnings = new List<string>();
                 var clinicalNotes = new List<string>();
@@ -520,6 +494,7 @@ namespace DentalCare.Services
                     skeletalClass = dd.RootElement.TryGetProperty("skeletal_class", out var sc) ? sc.GetString() ?? skeletalClass : skeletalClass;
                     verticalPattern = dd.RootElement.TryGetProperty("vertical_pattern", out var vp) ? vp.GetString() ?? verticalPattern : verticalPattern;
                     summary = dd.RootElement.TryGetProperty("summary", out var s) ? s.GetString() ?? "" : "";
+                    severity = dd.RootElement.TryGetProperty("severity", out var sev) ? sev.GetString() ?? severity : severity;
                     confidenceScore = ReadNullableFloat(dd.RootElement, "confidence_score");
 
                     if (dd.RootElement.TryGetProperty("warnings", out var wArr))
@@ -552,7 +527,8 @@ namespace DentalCare.Services
                     skeletal_class = skeletalClass,
                     vertical_pattern = verticalPattern,
                     patient_age = (float)patientAge,
-                    measurements
+                    measurements,
+                    severity
                 };
                 var treatResp = await _httpClient.PostAsJsonAsync("/ai/suggest-treatment", treatReq, _json);
                 var treatBody = await treatResp.Content.ReadAsStringAsync();
@@ -1029,8 +1005,4 @@ namespace DentalCare.Services
         public float? SuccessProbability { get; set; }
     }
 
-    public class CephPatientResponse
-    {
-        public Guid Id { get; set; }
-    }
 }

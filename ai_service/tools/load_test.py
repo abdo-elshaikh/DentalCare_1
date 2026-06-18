@@ -42,12 +42,11 @@ async def run_benchmark(concurrency, total_requests):
     print(f"Targeting: {BASE_URL}")
     print("=" * 60)
     
-    # We will query '/health' and '/cases' as a baseline load
+    # Query '/health' as a lightweight baseline load.
     sem = asyncio.Semaphore(concurrency)
     
     async def worker():
         async with sem:
-            # We run health check first, then list cases
             success, latency, res = await test_endpoint(None, "health", "/health", "GET")
             return success, latency, res
 

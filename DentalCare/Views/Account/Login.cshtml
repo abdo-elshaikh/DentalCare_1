@@ -15,6 +15,13 @@
             </div>
 
             <form asp-controller="Account" asp-action="Login" asp-route-returnUrl="@ViewData["ReturnUrl"]" method="post">
+                @if (TempData["InfoMessage"] is string infoMessage)
+                {
+                    <div class="alert alert-info small fw-semibold border-0 rounded-3" role="status">
+                        @infoMessage
+                    </div>
+                }
+
                 <div asp-validation-summary="ModelOnly" class="text-danger small mb-3" role="alert"></div>
 
                 <div class="mb-3">

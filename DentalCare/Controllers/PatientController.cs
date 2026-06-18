@@ -1,10 +1,7 @@
 ﻿using DentalCare.Interfaces;
 using DentalCare.Models;
-using DentalCare.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Net.Http;
-using System.Text.Json;
 
 namespace DentalCare.Controllers
 {
@@ -15,20 +12,16 @@ namespace DentalCare.Controllers
         private readonly IRepository<MedicalRecord> _medicalRecordRepository;
         private readonly IRepository<Appointment> _appointmentRepository;
         private readonly Microsoft.AspNetCore.Identity.UserManager<Microsoft.AspNetCore.Identity.IdentityUser> _userManager;
-        private readonly CephIntegrationService _cephIntegrationService;
-        private readonly HttpClient _httpClient;
         public PatientController(
             IRepository<Patient> patientRepository,
             IRepository<MedicalRecord> medicalRecordRepository,
             IRepository<Appointment> appointmentRepository,
-            Microsoft.AspNetCore.Identity.UserManager<Microsoft.AspNetCore.Identity.IdentityUser> userManager,
-            CephIntegrationService cephIntegrationService)
+            Microsoft.AspNetCore.Identity.UserManager<Microsoft.AspNetCore.Identity.IdentityUser> userManager)
         {
             _patientRepository = patientRepository;
             _medicalRecordRepository = medicalRecordRepository;
             _appointmentRepository = appointmentRepository;
             _userManager = userManager;
-            _cephIntegrationService = cephIntegrationService;
         }
 
         public async Task<IActionResult> Index(string searchString, int pageNumber = 1)
@@ -65,62 +58,18 @@ namespace DentalCare.Controllers
         }
 
         [Authorize(Roles = "Staff,Admin")]
-        //[HttpPost]
-        //public async Task<IActionResult> Create(Patient patient)
-        //{
-        //    if (ModelState.IsValid)
-        //    {
-        //        await _patientRepository.AddAsync(patient);
-        //        await _patientRepository.SaveAsync();
-        //        ///////---------------------
-        //        _ = Task.Run(async () =>
-        //        {
-        //            try
-        //            {
-        //                var cephId = await _cephIntegrationService.CreatePatientInCephAsync(patient);
-        //                if (cephId.HasValue)
-        //                {
-        //                    patient.CephPatientId = cephId;
-        //                    await _patientRepository.SaveAsync();
-        //                }
-        //            }
-        //            catch { }
-        //        });
-        //        /////-----------------------
-        //        return RedirectToAction(nameof(Index));
-        //    }
-        //    return View(patient);
-        //}
-        [Authorize(Roles = "Staff,Admin")]
         [HttpPost]
         public async Task<IActionResult> Create(Patient patient)
         {
             if (ModelState.IsValid)
             {
-                // 1. حفظ المريض في DentalCare أولاً
                 await _patientRepository.AddAsync(patient);
                 await _patientRepository.SaveAsync();
-
-                // 2. محاولة المزامنة مع CephAnalysis (في الخلفية، لا توقف العملية)
-                try
-                {
-                    var cephId = await _cephIntegrationService.CreatePatientInCephAsync(patient);
-                    if (cephId.HasValue)
-                    {
-                        patient.CephPatientId = cephId;
-                        await _patientRepository.SaveAsync();
-                    }
-                }
-                catch (Exception ex)
-                {
-                    // نسجل الخطأ لكن لا نوقف العملية
-                    Console.WriteLine($"Ceph sync failed: {ex.Message}");
-                }
-
                 return RedirectToAction(nameof(Index));
             }
             return View(patient);
         }
+        
         [Authorize(Roles = "Doctor,Staff,Admin")]
         public async Task<IActionResult> Edit(int id)
         {

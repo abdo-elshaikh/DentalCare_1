@@ -19,12 +19,6 @@
 
                 <div class="row g-3">
                     <div class="col-12">
-                        <label asp-for="FullName" class="dental-label">Doctor's Full Name (Display Name)</label>
-                        <input asp-for="FullName" class="dental-input" aria-required="true" placeholder="Ex: Dr. Ahmed Mohamed" title="Please enter your name as you want it to appear to patients" />
-                        <span asp-validation-for="FullName" class="text-danger small fw-bold"></span>
-                    </div>
-
-                    <div class="col-12">
                         <label asp-for="Email" class="dental-label">Email Address</label>
                         <input asp-for="Email" class="dental-input" autocomplete="username" aria-required="true" placeholder="name@example.com" />
                         <span asp-validation-for="Email" class="text-danger small fw-bold"></span>
@@ -40,24 +34,6 @@
                         <label asp-for="ConfirmPassword" class="dental-label">Confirm Password</label>
                         <input asp-for="ConfirmPassword" type="password" class="dental-input" autocomplete="new-password" aria-required="true" placeholder="••••••••" />
                         <span asp-validation-for="ConfirmPassword" class="text-danger small fw-bold"></span>
-                    </div>
-
-                    <div class="col-12">
-                        <label asp-for="Role" class="dental-label">Register As</label>
-                        <div class="row g-3">
-                            <div class="col-6">
-                                <input type="radio" asp-for="Role" value="Doctor" class="btn-check" id="roleDoctor" autocomplete="off" checked>
-                                <label class="btn btn-outline-primary w-100 py-2 fw-bold small text-uppercase rounded-3" for="roleDoctor">
-                                    <i class="fas fa-stethoscope me-2"></i> Doctor
-                                </label>
-                            </div>
-                            <div class="col-6">
-                                <input type="radio" asp-for="Role" value="Staff" class="btn-check" id="roleStaff" autocomplete="off">
-                                <label class="btn btn-outline-primary w-100 py-2 fw-bold small text-uppercase rounded-3" for="roleStaff">
-                                    <i class="fas fa-clipboard-user me-2"></i> Staff
-                                </label>
-                            </div>
-                        </div>
                     </div>
                 </div>
 

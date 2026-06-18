@@ -229,9 +229,6 @@ def diagnose_measurements(
             
         findings.append(_finding_from_row(row, is_outlier=is_outlier))
 
-    if not findings and rows:
-        findings.append(_finding_from_row(rows[0]))
-
     protocol_snapshots = []
     for protocol_id in PRIMARY_PROTOCOLS:
         report = build_analysis_report(

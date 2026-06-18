@@ -1,6 +1,6 @@
 # 🦷 AI Cephalometric Analysis System
 
-An end-to-end AI service for automated lateral cephalometric landmark detection, protocol-based geometric analysis, growth maturation prediction, and clinical overlay generation. The service exposes fine-grained FastAPI routes for the production backend and keeps legacy composite routes for compatibility.
+An end-to-end AI service for automated lateral cephalometric landmark detection, protocol-based geometric analysis, growth maturation prediction, and clinical overlay generation. The service exposes fine-grained FastAPI routes for the production backend.
 
 ---
 
@@ -153,26 +153,7 @@ It forecasts the **growth vector changes per year** for key metrics like ANB, FM
 
 ## 🗄️ Case Repository Database Schema
 
-The repository layer utilizes SQLite3 to store historical patient evaluations and modifications. The main table `cases` is structured as follows:
-
-```sql
-CREATE TABLE IF NOT EXISTS cases (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    patient_identifier TEXT NOT NULL,
-    patient_age INTEGER,
-    patient_sex TEXT,
-    analysis_type TEXT NOT NULL,
-    status TEXT NOT NULL CHECK(status IN ('draft', 'review', 'done')),
-    comment TEXT,
-    px_to_mm REAL DEFAULT 1.0,
-    ethnic_profile TEXT DEFAULT 'Caucasian',
-    filename TEXT,
-    landmarks TEXT, -- JSON serialized coordinate array
-    analysis TEXT,  -- JSON serialized diagnostic measurements report
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-```
+The FastAPI service does not store patients, cases, or analysis history in a local database. It receives request payloads, performs AI/measurement/diagnostic work, and returns results to the caller. Patient records and saved clinical reports are owned by the DentalCare ASP.NET application database.
 
 ### JSON Data Schemas Reference
 
@@ -237,7 +218,6 @@ ai_service/
 │   ├── calibration_auto.py # Auto-scale calibration via lead boundary ruler ticks
 │   ├── protocols.py        # Clinical analysis configurations (Steiner, Tweed, Downs)
 │   ├── norms.py            # Population reference parameters & clinical targets
-│   ├── repository.py       # Local SQLite3 database case storage and CRUD
 │   └── reporting.py        # PDF, CSV, and WeDoCeph-compatible ZIP exporters
 ├── ui/                     # Streamlit Frontend UI Module
 │   ├── tabs/               # Interactive clinical tabs (Intake, Calibration, Analysis)
@@ -250,7 +230,7 @@ ai_service/
 ├── tools/                  # Developer CLI Utilities
 │   ├── run_pipeline.py     # Quick offline test runner for model verification
 │   └── predict_sample.py   # Batch run utility for diagnostic predictions
-├── data/                   # SQLite database file paths and sample folders
+├── data/                   # Sample folders only; no AI-service database
 ├── dataset/                # Data loaders, augmentation, and preprocessing scripts
 ├── models/                 # Deep learning PyTorch weights (.pth)
 ├── training/               # Multi-GPU training loops and learning rate schedules
@@ -309,7 +289,6 @@ Review and adjust the environment configurations to match your local setup:
 | `OPENAI_MODEL` | `gpt-4o-mini` | Target OpenAI model family |
 | `GEMINI_API_KEY` | `your_gemini_key` | API Key for Gemini-based diagnostic generation |
 | `GEMINI_MODEL` | `gemini-1.5-pro` | Target Gemini model family |
-| `DB_PATH` | `data/cases.sqlite3` | Local case database location |
 
 ---
 
@@ -343,47 +322,54 @@ Below is a reference guide for the core FastAPI endpoints exposed by the backend
 
 | Method | Endpoint | Description | Key Request / Response Parameters |
 | :---: | :--- | :--- | :--- |
-| **POST** | `/predict` | Performs HRNet inference, anatomical constraint checking, and structural calculations on raw images. | **Form-data**: `file`, `px_to_mm`, `ethnic_profile`, `protocol_id`. |
-| **POST** | `/analyze` | Computes diagnostic measurements from landmark coordinate lists. | **JSON**: `landmarks`, `px_to_mm`, `ethnic_profile`, `protocol_id`. |
-| **POST** | `/measurements` | Runs Monte-Carlo perturbation on landmark structures to estimate measurements with standard deviations. | **JSON**: `landmarks`, `px_to_mm`, `samples`, `base_sigma_px`. |
-| **POST** | `/measurement-analysis` | Advanced diagnostic analyzer with confidence intervals, refinement suggestions, and quality scores. | **JSON**: `landmarks`, `px_to_mm`, `samples`, `base_sigma_px`. |
-| **POST** | `/growth-assessment` | Evaluates CVM maturation stage, expected growth time, growth vectors, and treatment timing. | **JSON**: `patient_age`, `patient_sex`, `landmarks`, `cvm_stage`. |
-| **POST** | `/diagnose` | End-to-end analyzer yielding measurements, skeletal diagnosis, treatment phases, and narrative reports. | **JSON**: `landmarks`, `px_to_mm`, `patient_age`, `patient_sex`, `provider`. |
-| **POST** | `/ai-interpret` | Synthesizes an LLM clinician narrative using computed diagnostic matrices. | **JSON**: `diagnostic_report`, `landmarks`, `provider`. |
+| **GET** | `/health` | Checks that the FastAPI service is reachable. | No body. |
+| **GET** | `/protocols` | Lists active cephalometric protocols. | No body. |
+| **GET** | `/protocols/{protocol_id}` | Returns one protocol and a norms preview. | **Path**: protocol ID. |
+| **POST** | `/protocols/{protocol_id}/validate` | Validates whether provided landmarks satisfy a protocol. | **JSON**: `landmarks`. |
+| **POST** | `/calibrate` | Calculates px-to-mm scale from two selected points. | **JSON**: `point_a`, `point_b`, `real_distance_mm`. |
+| **POST** | `/ai/detect-landmarks` | Performs HRNet landmark detection from a base64 image. | **JSON**: `session_id`, `image_base64`, `pixel_spacing_mm`. |
+| **POST** | `/ai/calculate-measurements` | Computes protocol measurements from named landmarks. | **JSON**: `session_id`, `landmarks`, `pixel_spacing_mm`, `population`, `protocol_id`. |
+| **POST** | `/ai/classify-diagnosis` | Classifies skeletal and vertical diagnosis from measurement values. | **JSON**: `session_id`, `measurements`, `protocol_id`. |
+| **POST** | `/ai/suggest-treatment` | Generates treatment suggestions from diagnosis and measurements. | **JSON**: `session_id`, `skeletal_class`, `vertical_pattern`, `measurements`, `patient_age`. |
+| **POST** | `/ai/explain-decision` | Returns explainable AI decision chain and key drivers. | **JSON**: diagnosis, probabilities, measurements, treatment, outcomes. |
+| **POST** | `/ai/generate-overlays` | Generates tracing, measurement, and report overlay images. | **JSON**: `image_base64`, named landmarks, measurements, outputs. |
 | **POST** | `/patient-letter` | Generates a warm, plain-language patient report from clinical findings. | **JSON**: `diagnostic_report`, `landmarks`, `provider`. |
 | **POST** | `/auto-calibrate` | Automatically detects px_to_mm calibration using boundary metallic lead ruler markers on standard borders. | **Form-data**: `file`, `tick_interval_mm`. |
 | **POST** | `/refine` | Snaps rough landmark placements to optimal pixel centers using local intensity/gradient refinement. | **Form-data**: `file`, `landmarks`, `method` ('intensity'/'edge'). |
-| **GET** | `/cases` | Query, filter, and fetch previously saved clinical evaluations. | **Query Params**: `status`, `query`, `limit`. |
 
 ### Programmatic Python Example
-You can utilize our lightweight API connector wrapper (`ui/utils/api.py`) to easily perform calculations within your scripts:
+You can call the staged endpoints directly to perform measurements within scripts:
 ```python
-from ui.utils import api
+import requests
 
-# Landmark coordinate configuration
-landmarks = [
-    {"id": 1, "x": 140.2, "y": 210.5, "name": "Sella"},
-    {"id": 2, "x": 305.8, "y": 250.1, "name": "Nasion"},
-    {"id": 5, "x": 320.1, "y": 380.4, "name": "Subspinale (A)"}
-]
+API_BASE = "http://127.0.0.1:8000"
 
-# Compute Monte-Carlo measurements with standard deviations
-response = api.api_measurements(
-    landmarks=landmarks, 
-    px_to_mm=0.264, 
-    samples=150, 
-    base_sigma_px=1.5
+landmarks = {
+    "Sella": {"x": 140.2, "y": 210.5},
+    "Nasion": {"x": 305.8, "y": 250.1},
+    "A Point": {"x": 320.1, "y": 380.4},
+}
+
+response = requests.post(
+    f"{API_BASE}/ai/calculate-measurements",
+    json={
+        "session_id": "script-example",
+        "landmarks": landmarks,
+        "pixel_spacing_mm": 0.264,
+        "population": "Caucasian",
+        "protocol_id": "core_lateral",
+    },
 )
-
-for measure in response.get("measurements", []):
-    print(f"Measurement: {measure['measurement']} -> Nom: {measure['value']} | Z-Score: {measure['z_score']}")
+response.raise_for_status()
+for row in response.json().get("measurements", []):
+    print(row["measurement"], row["value"], row.get("status"))
 ```
 
 ---
 
 ## 🧪 Testing and Validation
 
-A suite of 44+ automated tests are available inside the `/tests` folder, checking inference boundaries, geometric protocols, CVM mathematics, SQLite transactions, and LLM prompt consistency.
+A suite of automated tests should cover inference boundaries, geometric protocols, CVM mathematics, stateless API contracts, and LLM prompt consistency.
 
 To run the automated tests:
 ```bash

@@ -1,13 +1,17 @@
 @model IEnumerable<DentalCare.Models.Appointment>
 @{
     ViewData["Title"] = "Doctor Dashboard";
+    var latestAnalysisReportByPatientId =
+        ViewBag.LatestAnalysisReportByPatientId as Dictionary<int, DentalCare.Models.AiAnalysisReport>
+        ?? new Dictionary<int, DentalCare.Models.AiAnalysisReport>();
 }
 <!-- statistics Waiting, Total, Completed-->
 <div class="row g-4 mb-5">
     <div class="col-md-4">
         <div class="dental-card shadow-sm border-0 h-100">
             <div class="d-flex align-items-center gap-3">
-                <div class="dental-avatar bg-primary-subtle text-primary" style="width: 48px; height: 48px; border-radius: 12px;">
+                <div class="dental-avatar bg-primary-subtle text-primary"
+                     style="width: 48px; height: 48px; border-radius: 12px;">
                     <i class="fas fa-users fs-5"></i>
                 </div>
                 <div>
@@ -21,7 +25,8 @@
     <div class="col-md-4">
         <div class="dental-card shadow-sm border-0 h-100">
             <div class="d-flex align-items-center gap-3">
-                <div class="dental-avatar bg-success-subtle text-success" style="width: 48px; height: 48px; border-radius: 12px;">
+                <div class="dental-avatar bg-success-subtle text-success"
+                     style="width: 48px; height: 48px; border-radius: 12px;">
                     <i class="fas fa-calendar-check fs-5"></i>
                 </div>
                 <div>
@@ -35,7 +40,8 @@
     <div class="col-md-4">
         <div class="dental-card shadow-sm border-0 h-100">
             <div class="d-flex align-items-center gap-3">
-                <div class="dental-avatar bg-primary-subtle text-primary" style="width: 48px; height: 48px; border-radius: 12px;">
+                <div class="dental-avatar bg-primary-subtle text-primary"
+                     style="width: 48px; height: 48px; border-radius: 12px;">
                     <i class="fas fa-check-circle fs-5"></i>
                 </div>
                 <div>
@@ -52,7 +58,8 @@
     <!-- Main Queue Section -->
     <div class="col-lg-8">
         <div class="dental-card p-0 shadow-sm border-0 overflow-hidden">
-            <div class="p-4 border-bottom bg-light d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+            <div
+                class="p-4 border-bottom bg-light d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
                 <div>
                     <h3 class="h5 fw-bold text-dark mb-0">Active Patient Queue</h3>
                     @{
@@ -61,19 +68,23 @@
                         if (!string.IsNullOrEmpty(rawDoc))
                         {
                             if (rawDoc.Contains("@")) cleanDoc = rawDoc.Split('@')[0];
-                            if (!cleanDoc.StartsWith("Dr. ", StringComparison.OrdinalIgnoreCase)) cleanDoc = "Dr. " + cleanDoc;
+                            if (!string.IsNullOrEmpty(cleanDoc) && !cleanDoc.StartsWith("Dr. ",
+                    StringComparison.OrdinalIgnoreCase)) cleanDoc = "Dr. " + cleanDoc;
                         }
                     }
                     <p class="dental-caption mb-0 text-primary">Doctor: @cleanDoc</p>
                 </div>
 
                 <div class="d-flex align-items-center gap-3">
-                    <form asp-action="Dashboard" method="get" class="d-flex align-items-center gap-2 flex-grow-1 flex-md-grow-0" style="max-width: 400px;">
+                    <form asp-action="Dashboard" method="get"
+                          class="d-flex align-items-center gap-2 flex-grow-1 flex-md-grow-0" style="max-width: 400px;">
                         <div class="flex-grow-1">
-                            <input type="text" name="searchString" value="@ViewBag.SearchString" placeholder="Search patient..."
-                                   class="dental-input py-2 shadow-none border" style="font-size: 13px;" />
+                            <input type="text" name="searchString" value="@ViewBag.SearchString"
+                                   placeholder="Search patient..." class="dental-input py-2 shadow-none border"
+                                   style="font-size: 13px;" />
                         </div>
-                        <button type="submit" class="btn btn-dark fw-bold px-4 rounded-3 text-uppercase small" style="font-size: 10px; padding-top: 10px; padding-bottom: 10px;">Filter</button>
+                        <button type="submit" class="btn btn-dark fw-bold px-4 rounded-3 text-uppercase small"
+                                style="font-size: 10px; padding-top: 10px; padding-bottom: 10px;">Filter</button>
                     </form>
 
                     <form asp-controller="Account" asp-action="Logout" method="post" class="d-md-none">
@@ -98,89 +109,148 @@
                         @if (!Model.Any())
                         {
                             <tr>
-                                <td colspan="4" class="px-4 py-5 text-center text-muted fst-italic fw-medium">No patients in queue.</td>
-                            </tr>
-                        }
-                        else
-                        {
-                            foreach (var appt in Model)
-                            {
-                                <tr>
-                                    <td class="px-4 fw-black text-secondary opacity-50 small">#@appt.Id</td>
-                                    <td class="px-4">
-                                        <div class="d-flex align-items-center gap-3">
-                                            <div class="dental-avatar bg-primary-subtle text-primary fw-bold" style="width: 32px; height: 32px; border-radius: 8px; font-size: 12px;">@(appt.Patient?.Name?[0])</div>
-                                            <span class="fw-bold text-dark small">@appt.Patient?.Name</span>
-                                        </div>
-                                    </td>
-                                    <td class="px-4 small fw-bold text-uppercase text-secondary tracking-widest" style="font-size: 10px;">@appt.Type</td>
-                                    <td class="px-4 text-end">
-                                        <a asp-action="PatientProfile" asp-route-id="@appt.PatientId" asp-route-visitType="@appt.Type" class="dental-btn dental-btn-primary py-2 px-3">Open Record</a>
-                                    </td>
+                                <td colspan="4" class="px-4 py-5 text-center text-muted fst-italic fw-medium">No patients in
+                                    queue.</td>
                                 </tr>
                             }
-                        }
-                    </tbody>
-                </table>
-            </div>
-
-            @if (ViewBag.TotalPages > 1)
-            {
-                <div class="p-4 border-top bg-light d-flex align-items-center justify-content-between">
-                    <span class="dental-caption">Page @ViewBag.CurrentPage of @ViewBag.TotalPages</span>
-                    <nav>
-                        <ul class="pagination pagination-sm mb-0 gap-2">
-                            @if (ViewBag.CurrentPage > 1)
+                        else
                             {
-                                <li class="page-item"><a asp-action="Dashboard" asp-route-pageNumber="@(ViewBag.CurrentPage - 1)" asp-route-searchString="@ViewBag.SearchString" class="btn btn-outline-secondary btn-sm fw-bold border rounded-pill px-3">Prev</a></li>
-                            }
-                            @if (ViewBag.CurrentPage < ViewBag.TotalPages)
-                            {
-                                <li class="page-item"><a asp-action="Dashboard" asp-route-pageNumber="@(ViewBag.CurrentPage + 1)" asp-route-searchString="@ViewBag.SearchString" class="btn btn-primary btn-sm fw-bold border-0 rounded-pill px-3 shadow-sm">Next</a></li>
-                            }
-                        </ul>
-                    </nav>
-                </div>
-            }
-        </div>
-    </div>
+                                foreach (var appt in Model)
+                                {
+                                    var isXrayAppointment =
+                                        string.Equals(appt.Type, "X-Ray", StringComparison.OrdinalIgnoreCase) ||
+                                        string.Equals(appt.Type, "Xray", StringComparison.OrdinalIgnoreCase) ||
+                                        string.Equals(appt.Type, "X Ray", StringComparison.OrdinalIgnoreCase);
+                                    <tr>
+                                        <td class="px-4 fw-black text-secondary opacity-50 small">#@appt.Id</td>
+                                        <td class="px-4">
+                                            <div class="d-flex align-items-center gap-3">
+                                                <div class="dental-avatar bg-primary-subtle text-primary fw-bold"
+                                                     style="width: 32px; height: 32px; border-radius: 8px; font-size: 12px;">
+                                                    @(appt.Patient?.Name?[0])</div>
+                                                    <span class="fw-bold text-dark small">@appt.Patient?.Name</span>
+                                                    @if (isXrayAppointment)
+                                                    {
+                                                        <a asp-action="Analysis" asp-route-patientId="@appt.PatientId"
+                                                           title="Open AI analysis"
+                                                           class="text-primary hover-primary transition"><i
+                                                            class="fas fa-x-ray ms-2"></i></a>
+                                                        }
+                                                    </div>
+                                                </td>
+                                                <td class="px-4 small fw-bold text-uppercase text-secondary tracking-widest"
+                                                    style="font-size: 10px;">@appt.Type</td>
+                                                <td class="px-4 text-end">
+                                                    @if (isXrayAppointment)
+                                                    {
+                                                        <a asp-action="Analysis" asp-route-patientId="@appt.PatientId"
+                                                           class="dental-btn dental-btn-primary py-2 px-3">
+                                                            <i class="fas fa-x-ray me-1"></i> Analyze
+                                                        </a>
+                                                    }
+                                                    else
+                                                    {
+                                                        <a asp-action="PatientProfile" asp-route-id="@appt.PatientId"
+                                                           asp-route-visitType="@appt.Type"
+                                                           class="dental-btn dental-btn-primary py-2 px-3">Open Record</a>
+                                                    }
+                                                </td>
+                                            </tr>
+                                        }
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
 
-    <!-- Completed Section -->
-    <div class="col-lg-4">
-        <div class="dental-card p-0 shadow-sm border-0 overflow-hidden h-100">
-            <div class="p-4 border-bottom bg-success bg-opacity-10">
-                <h3 class="h6 fw-bold text-dark mb-0">Seen Today</h3>
-                <p class="dental-caption mb-0 text-success">Completed Appointments</p>
-            </div>
-            <div class="p-4">
-                @if (ViewBag.CompletedList is List<DentalCare.Models.Appointment> completedList && completedList.Any())
-                {
-                    <div class="d-flex flex-column gap-3">
-                        @foreach (var item in completedList)
+                        @if (ViewBag.TotalPages > 1)
                         {
-                            <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded-4 border border-transparent hover-border-light transition shadow-sm">
-                                <div class="d-flex align-items-center gap-3">
-                                    <div class="dental-avatar bg-success-subtle text-success" style="width: 32px; height: 32px; font-size: 10px;">
-                                        <i class="fas fa-check"></i>
-                                    </div>
-                                    <div>
-                                        <p class="small fw-bold text-dark mb-0">@item.Patient?.Name</p>
-                                        <p class="dental-caption mb-0" style="font-size: 9px; opacity: 0.7;">@item.Type</p>
-                                    </div>
+                            <div class="p-4 border-top bg-light d-flex align-items-center justify-content-between">
+                                <span class="dental-caption">Page @ViewBag.CurrentPage of @ViewBag.TotalPages</span>
+                                <nav>
+                                    <ul class="pagination pagination-sm mb-0 gap-2">
+                                        @if (ViewBag.CurrentPage > 1)
+                                        {
+                                            <li class="page-item"><a asp-action="Dashboard"
+                                                                         asp-route-pageNumber="@(ViewBag.CurrentPage - 1)"
+                                                                         asp-route-searchString="@ViewBag.SearchString"
+                                                                         class="btn btn-outline-secondary btn-sm fw-bold border rounded-pill px-3">Prev</a></li>
+                                            }
+                                            @if (ViewBag.CurrentPage < ViewBag.TotalPages)
+                                            {
+                                                <li class="page-item"><a asp-action="Dashboard"
+                                                                             asp-route-pageNumber="@(ViewBag.CurrentPage + 1)"
+                                                                             asp-route-searchString="@ViewBag.SearchString"
+                                                                             class="btn btn-primary btn-sm fw-bold border-0 rounded-pill px-3 shadow-sm">Next</a>
+                                                </li>
+                                            }
+                                        </ul>
+                                    </nav>
                                 </div>
-                                <a asp-action="PatientProfile" asp-route-id="@item.PatientId" class="text-secondary hover-primary transition"><i class="fas fa-history"></i></a>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Completed Section -->
+                    <div class="col-lg-4">
+                        <div class="dental-card p-0 shadow-sm border-0 overflow-hidden h-100">
+                            <div class="p-4 border-bottom bg-success bg-opacity-10">
+                                <h3 class="h6 fw-bold text-dark mb-0">Seen Today</h3>
+                                <p class="dental-caption mb-0 text-success">Completed Appointments</p>
                             </div>
-                        }
+                            <div class="p-4">
+                                @if (ViewBag.CompletedList is List<DentalCare.Models.Appointment> completedList && completedList.Any())
+                                {
+                                    <div class="d-flex flex-column gap-3">
+                                        @foreach (var item in completedList)
+                                        {
+                                            var isCompletedXrayAppointment =
+                                                string.Equals(item.Type, "X-Ray", StringComparison.OrdinalIgnoreCase) ||
+                                                string.Equals(item.Type, "Xray", StringComparison.OrdinalIgnoreCase) ||
+                                                string.Equals(item.Type, "X Ray", StringComparison.OrdinalIgnoreCase);
+                                            <div
+                                                class="d-flex align-items-center justify-content-between p-3 bg-light rounded-4 border border-transparent hover-border-light transition shadow-sm">
+                                                <div class="d-flex align-items-center gap-3">
+                                                    <div class="dental-avatar bg-success-subtle text-success"
+                                                         style="width: 32px; height: 32px; font-size: 10px;">
+                                                        <i class="fas fa-check"></i>
+                                                    </div>
+                                                    <div>
+                                                        <p class="small fw-bold text-dark mb-0">@item.Patient?.Name</p>
+                                                        <p class="dental-caption mb-0" style="font-size: 9px; opacity: 0.7;">@item.Type</p>
+                                                    </div>
+                                                </div>
+                                                @if (isCompletedXrayAppointment)
+                                                {
+                                                    @if (latestAnalysisReportByPatientId.TryGetValue(item.PatientId, out var analysisReport))
+                                                    {
+                                                        <a asp-action="AnalysisDetails" asp-route-id="@analysisReport.Id"
+                                                           title="Open analysis details"
+                                                           class="text-primary hover-primary transition"><i class="fas fa-chart-line"></i></a>
+                                                    }
+                                                    else
+                                                    {
+                                                        <a asp-action="Analysis" asp-route-patientId="@item.PatientId"
+                                                           title="Run AI analysis"
+                                                           class="text-warning hover-primary transition"><i class="fas fa-x-ray"></i></a>
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    <a asp-action="PatientProfile" asp-route-id="@item.PatientId"
+                                                       class="text-secondary hover-primary transition"><i class="fas fa-history"></i></a>
+                                                }
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="py-5 text-center">
+                                        <i class="fas fa-list-check text-light opacity-50 display-4 mb-3"></i>
+                                        <p class="dental-caption">No patients seen yet.</p>
+                                    </div>
+                                }
+                            </div>
+                        </div>
                     </div>
-                }
-                else
-                {
-                    <div class="py-5 text-center">
-                        <i class="fas fa-list-check text-light opacity-50 display-4 mb-3"></i>
-                        <p class="dental-caption">No patients seen yet.</p>
-                    </div>
-                }
-            </div>
-        </div>
-    </div>
-</div>
+                </div>
