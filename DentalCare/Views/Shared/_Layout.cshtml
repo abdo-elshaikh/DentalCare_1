@@ -11,18 +11,39 @@
     <title>@ViewData["Title"] - DentalCare</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <style>
+        .text-gradient {
+            background: linear-gradient(135deg, #0d6efd 0%, #0dcaf0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .footer-gradient {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .glass-header {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
+        }
+    </style>
 </head>
-<body class="font-sans" style="background-color: #f8fafc;">
+<body class="bg-surface font-sans">
     <div class="min-vh-100 d-flex flex-column">
         <!-- Top Navigation Bar -->
         <header class="glass-header sticky-top z-3 text-nowrap">
             <div class="container">
                 <div class="d-flex justify-content-between align-items-center py-3">
                     <!-- Logo -->
-                    <div class="d-flex align-items-center gap-3 text-primary">
+                    <div class="d-flex align-items-center gap-2 text-primary">
                         <i class="fas fa-tooth fs-3"></i>
-                        <span class="fs-4 fw-bold text-dark tracking-tighter">DentalCare</span>
+                        <span class="fs-3 fw-bold font-serif text-gradient tracking-tighter" style="line-height: 1;">DentalCare</span>
                     </div>
 
                     <!-- Main Navigation Links -->
@@ -67,13 +88,13 @@
         </main>
 
         <!-- Footer -->
-        <footer class="glass-panel-dark text-white py-5 mt-auto border-0">
+        <footer class="footer-gradient text-white py-5 mt-auto">
             <div class="container">
                 <div class="row gy-4">
                     <div class="col-lg-4 col-md-6">
-                        <div class="d-flex align-items-center gap-3 text-white mb-3">
-                            <i class="fas fa-tooth fs-3 text-primary"></i>
-                            <span class="fs-4 fw-bold tracking-tighter">DentalCare</span>
+                        <div class="d-flex align-items-center gap-2 text-white mb-3">
+                            <i class="fas fa-tooth fs-3" style="color: #0dcaf0;"></i>
+                            <span class="fs-3 fw-bold font-serif tracking-tighter" style="line-height: 1;">DentalCare</span>
                         </div>
                         <p class="small text-white-50 pe-md-4">
                             Precision dental management software empowering clinics with AI-driven insights, seamless appointments, and secure medical records.

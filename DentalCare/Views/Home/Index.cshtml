@@ -1,111 +1,252 @@
 @model DentalCare.ViewModels.HomeIndexViewModel
 @{
-    ViewData["Title"] = "Welcome to DentalCare";
+    ViewData["Title"] = "DentalCare — Digital Practice Management";
 }
 
-<div class="py-5 hero-gradient-bg mb-5" style="border-radius: 2rem;">
-    <!-- Hero Section -->
-    <section class="text-center py-5 container animate-fade-in-up">
-        <div class="d-inline-flex align-items-center gap-2 px-3 py-2 bg-white rounded-pill shadow-sm mb-4 border border-primary-subtle delay-100">
-            <span class="badge bg-primary rounded-pill">New</span>
-            <span class="small fw-semibold text-secondary">AI-Powered Dental Analysis Now Available</span>
+<style>
+    :root {
+        --primary-gradient: linear-gradient(135deg, #0d6efd 0%, #0dcaf0 100%);
+        --glass-bg: rgba(255, 255, 255, 0.85);
+        --glass-border: rgba(255, 255, 255, 0.4);
+        --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+    }
+    
+    .hero-section {
+        background: radial-gradient(circle at top right, rgba(13, 110, 253, 0.1) 0%, rgba(255,255,255,0) 50%),
+                    radial-gradient(circle at bottom left, rgba(13, 202, 240, 0.1) 0%, rgba(255,255,255,0) 50%);
+        padding: 6rem 0;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .display-font {
+        font-family: 'DM Serif Display', serif;
+    }
+
+    .hero-title {
+        font-size: clamp(2.5rem, 5vw, 4rem);
+        line-height: 1.1;
+        letter-spacing: -0.02em;
+        color: #1a1d20;
+    }
+
+    .hero-title em {
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-style: normal;
+    }
+
+    .glass-card {
+        background: var(--glass-bg);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid var(--glass-border);
+        box-shadow: var(--glass-shadow);
+        border-radius: 1.5rem;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .glass-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.12);
+    }
+
+    .stat-number {
+        font-size: clamp(2.5rem, 4vw, 3.5rem);
+        font-weight: 800;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        line-height: 1;
+    }
+
+    .badge-soft {
+        background-color: rgba(13, 110, 253, 0.1);
+        color: #0d6efd;
+        font-weight: 600;
+        padding: 0.5rem 1rem;
+        border-radius: 50rem;
+    }
+
+    .feature-icon-wrapper {
+        width: 70px;
+        height: 70px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 1.2rem;
+        font-size: 2rem;
+        margin-bottom: 1.5rem;
+        transition: transform 0.3s ease;
+    }
+    
+    .feature-card:hover .feature-icon-wrapper {
+        transform: scale(1.1);
+    }
+
+    .bg-soft-primary { background: rgba(13, 110, 253, 0.1); color: #0d6efd; }
+    .bg-soft-success { background: rgba(25, 135, 84, 0.1); color: #198754; }
+    .bg-soft-purple { background: rgba(111, 66, 193, 0.1); color: #6f42c1; }
+
+    .btn-gradient {
+        background: var(--primary-gradient);
+        color: white;
+        border: none;
+        transition: opacity 0.3s ease, transform 0.2s ease;
+    }
+    
+    .btn-gradient:hover {
+        opacity: 0.9;
+        color: white;
+        transform: translateY(-2px);
+    }
+    
+    .btn-outline-custom {
+        border: 2px solid #dee2e6;
+        color: #495057;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-outline-custom:hover {
+        border-color: #0d6efd;
+        color: #0d6efd;
+        background: rgba(13, 110, 253, 0.05);
+        transform: translateY(-2px);
+    }
+</style>
+
+<div class="hero-section">
+    <div class="container">
+        <div class="row align-items-center gy-5">
+            <div class="col-lg-6 text-center text-lg-start">
+                <div class="d-inline-flex align-items-center badge-soft mb-4">
+                    <span class="spinner-grow spinner-grow-sm me-2 text-primary" role="status" aria-hidden="true"></span>
+                    AI-Powered Ceph Analysis is live
+                </div>
+                
+                <h1 class="hero-title mb-4 display-font">
+                    The modern OS<br>for your <em>dental practice</em>
+                </h1>
+                
+                <p class="lead text-muted mb-5 pe-lg-5" style="font-size: 1.25rem;">
+                    Unified scheduling, patient records, and AI diagnostics — built for clinics that want to move faster without sacrificing clinical accuracy.
+                </p>
+                
+                <div class="d-flex flex-column flex-sm-row gap-3 justify-content-center justify-content-lg-start">
+                    <a asp-controller="Account" asp-action="Register" class="btn btn-gradient btn-lg px-5 rounded-pill shadow-sm fw-bold">
+                        Start Free Trial
+                    </a>
+                    <a href="#features" class="btn btn-outline-custom btn-lg px-5 rounded-pill fw-bold">
+                        Explore Features
+                    </a>
+                </div>
+            </div>
+
+            <!-- Actual Data Statistics Dashboard -->
+            <div class="col-lg-6">
+                <div class="row g-4">
+                    <div class="col-sm-6">
+                        <div class="glass-card p-4 h-100 d-flex flex-column justify-content-center text-center">
+                            <i class="fas fa-users fs-2 text-primary mb-3 opacity-75"></i>
+                            <div class="stat-number mb-2">@(Model?.TotalPatients ?? 0)</div>
+                            <div class="text-muted fw-bold text-uppercase tracking-wider small">Registered Patients</div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="glass-card p-4 h-100 d-flex flex-column justify-content-center text-center">
+                            <i class="fas fa-calendar-check fs-2 text-success mb-3 opacity-75"></i>
+                            <div class="stat-number mb-2">@(Model?.TotalAppointments ?? 0)</div>
+                            <div class="text-muted fw-bold text-uppercase tracking-wider small">Appointments Booked</div>
+                        </div>
+                    </div>
+                    <div class="col-sm-12">
+                        <div class="glass-card p-4 d-flex flex-column flex-sm-row align-items-center justify-content-between text-center text-sm-start gap-3">
+                            <div>
+                                <div class="d-flex align-items-center justify-content-center justify-content-sm-start mb-2">
+                                    <i class="fas fa-robot text-info me-2 fs-4"></i>
+                                    <div class="text-muted fw-bold text-uppercase tracking-wider small">AI Analyses Run</div>
+                                </div>
+                                <div class="stat-number">@(Model?.TotalAiAnalyses ?? 0)</div>
+                            </div>
+                            <div>
+                                <div class="badge bg-soft-primary text-primary fw-bold rounded-pill px-4 py-2 fs-6">
+                                    <i class="fas fa-arrow-trend-up me-2"></i> Growing
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <h1 class="display-3 fw-bolder text-dark mb-4 tracking-tight delay-200">
-            Digital Solution for Your <span class="text-primary position-relative">Dental Practice
-                <svg class="position-absolute bottom-0 start-0 w-100 text-primary opacity-25" style="height: 12px; margin-bottom: -4px;" viewBox="0 0 100 10" preserveAspectRatio="none"><path d="M0,5 Q50,15 100,5" stroke="currentColor" stroke-width="4" fill="none"/></svg>
-            </span>
-        </h1>
-        <p class="lead text-secondary mx-auto mb-5 delay-300" style="max-width: 700px;">
-            Manage your patients, appointments, and medical records with ease. Advanced AI analysis at your fingertips. Join the future of dental care.
-        </p>
-        <div class="d-flex justify-content-center flex-wrap gap-3 mt-4 delay-400">
-            <a asp-controller="Account" asp-action="Register" class="btn btn-primary px-5 py-3 rounded-pill fw-bold shadow-lg transition hover-lift text-uppercase tracking-wider" style="font-size: 0.9rem;">
-                Start Free Trial
-            </a>
-            <a href="#features" class="btn btn-white bg-white border border-secondary-subtle px-5 py-3 rounded-pill fw-bold shadow-sm transition hover-lift text-uppercase tracking-wider" style="font-size: 0.9rem;">
-                Explore Features
-            </a>
+    </div>
+</div>
+
+<div class="container pb-5">
+    <!-- Platform Impact / Features -->
+    <section id="features" class="py-5 mt-5">
+        <div class="text-center mb-5">
+            <span class="text-primary fw-bold tracking-widest text-uppercase small d-block mb-2">Platform Capabilities</span>
+            <h2 class="display-font display-5 mb-3 text-dark">Everything your clinic needs,<br>nothing it doesn't</h2>
+            <p class="lead text-muted mx-auto" style="max-width: 600px;">
+                Designed for dental and orthodontic practices that want clinical-grade tools without the complexity of legacy systems.
+            </p>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card feature-card h-100 border-0 bg-transparent shadow-none">
+                    <div class="card-body p-4 text-center">
+                        <div class="feature-icon-wrapper bg-soft-primary mx-auto">
+                            <i class="fas fa-calendar-alt"></i>
+                        </div>
+                        <h3 class="h4 fw-bold mb-3 display-font">Smart Scheduling</h3>
+                        <p class="text-muted" style="line-height: 1.7;">Conflict-free online bookings with real-time availability, automated reminders, and chair-time optimization.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card feature-card h-100 border-0 bg-transparent shadow-none">
+                    <div class="card-body p-4 text-center">
+                        <div class="feature-icon-wrapper bg-soft-success mx-auto">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <h3 class="h4 fw-bold mb-3 display-font">Secure Records</h3>
+                        <p class="text-muted" style="line-height: 1.7;">Compliant digital storage for histories, X-rays, and treatment plans — accessible only to authorized staff.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card feature-card h-100 border-0 bg-transparent shadow-none">
+                    <div class="card-body p-4 text-center">
+                        <div class="feature-icon-wrapper bg-soft-purple mx-auto">
+                            <i class="fas fa-brain"></i>
+                        </div>
+                        <h3 class="h4 fw-bold mb-3 display-font">AI Ceph Analysis</h3>
+                        <p class="text-muted" style="line-height: 1.7;">Machine-learning models detect skeletal patterns in cephalometric radiographs before they progress clinically.</p>
+                    </div>
+                </div>
+            </div>
         </div>
     </section>
-    
-    <!-- Stats Section (Dynamic Data) -->
-    <section class="container mt-5 pb-5 animate-fade-in-up delay-400">
-        <div class="row g-4 justify-content-center">
-            <div class="col-md-4">
-                <div class="glass-panel text-center p-4 rounded-4 hover-lift">
-                    <h2 class="display-5 fw-bold text-primary mb-1">@(Model?.TotalPatients ?? 0)</h2>
-                    <p class="text-secondary fw-semibold mb-0 text-uppercase tracking-widest small">Registered Patients</p>
-                </div>
+
+    <!-- Call To Action -->
+    <section class="py-5 my-5">
+        <div class="glass-card p-5 text-center position-relative overflow-hidden shadow-lg border-0" style="background: var(--primary-gradient);">
+            <div class="position-relative z-1 py-4">
+                <h2 class="display-font display-4 text-white mb-4">Ready to modernize your practice?</h2>
+                <p class="lead text-white mb-5 mx-auto opacity-75" style="max-width: 600px;">
+                    Join dental professionals across Egypt who trust DentalCare for daily management and AI-assisted diagnostics.
+                </p>
+                <a asp-controller="Account" asp-action="Register" class="btn btn-light btn-lg px-5 py-3 rounded-pill shadow fw-bold text-primary transition" style="transform: translateY(0);" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
+                    Create Free Account
+                </a>
             </div>
-            <div class="col-md-4">
-                <div class="glass-panel text-center p-4 rounded-4 hover-lift">
-                    <h2 class="display-5 fw-bold text-success mb-1">@(Model?.TotalAppointments ?? 0)</h2>
-                    <p class="text-secondary fw-semibold mb-0 text-uppercase tracking-widest small">Appointments Booked</p>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="glass-panel text-center p-4 rounded-4 hover-lift">
-                    <h2 class="display-5 fw-bold text-info mb-1">@(Model?.TotalAiAnalyses ?? 0)</h2>
-                    <p class="text-secondary fw-semibold mb-0 text-uppercase tracking-widest small">AI Analyses Performed</p>
-                </div>
-            </div>
+            <!-- Decorative elements -->
+            <div class="position-absolute top-0 start-0 translate-middle rounded-circle bg-white opacity-10" style="width: 400px; height: 400px;"></div>
+            <div class="position-absolute bottom-0 end-0 translate-middle rounded-circle bg-white opacity-10" style="width: 300px; height: 300px; margin-bottom: -150px; margin-right: -150px;"></div>
         </div>
     </section>
 </div>
-
-<!-- Why Choose DentalCare Section -->
-<section id="features" class="py-5 mb-5 container">
-    <div class="text-center mb-5 animate-fade-in-up">
-        <span class="text-primary fw-bold text-uppercase tracking-widest small mb-2 d-block">Platform Features</span>
-        <h2 class="display-5 fw-bold text-dark mb-3">Everything you need to run your clinic</h2>
-        <p class="text-secondary mx-auto" style="max-width: 600px;">
-            We provide a comprehensive suite of tools designed to make dental and orthodontic management
-            simple, secure, and highly efficient.
-        </p>
-    </div>
-    <div class="row g-4">
-        <div class="col-md-4 animate-fade-in-up delay-100">
-            <div class="dental-card h-100 shadow-sm border-0 hover-lift">
-                <div class="dental-avatar bg-primary-subtle text-primary mb-4" style="width: 56px; height: 56px; border-radius: 1rem;">
-                    <i class="fas fa-calendar-check fs-4"></i>
-                </div>
-                <h3 class="h5 fw-bold text-dark mb-3">Smart Scheduling</h3>
-                <p class="text-secondary small mb-0">Fast, reliable, and conflict-free online dental appointment system for both patients and doctors.</p>
-            </div>
-        </div>
-
-        <div class="col-md-4 animate-fade-in-up delay-200">
-            <div class="dental-card h-100 shadow-sm border-0 hover-lift">
-                <div class="dental-avatar bg-success-subtle text-success mb-4" style="width: 56px; height: 56px; border-radius: 1rem;">
-                    <i class="fas fa-users fs-4"></i>
-                </div>
-                <h3 class="h5 fw-bold text-dark mb-3">Secure Records</h3>
-                <p class="text-secondary small mb-0">Compliant digital storage for all patient histories, X-rays, and comprehensive treatment plans.</p>
-            </div>
-        </div>
-
-        <div class="col-md-4 animate-fade-in-up delay-300">
-            <div class="dental-card h-100 shadow-sm border-0 hover-lift">
-                <div class="dental-avatar bg-info-subtle text-info mb-4" style="width: 56px; height: 56px; border-radius: 1rem;">
-                    <i class="fas fa-robot fs-4"></i>
-                </div>
-                <h3 class="h5 fw-bold text-dark mb-3">AI Intelligence</h3>
-                <p class="text-secondary small mb-0">Leverage cutting-edge machine learning models to detect ceph issues before they become serious.</p>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- Call to Action -->
-<section class="container mb-5">
-    <div class="bg-primary rounded-5 p-5 text-center text-white shadow-lg position-relative overflow-hidden" style="background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);">
-        <div class="position-absolute top-0 end-0 opacity-25 w-50 h-100" style="background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 70%); transform: translate(30%, -30%);"></div>
-        <div class="py-4 position-relative z-1 animate-fade-in-up">
-            <h2 class="display-6 fw-bold mb-3">Ready to transform your practice?</h2>
-            <p class="mb-4 opacity-75 mx-auto fs-5" style="max-width: 700px;">Join leading dental professionals who trust DentalCare for their daily clinical management and AI analysis.</p>
-            <a asp-controller="Account" asp-action="Register" class="btn btn-light btn-lg px-5 py-3 rounded-pill fw-bold text-primary shadow-sm hover-lift text-uppercase tracking-wider" style="font-size: 0.9rem;">
-                Create Your Free Account
-            </a>
-        </div>
-    </div>
-</section>

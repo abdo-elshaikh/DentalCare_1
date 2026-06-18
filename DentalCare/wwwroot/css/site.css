@@ -1,12 +1,44 @@
 /* Global Styles for DentalCare */
+:root {
+    --navy: #0B1628;
+    --white: #FFFFFF;
+    --cyan: #00C2FF;
+    --slate: #8A9BB5;
+    --surface: #F0F4FA;
+    --font-serif: 'DM Serif Display', serif;
+    --font-sans: 'Inter', sans-serif;
+}
+
 body {
     padding-bottom: 20px;
+    font-family: var(--font-sans);
+    color: var(--navy);
+}
+
+.font-serif {
+    font-family: var(--font-serif);
+}
+
+.font-sans {
+    font-family: var(--font-sans);
+}
+
+.text-navy { color: var(--navy) !important; }
+.text-cyan { color: var(--cyan) !important; }
+.text-slate { color: var(--slate) !important; }
+
+.bg-navy { background-color: var(--navy) !important; }
+.bg-cyan { background-color: var(--cyan) !important; }
+.bg-surface { background-color: var(--surface) !important; }
+
+.border-cyan-left {
+    border-left: 4px solid var(--cyan) !important;
 }
 
 /* Reusable Dental Components (Cleaning up Views) */
 
 .hover-primary:hover {
-    color: #0d6efd !important;
+    color: var(--cyan) !important;
 }
 
 .tracking-tighter {
