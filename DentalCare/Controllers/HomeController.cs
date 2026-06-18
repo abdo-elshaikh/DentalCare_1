@@ -1,12 +1,30 @@
 using Microsoft.AspNetCore.Mvc;
+using DentalCare.Data;
+using DentalCare.ViewModels;
+using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 
 namespace DentalCare.Controllers
 {
     public class HomeController : Controller
     {
-        public IActionResult Index()
+        private readonly DentalDbContext _context;
+
+        public HomeController(DentalDbContext context)
         {
-            return View();
+            _context = context;
+        }
+
+        public async Task<IActionResult> Index()
+        {
+            var model = new HomeIndexViewModel
+            {
+                TotalPatients = await _context.Patients.CountAsync(),
+                TotalAppointments = await _context.Appointments.CountAsync(),
+                TotalAiAnalyses = await _context.AiAnalysisReports.CountAsync()
+            };
+
+            return View(model);
         }
 
         public IActionResult Privacy()
@@ -18,6 +36,12 @@ namespace DentalCare.Controllers
         public IActionResult Error()
         {
             return View();
+        }
+
+        [Route("Home/NotFound")]
+        public IActionResult NotFoundPage()
+        {
+            return View("NotFound");
         }
     }
 }

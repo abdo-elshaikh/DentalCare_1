@@ -5,7 +5,7 @@
 <div class="d-flex align-items-center gap-3">
     @if (SignInManager.IsSignedIn(User))
     {
-        <div class="d-flex align-items-center gap-2 px-3 py-1 bg-white border rounded-pill shadow-sm">
+        <div class="d-flex align-items-center gap-2 px-3 py-1 bg-white border rounded-pill shadow-sm hover-lift">
             @{
                 var identityName = User.Identity?.Name;
                 var user = string.IsNullOrWhiteSpace(identityName)
@@ -19,13 +19,13 @@
                         displayName = "Dr. " + displayName;
                 }
             }
-            <div class="dental-avatar bg-primary text-white small" style="width: 28px; height: 28px; font-size: 11px;">
+            <div class="dental-avatar bg-primary text-white small shadow-sm" style="width: 32px; height: 32px; font-size: 12px; margin-left: -8px;">
                 @((displayName?.Length > 0 ? displayName[0].ToString().ToUpper() : "U"))
             </div>
-            <span class="small fw-bold text-dark text-truncate" style="max-width: 120px;">@displayName</span>
+            <span class="small fw-bold text-dark text-truncate px-1" style="max-width: 120px;">@displayName</span>
         </div>
         <form class="d-flex align-items-center" asp-controller="Account" asp-action="Logout" method="post">
-            <button type="submit" class="btn btn-light btn-sm fw-bold border text-danger text-uppercase px-3 rounded-pill shadow-sm transition">
+            <button type="submit" class="btn btn-light btn-sm fw-bold border text-danger text-uppercase px-3 rounded-pill shadow-sm transition hover-lift">
                 <i class="fas fa-sign-out-alt me-1"></i>
                 <span class="d-none d-lg-inline">Log Out</span>
             </button>
@@ -33,11 +33,11 @@
     }
     else
     {
-        <a asp-controller="Account" asp-action="Login" class="text-secondary text-decoration-none fw-bold small text-uppercase tracking-wider transition me-2">
-            Login
+        <a asp-controller="Account" asp-action="Login" class="text-secondary text-decoration-none fw-bold small text-uppercase tracking-wider transition hover-primary me-2">
+            Sign In
         </a>
-        <a asp-controller="Account" asp-action="Register" class="btn btn-primary btn-sm px-4 rounded-pill fw-bold shadow-sm transition">
-            Register
+        <a asp-controller="Account" asp-action="Register" class="btn btn-primary btn-sm px-4 py-2 rounded-pill fw-bold shadow transition hover-lift">
+            Get Started
         </a>
     }
 </div>

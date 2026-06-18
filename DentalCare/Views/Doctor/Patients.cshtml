@@ -3,65 +3,88 @@
     ViewData["Title"] = "My Patients";
 }
 
-<div class="space-y-6">
-    <div class="flex justify-between items-center">
-        <h1 class="text-2xl font-bold text-gray-900">Patient Database</h1>
-        <div class="flex gap-4">
-            <div class="relative">
-                <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
-                <input type="text" placeholder="Search patients..." class="pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-100" />
-            </div>
-            <a asp-controller="Patient" asp-action="Create" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
-                <i class="fas fa-plus mr-2"></i> Register New
+<div class="d-flex flex-column gap-4 animate-fade-in-up">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+        <div>
+            <h1 class="h3 fw-bold text-dark mb-1 tracking-tight">Patient Database</h1>
+            <p class="text-secondary small mb-0">View and manage all registered patients.</p>
+        </div>
+
+        <div class="d-flex align-items-center gap-3 w-100 w-md-auto">
+            <!-- Search Form -->
+            <form asp-action="Patients" method="get" class="d-flex align-items-center gap-2 flex-grow-1" style="max-width: 400px;">
+                <div class="flex-grow-1 position-relative">
+                    <i class="fas fa-search position-absolute start-0 top-50 translate-middle-y ms-3 text-secondary opacity-50 small"></i>
+                    <input type="text" name="searchString" placeholder="Search patients..."
+                           class="form-control rounded-pill bg-white border-0 shadow-sm ps-5 py-2" style="font-size: 13px;" />
+                </div>
+                <button type="submit" class="btn btn-dark fw-bold px-4 rounded-pill shadow-sm transition hover-lift text-uppercase tracking-wider" style="font-size: 11px; padding-top: 10px; padding-bottom: 10px;">
+                    Filter
+                </button>
+            </form>
+
+            <a asp-controller="Patient" asp-action="Create" class="btn btn-primary fw-bold px-4 rounded-pill shadow-sm transition hover-lift d-flex align-items-center gap-2" style="padding-top: 10px; padding-bottom: 10px;">
+                <i class="fas fa-plus"></i> <span class="d-none d-sm-inline">Register New</span>
             </a>
         </div>
     </div>
 
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <table class="w-full text-left border-collapse">
-            <thead class="bg-gray-50 text-gray-400 text-xs uppercase font-bold">
-                <tr>
-                    <th class="px-6 py-4">Patient ID</th>
-                    <th class="px-6 py-4">Name</th>
-                    <th class="px-6 py-4">Age / Gender</th>
-                    <th class="px-6 py-4">Contact</th>
-                    <th class="px-6 py-4">Actions</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-100">
-                @foreach (var patient in Model)
-                {
-                    <tr class="hover:bg-gray-50 transition">
-                        <td class="px-6 py-4 text-sm font-medium text-blue-600">@patient.Id</td>
-                        <td class="px-6 py-4">
-                            <span class="font-semibold text-gray-900">@patient.Name</span>
-                        </td>
-                        <td class="px-6 py-4 text-sm">@patient.Age years / @patient.Gender</td>
-                        <td class="px-6 py-4">
-                            <div class="text-sm text-gray-900">@patient.Phone</div>
-                            <div class="text-xs text-gray-500">@patient.Email</div>
-                        </td>
-                        <td class="px-6 py-4">
-                            <div class="flex gap-3">
-                                <a asp-controller="Patient" asp-action="Details" asp-route-id="@patient.Id" class="text-blue-600 hover:text-blue-800" title="Details">
-                                    <i class="fas fa-eye"></i>
-                                </a>
-                                <a href="#" class="text-green-600 hover:text-green-800" title="History">
-                                    <i class="fas fa-history"></i>
-                                </a>
-                            </div>
-                        </td>
-                    </tr>
-                }
-                @if (!Model.Any())
-                {
+    <div class="glass-panel p-0 shadow-sm border-0 rounded-4 overflow-hidden animate-fade-in-up delay-100">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 border-white border-opacity-25">
+                <thead class="bg-light bg-opacity-50 text-uppercase tracking-widest text-secondary" style="font-size: 10px; font-weight: 800;">
                     <tr>
-                        <td colspan="5" class="px-6 py-10 text-center text-gray-500">
-                            No patients found in the database.
-                        </td>
+                        <th class="px-4 py-3 border-0">Patient ID</th>
+                        <th class="px-4 py-3 border-0">Name</th>
+                        <th class="px-4 py-3 border-0">Age / Gender</th>
+                        <th class="px-4 py-3 border-0">Contact</th>
+                        <th class="px-4 py-3 border-0 text-end">Actions</th>
                     </tr>
-                }
-            </tbody>
-        </table>
+                </thead>
+                <tbody class="border-top-0">
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="5" class="px-4 py-5 text-center text-muted fst-italic small fw-medium">No patients found in the database.</td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var patient in Model)
+                        {
+                            <tr class="transition" style="background-color: transparent;">
+                                <td class="px-4 py-3 fw-bold text-secondary opacity-50 small border-bottom border-light">#@patient.Id</td>
+                                <td class="px-4 py-3 border-bottom border-light">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="dental-avatar bg-primary-subtle text-primary fw-bold shadow-sm" style="width: 40px; height: 40px; border-radius: 12px; font-size: 14px;">
+                                            @patient.Name[0].ToString().ToUpper()
+                                        </div>
+                                        <span class="fw-bold text-dark small">@patient.Name</span>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-3 border-bottom border-light">
+                                    <div class="text-dark small fw-bold">@patient.Age <span class="text-secondary fw-normal">years</span></div>
+                                    <div class="text-secondary" style="font-size: 11px;">@patient.Gender</div>
+                                </td>
+                                <td class="px-4 py-3 border-bottom border-light">
+                                    <div class="text-dark small fw-bold">@patient.Phone</div>
+                                    <div class="text-secondary" style="font-size: 11px;">@patient.Email</div>
+                                </td>
+                                <td class="px-4 py-3 text-end border-bottom border-light">
+                                    <div class="d-flex align-items-center justify-content-end gap-2">
+                                        <a asp-controller="Patient" asp-action="Details" asp-route-id="@patient.Id" class="btn btn-white text-secondary border-secondary-subtle btn-sm fw-bold px-3 rounded-pill transition hover-lift" style="font-size: 11px;" title="Details">
+                                            <i class="fas fa-eye me-1"></i> Details
+                                        </a>
+                                        <a asp-action="PatientProfile" asp-route-id="@patient.Id" class="btn btn-primary bg-gradient shadow-sm btn-sm fw-bold px-3 rounded-pill border-0 transition hover-lift" style="font-size: 11px;" title="History">
+                                            <i class="fas fa-history me-1"></i> Record
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>

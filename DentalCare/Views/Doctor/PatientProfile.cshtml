@@ -8,98 +8,105 @@
         ?? new Dictionary<int, DentalCare.Models.AiAnalysisReport>();
 }
 
-<div class="mb-4 d-flex align-items-center justify-content-between gap-3">
-    <a asp-action="Dashboard" class="btn btn-link text-primary fw-bold text-decoration-none p-0 d-flex align-items-center gap-2 small">
+<div class="mb-4 d-flex align-items-center justify-content-between gap-3 animate-fade-in-up">
+    <a asp-action="Dashboard" class="btn btn-white text-secondary border-secondary-subtle btn-sm fw-bold px-3 rounded-pill transition hover-lift d-inline-flex align-items-center gap-2">
         <i class="fas fa-arrow-left"></i> Back to Dashboard
     </a>
     @if (isDoctor)
     {
-        <span class="badge bg-success-subtle text-success rounded-pill px-3 py-2 small fw-bold d-flex align-items-center gap-2">
+        <span class="badge bg-success-subtle text-success border border-success border-opacity-25 rounded-pill px-3 py-2 small fw-bold d-flex align-items-center gap-2 tracking-wider">
             <i class="fas fa-circle" style="font-size:8px;"></i> AI Ready
         </span>
     }
 </div>
 
-<div class="row g-4">
+<div class="row g-4 animate-fade-in-up delay-100">
     <!-- ── Left Column ──────────────────────────────────────────── -->
     <div class="col-lg-4">
         <div class="d-flex flex-column gap-4">
 
             <!-- Patient Bio Card -->
-            <div class="dental-card shadow-sm border-0 text-center p-4">
-                <div class="dental-avatar bg-primary text-white fw-bold mx-auto mb-4" style="width: 80px; height: 80px; border-radius: 20px; font-size: 32px;">
-                    @Model.Name[0].ToString().ToUpper()
-                </div>
-                <h2 class="h4 fw-bold text-dark mb-1">@Model.Name</h2>
-                <p class="dental-caption mb-4">Patient ID: #@Model.Id</p>
-                <div class="row text-start border-top pt-4 g-3">
-                    <div class="col-6">
-                        <p class="dental-caption mb-1">Age</p>
-                        <p class="small fw-bold text-dark mb-0">@Model.Age Years</p>
+            <div class="glass-panel border-0 shadow-sm rounded-4 text-center p-4 position-relative overflow-hidden">
+                <div class="position-absolute top-0 start-50 translate-middle-x bg-primary opacity-10" style="width: 150px; height: 150px; border-radius: 50%; filter: blur(30px); z-index: 0;"></div>
+                <div class="position-relative z-1">
+                    <div class="dental-avatar bg-primary bg-gradient text-white fw-bold mx-auto mb-4 shadow-sm" style="width: 88px; height: 88px; border-radius: 24px; font-size: 32px;">
+                        @Model.Name[0].ToString().ToUpper()
                     </div>
-                    <div class="col-6">
-                        <p class="dental-caption mb-1">Gender</p>
-                        <p class="small fw-bold text-dark mb-0">@Model.Gender</p>
-                    </div>
-                    <div class="col-12">
-                        <p class="dental-caption mb-1">Contact</p>
-                        <p class="small fw-bold text-dark mb-0">@Model.Phone</p>
-                    </div>
-                    @if (!string.IsNullOrEmpty(Model.Email))
-                    {
-                        <div class="col-12">
-                            <p class="dental-caption mb-1">Email</p>
-                            <p class="small fw-bold text-dark mb-0">@Model.Email</p>
+                    <h2 class="h4 fw-bold text-dark mb-1 tracking-tight">@Model.Name</h2>
+                    <p class="text-secondary fw-bold small text-uppercase tracking-widest mb-4">Patient ID: #@Model.Id</p>
+                    <div class="row text-start border-top border-light pt-4 g-3">
+                        <div class="col-6">
+                            <p class="text-secondary small fw-bold text-uppercase tracking-widest mb-1" style="font-size: 10px;">Age</p>
+                            <p class="small fw-bold text-dark mb-0">@Model.Age <span class="fw-normal text-secondary">Years</span></p>
                         </div>
-                    }
+                        <div class="col-6">
+                            <p class="text-secondary small fw-bold text-uppercase tracking-widest mb-1" style="font-size: 10px;">Gender</p>
+                            <p class="small fw-bold text-dark mb-0">@Model.Gender</p>
+                        </div>
+                        <div class="col-12">
+                            <p class="text-secondary small fw-bold text-uppercase tracking-widest mb-1" style="font-size: 10px;">Contact</p>
+                            <p class="small fw-bold text-dark mb-0">@Model.Phone</p>
+                        </div>
+                        @if (!string.IsNullOrEmpty(Model.Email))
+                        {
+                            <div class="col-12">
+                                <p class="text-secondary small fw-bold text-uppercase tracking-widest mb-1" style="font-size: 10px;">Email</p>
+                                <p class="small fw-bold text-dark mb-0">@Model.Email</p>
+                            </div>
+                        }
+                    </div>
                 </div>
             </div>
 
             @if (isDoctor)
             {
                 <!-- ── AI Integration Panel ──────────────────────── -->
-                <div class="dental-card shadow-sm border-0 p-4">
-                    <h3 class="h6 fw-bold text-dark mb-3 d-flex align-items-center gap-2">
-                        <i class="fas fa-robot text-primary"></i> AI Integration
-                    </h3>
+                <div class="glass-panel border-0 shadow-sm rounded-4 p-4 position-relative overflow-hidden">
+                    <div class="position-absolute top-0 end-0 bg-success opacity-10" style="width: 100px; height: 100px; border-radius: 50%; filter: blur(20px); z-index: 0;"></div>
+                    <div class="position-relative z-1">
+                        <h3 class="h6 fw-bold text-dark mb-3 d-flex align-items-center gap-2 tracking-tight">
+                            <div class="dental-avatar bg-primary-subtle text-primary rounded-3 shadow-sm" style="width: 32px; height: 32px;"><i class="fas fa-robot"></i></div> 
+                            AI Integration
+                        </h3>
 
-                    <p class="dental-caption mb-3" style="font-size:11px;">
-                        AI analysis uses this patient record directly from DentalCare. No AI-side patient database is required.
-                    </p>
-                    @if (isXRay)
-                    {
-                        <a asp-action="Analysis" asp-route-patientId="@Model.Id"
-                           class="btn btn-success btn-sm fw-bold rounded-pill px-3 shadow-sm text-center w-100">
-                            <i class="fas fa-microscope me-1"></i> Run Cephalometric Analysis
-                        </a>
-                    }
+                        <p class="text-secondary mb-3 lh-sm" style="font-size:12px;">
+                            AI analysis uses this patient record directly from DentalCare. No external AI database is required.
+                        </p>
+                        @if (isXRay)
+                        {
+                            <a asp-action="Analysis" asp-route-patientId="@Model.Id"
+                               class="btn btn-success bg-gradient fw-bold rounded-pill py-2 shadow-sm text-center w-100 hover-lift tracking-wider" style="font-size: 13px;">
+                                <i class="fas fa-microscope me-2"></i> Run Cephalometric Analysis
+                            </a>
+                        }
+                    </div>
                 </div>
 
                 <!-- ── New Diagnosis Form ─────────────────────────── -->
-                <div class="dental-card shadow-sm border-0 border-start border-4 border-primary p-4">
-                    <h3 class="h6 fw-bold text-dark mb-4 d-flex align-items-center gap-2">
+                <div class="glass-panel shadow-sm border-0 border-start border-4 border-primary rounded-4 p-4">
+                    <h3 class="h6 fw-bold text-dark mb-4 d-flex align-items-center gap-2 tracking-tight">
                         <i class="fas fa-file-medical text-primary"></i> New Diagnosis
                     </h3>
                     <form asp-action="AddDiagnosis" method="post" class="d-flex flex-column gap-3">
                         <input type="hidden" name="patientId" value="@Model.Id" />
 
-                        <div>
-                            <label class="form-label dental-label">Visit Type</label>
-                            <select name="visitType" class="form-select dental-input border shadow-none" style="font-size: 13px;" asp-items="ViewBag.VisitTypeList"></select>
+                        <div class="form-floating">
+                            <select name="visitType" class="form-select rounded-4 bg-white border-0 shadow-sm px-4" style="font-size: 13px;" asp-items="ViewBag.VisitTypeList"></select>
+                            <label class="text-secondary small px-4">Visit Type</label>
                         </div>
-                        <div>
-                            <label class="form-label dental-label">Diagnosis</label>
-                            <textarea name="diagnosis" id="diagnosisField" class="dental-input border shadow-none"
+                        <div class="form-floating">
+                            <textarea name="diagnosis" id="diagnosisField" class="form-control rounded-4 bg-white border-0 shadow-sm px-4 pt-4"
                                       style="min-height: 100px; font-size: 13px;" placeholder="Primary diagnosis..." required></textarea>
+                            <label class="text-secondary small px-4">Diagnosis</label>
                         </div>
-                        <div>
-                            <label class="form-label dental-label">Internal Notes</label>
-                            <textarea name="notes" class="dental-input border shadow-none"
+                        <div class="form-floating">
+                            <textarea name="notes" class="form-control rounded-4 bg-white border-0 shadow-sm px-4 pt-4"
                                       style="min-height: 80px; font-size: 13px;" placeholder="Optional treatment notes..."></textarea>
+                            <label class="text-secondary small px-4">Internal Notes</label>
                         </div>
                         <div class="d-grid pt-2">
-                            <button type="submit" class="btn btn-primary fw-bold py-3 text-uppercase shadow-sm border-0 rounded-3"
-                                    style="font-size: 11px; letter-spacing: 1px;">
+                            <button type="submit" class="btn btn-primary bg-gradient fw-bold py-3 text-uppercase shadow-sm border-0 rounded-pill hover-lift tracking-wider"
+                                    style="font-size: 11px;">
                                 Save Record
                             </button>
                         </div>
@@ -108,56 +115,61 @@
             }
             else
             {
-                <div class="alert alert-info border-0 shadow-sm rounded-4 mb-0">
-                    <p class="fw-bold mb-1 small text-uppercase" style="font-size: 10px;">Notice</p>
-                    <p class="small mb-0 opacity-75">Only authorized Doctors can record new diagnoses and medical records.</p>
+                <div class="alert alert-info border-0 shadow-sm rounded-4 mb-0 d-flex align-items-start gap-3">
+                    <i class="fas fa-info-circle fs-4 text-info mt-1"></i>
+                    <div>
+                        <p class="fw-bold mb-1 small text-uppercase tracking-widest text-info" style="font-size: 10px;">Notice</p>
+                        <p class="small mb-0 opacity-75 text-dark">Only authorized Doctors can record new diagnoses and medical records.</p>
+                    </div>
                 </div>
             }
         </div>
     </div>
 
     <!-- ── Right Column ─────────────────────────────────────────── -->
-    <div class="col-lg-8">
+    <div class="col-lg-8 animate-fade-in-up delay-200">
         <div class="d-flex flex-column gap-4">
 
             <!-- Medical History -->
-            <div class="dental-card p-0 shadow-sm border-0 overflow-hidden">
-                <div class="p-4 border-bottom bg-light d-flex justify-content-between align-items-center">
-                    <h3 class="h6 fw-bold text-dark mb-0">Medical History</h3>
-                    <span class="badge bg-secondary-subtle text-secondary fw-bold rounded-pill" style="font-size: 10px;">@Model.MedicalHistory.Count Records</span>
+            <div class="glass-panel p-0 shadow-sm border-0 rounded-4 overflow-hidden h-100">
+                <div class="p-4 border-bottom bg-white bg-opacity-75 d-flex justify-content-between align-items-center">
+                    <h3 class="h6 fw-bold text-dark mb-0 d-flex align-items-center gap-2 tracking-tight">
+                        <i class="fas fa-history text-primary"></i> Medical History
+                    </h3>
+                    <span class="badge bg-secondary-subtle text-secondary fw-bold rounded-pill tracking-widest" style="font-size: 10px;">@Model.MedicalHistory.Count Records</span>
                 </div>
-                <div class="p-4 p-md-5">
+                <div class="p-4 p-md-5 bg-white bg-opacity-50">
                     @if (!Model.MedicalHistory.Any())
                     {
                         <div class="text-center py-5">
-                            <div class="dental-avatar bg-light text-secondary mx-auto mb-3" style="width: 64px; height: 64px; border-radius: 16px;">
+                            <div class="dental-avatar bg-light text-secondary mx-auto mb-3 shadow-sm" style="width: 64px; height: 64px; border-radius: 16px;">
                                 <i class="fas fa-folder-open fs-4"></i>
                             </div>
-                            <p class="dental-caption">No previous records found.</p>
+                            <p class="text-secondary small fw-medium">No previous records found.</p>
                         </div>
                     }
                     else
                     {
-                        <div class="position-relative ps-4 ms-2" style="border-left: 2px solid #f1f3f5;">
+                        <div class="position-relative ps-4 ms-2" style="border-left: 2px solid rgba(0,0,0,0.05);">
                             @foreach (var record in Model.MedicalHistory)
                             {
                                 <div class="position-relative mb-5">
-                                    <div class="position-absolute translate-middle-x" style="left: -1.75rem; top: 0.5rem; width: 12px; height: 12px; background: var(--dental-primary); border-radius: 50%; border: 3px solid white; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);"></div>
-                                    <div class="card border-0 shadow-sm rounded-4 p-4">
+                                    <div class="position-absolute translate-middle-x" style="left: -1.75rem; top: 0.5rem; width: 14px; height: 14px; background: var(--dental-primary); border-radius: 50%; border: 3px solid white; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);"></div>
+                                    <div class="card border-0 shadow-sm rounded-4 p-4 hover-lift transition">
                                         <div class="d-flex flex-column flex-md-row justify-content-between align-items-start mb-3">
                                             <div>
-                                                <span class="badge bg-primary-subtle text-primary border rounded-pill px-3 mb-2" style="font-size: 9px;">@record.VisitType</span>
+                                                <span class="badge bg-primary-subtle text-primary border border-primary border-opacity-25 rounded-pill px-3 py-1 mb-2 tracking-widest text-uppercase" style="font-size: 9px;">@record.VisitType</span>
                                                 <h4 class="h6 fw-bold text-dark mb-0">@record.Diagnosis</h4>
                                             </div>
-                                            <div class="text-md-end mt-2 mt-md-0">
+                                            <div class="text-md-end mt-2 mt-md-0 bg-light rounded-3 px-3 py-2">
                                                 <p class="small fw-bold text-dark mb-0">@record.Date.ToString("dd MMM yyyy")</p>
-                                                <p class="dental-caption mb-0" style="font-size: 10px;">@record.Date.ToString("hh:mm tt")</p>
+                                                <p class="text-secondary fw-bold text-uppercase tracking-widest mb-0" style="font-size: 9px;">@record.Date.ToString("hh:mm tt")</p>
                                             </div>
                                         </div>
-                                        <div class="p-3 bg-light rounded-3 border-start border-3 border-light-subtle">
+                                        <div class="p-3 bg-light bg-opacity-50 rounded-4 border-start border-3 border-primary border-opacity-25 mt-2">
                                             <p class="small text-secondary mb-0 fst-italic">@record.Notes</p>
                                         </div>
-                                        <div class="mt-4 pt-4 border-top d-flex justify-content-between align-items-center">
+                                        <div class="mt-4 pt-4 border-top border-light d-flex flex-wrap gap-3 justify-content-between align-items-center">
                                             @{
                                                 var doctorNames = (ViewBag.DoctorNames as Dictionary<string, string>) ?? new Dictionary<string, string>();
                                                 var docName = "Unknown";
@@ -167,16 +179,16 @@
                                                     docName = record.DoctorId.Length > 8 ? record.DoctorId[..8] : record.DoctorId;
                                                 if (docName != "Unknown" && !docName.StartsWith("Dr. ")) docName = "Dr. " + docName;
                                             }
-                                            <span class="dental-caption fw-bold text-primary">@docName</span>
+                                            <span class="text-primary fw-bold small d-flex align-items-center gap-2"><i class="fas fa-user-md text-secondary opacity-50"></i> @docName</span>
                                             <div class="d-flex align-items-center gap-3">
                                                 @if (analysisReportsByMedicalRecordId.TryGetValue(record.Id, out var analysisReport))
                                                 {
                                                     <a asp-action="AnalysisDetails" asp-route-id="@analysisReport.Id"
-                                                       class="btn btn-outline-primary btn-sm fw-bold rounded-pill px-3">
-                                                        <i class="fas fa-chart-line me-1"></i> Analysis Details
+                                                       class="btn btn-outline-primary btn-sm fw-bold rounded-pill px-3 shadow-sm transition hover-lift text-uppercase tracking-wider" style="font-size: 10px;">
+                                                        <i class="fas fa-chart-line me-1"></i> Analysis
                                                     </a>
                                                 }
-                                                <span class="dental-caption opacity-50">Record #@record.Id</span>
+                                                <span class="text-secondary fw-bold text-uppercase tracking-widest opacity-50" style="font-size: 9px;">Record #@record.Id</span>
                                             </div>
                                         </div>
                                     </div>

@@ -13,10 +13,10 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
-<body class="bg-light font-sans">
+<body class="font-sans" style="background-color: #f8fafc;">
     <div class="min-vh-100 d-flex flex-column">
         <!-- Top Navigation Bar -->
-        <header class="bg-white border-bottom sticky-top z-3 text-nowrap">
+        <header class="glass-header sticky-top z-3 text-nowrap">
             <div class="container">
                 <div class="d-flex justify-content-between align-items-center py-3">
                     <!-- Logo -->
@@ -67,9 +67,52 @@
         </main>
 
         <!-- Footer -->
-        <footer class="bg-white border-top py-4 mt-auto">
-            <div class="container text-center">
-                <p class="dental-caption mb-0">&copy; 2026 DentalCare - Precision Dental Management</p>
+        <footer class="glass-panel-dark text-white py-5 mt-auto border-0">
+            <div class="container">
+                <div class="row gy-4">
+                    <div class="col-lg-4 col-md-6">
+                        <div class="d-flex align-items-center gap-3 text-white mb-3">
+                            <i class="fas fa-tooth fs-3 text-primary"></i>
+                            <span class="fs-4 fw-bold tracking-tighter">DentalCare</span>
+                        </div>
+                        <p class="small text-white-50 pe-md-4">
+                            Precision dental management software empowering clinics with AI-driven insights, seamless appointments, and secure medical records.
+                        </p>
+                    </div>
+                    <div class="col-lg-2 col-md-6">
+                        <h5 class="fw-bold text-white mb-3 small text-uppercase tracking-widest">Platform</h5>
+                        <ul class="list-unstyled mb-0">
+                            <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none hover-primary transition small">Features</a></li>
+                            <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none hover-primary transition small">AI Analysis</a></li>
+                            <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none hover-primary transition small">Pricing</a></li>
+                        </ul>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <h5 class="fw-bold text-white mb-3 small text-uppercase tracking-widest">Contact</h5>
+                        <ul class="list-unstyled mb-0">
+                            <li class="mb-2 text-white-50 small"><i class="fas fa-map-marker-alt me-2 text-primary"></i> 123 Health Ave, Medical City</li>
+                            <li class="mb-2 text-white-50 small"><i class="fas fa-phone me-2 text-primary"></i> +1 (234) 567-890</li>
+                            <li class="mb-2 text-white-50 small"><i class="fas fa-envelope me-2 text-primary"></i> contact@dentalcare.com</li>
+                        </ul>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <h5 class="fw-bold text-white mb-3 small text-uppercase tracking-widest">Follow Us</h5>
+                        <div class="d-flex gap-3">
+                            <a href="#" class="text-white-50 hover-primary transition"><i class="fab fa-facebook fs-5"></i></a>
+                            <a href="#" class="text-white-50 hover-primary transition"><i class="fab fa-twitter fs-5"></i></a>
+                            <a href="#" class="text-white-50 hover-primary transition"><i class="fab fa-instagram fs-5"></i></a>
+                            <a href="#" class="text-white-50 hover-primary transition"><i class="fab fa-linkedin fs-5"></i></a>
+                        </div>
+                    </div>
+                </div>
+                <hr class="border-secondary opacity-25 my-4" />
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
+                    <p class="small text-white-50 mb-0">&copy; 2026 DentalCare. All rights reserved.</p>
+                    <div class="d-flex gap-3 mt-3 mt-md-0">
+                        <a href="#" class="small text-white-50 text-decoration-none hover-primary transition">Privacy Policy</a>
+                        <a href="#" class="small text-white-50 text-decoration-none hover-primary transition">Terms of Service</a>
+                    </div>
+                </div>
             </div>
         </footer>
     </div>

@@ -1,51 +1,61 @@
-﻿@model DentalCare.Models.Appointment
+@model DentalCare.Models.Appointment
 @{
     ViewData["Title"] = "New Appointment";
 }
 
-<div class="container py-4">
+<div class="container py-5 animate-fade-in-up">
     <div class="mb-4">
-        <a asp-controller="Patient" asp-action="Index" class="btn btn-link text-primary fw-bold text-decoration-none p-0 d-flex align-items-center gap-2 small">
+        <a asp-controller="Patient" asp-action="Index" class="btn btn-white text-secondary border-secondary-subtle btn-sm fw-bold px-3 rounded-pill transition hover-lift d-inline-flex align-items-center gap-2">
             <i class="fas fa-arrow-left"></i> Back to Patients
         </a>
     </div>
 
     <div class="row justify-content-center">
-        <div class="col-lg-7">
-            <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
-                <div class="bg-primary p-4 p-md-5 text-white">
-                    <h1 class="h3 fw-bold mb-2">Book Appointment</h1>
-                    <p class="mb-0 fw-bold opacity-75">Scheduling visit for <span class="text-white border-bottom border-white border-opacity-50">@ViewBag.PatientName</span></p>
+        <div class="col-lg-8 col-xl-7">
+            <div class="glass-panel shadow-lg border-0 rounded-5 overflow-hidden">
+                <div class="bg-primary p-4 p-md-5 text-white position-relative overflow-hidden hero-gradient-bg">
+                    <!-- Decorative element -->
+                    <div class="position-absolute top-0 end-0 bg-white opacity-10" style="width: 150px; height: 150px; border-radius: 50%; transform: translate(30%, -30%); z-index: 0;"></div>
+                    
+                    <div class="position-relative z-1 d-flex align-items-center gap-4">
+                        <div class="dental-avatar bg-white bg-opacity-25 text-white rounded-3 shadow-sm" style="width: 64px; height: 64px;">
+                            <i class="far fa-calendar-check fs-3"></i>
+                        </div>
+                        <div>
+                            <h1 class="h3 fw-bold mb-1 tracking-tight">Book Appointment</h1>
+                            <p class="mb-0 fw-medium opacity-75 small text-uppercase tracking-widest">For <span class="text-white fw-bold">@ViewBag.PatientName</span></p>
+                        </div>
+                    </div>
                 </div>
 
-                <form asp-action="Create" method="post" class="p-4 p-md-5 bg-white">
+                <form asp-action="Create" method="post" class="p-4 p-md-5 bg-white bg-opacity-75">
                     <input type="hidden" asp-for="PatientId" />
 
-                    <div class="mb-4">
-                        <label asp-for="Date" class="form-label dental-label">Appointment Date & Time</label>
-                        <input asp-for="Date" type="datetime-local" class="dental-input border shadow-none" required />
+                    <div class="form-floating mb-4">
+                        <input asp-for="Date" type="datetime-local" class="form-control rounded-4 bg-white border-0 shadow-sm px-4" required />
+                        <label asp-for="Date" class="text-secondary small px-4">Appointment Date & Time</label>
                         <span asp-validation-for="Date" class="text-danger small fw-bold mt-1 d-block ms-1"></span>
                     </div>
 
-                    <div class="mb-4">
-                        <label asp-for="Type" class="form-label dental-label">Visit Category</label>
-                        <select asp-for="Type" class="form-select dental-input border shadow-none">
+                    <div class="form-floating mb-4">
+                        <select asp-for="Type" class="form-select rounded-4 bg-white border-0 shadow-sm px-4">
                             <option value="Checkup">General Checkup</option>
                             <option value="Cleaning">Teeth Cleaning</option>
                             <option value="X-Ray">X-Ray Analysis</option>
                             <option value="Extraction">Extraction</option>
                             <option value="Root Canal">Root Canal</option>
                         </select>
+                        <label asp-for="Type" class="text-secondary small px-4">Visit Category</label>
                         <span asp-validation-for="Type" class="text-danger small fw-bold mt-1 d-block ms-1"></span>
                     </div>
 
                     @if (User.IsInRole("Staff"))
                     {
-                        <div class="mb-4">
-                            <label asp-for="DoctorId" class="form-label dental-label">Assign Doctor</label>
-                            <select asp-for="DoctorId" class="form-select dental-input border shadow-none" asp-items="ViewBag.DoctorList">
+                        <div class="form-floating mb-4">
+                            <select asp-for="DoctorId" class="form-select rounded-4 bg-white border-0 shadow-sm px-4" asp-items="ViewBag.DoctorList">
                                 <option value="">-- Select Doctor --</option>
                             </select>
+                            <label asp-for="DoctorId" class="text-secondary small px-4">Assign Doctor</label>
                             <span asp-validation-for="DoctorId" class="text-danger small fw-bold mt-1 d-block ms-1"></span>
                         </div>
                     }
@@ -54,17 +64,17 @@
                         <input type="hidden" asp-for="DoctorId" />
                     }
 
-                    <div class="mb-5">
-                        <label asp-for="Status" class="form-label dental-label">Initial Status</label>
-                        <select asp-for="Status" class="form-select dental-input border shadow-none">
+                    <div class="form-floating mb-5">
+                        <select asp-for="Status" class="form-select rounded-4 bg-white border-0 shadow-sm px-4">
                             <option value="Pending">Pending Confirmation</option>
                             <option value="Confirmed">Confirmed</option>
                         </select>
+                        <label asp-for="Status" class="text-secondary small px-4">Initial Status</label>
                         <span asp-validation-for="Status" class="text-danger small fw-bold mt-1 d-block ms-1"></span>
                     </div>
 
-                    <div class="d-grid shadow-sm rounded-3 overflow-hidden">
-                        <button type="submit" class="btn btn-primary fw-bold py-3 text-uppercase border-0" style="letter-spacing: 1px;">
+                    <div class="d-grid pt-2">
+                        <button type="submit" class="btn btn-primary fw-bold py-3 text-uppercase shadow-sm border-0 rounded-pill hover-lift tracking-wider">
                             Confirm Appointment
                         </button>
                     </div>

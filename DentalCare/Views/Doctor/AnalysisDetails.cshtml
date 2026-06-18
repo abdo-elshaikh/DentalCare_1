@@ -47,7 +47,7 @@
     </span>
 </div>
 
-<div class="dental-card border-0 shadow-sm p-4 mb-4">
+<div class="glass-panel shadow-sm border-0 rounded-4 p-4 mb-4">
     <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
         <div>
             <h1 class="h4 fw-bold text-dark mb-1">AI Cephalometric Analysis</h1>
@@ -86,7 +86,7 @@
 <div class="row g-4">
     <div class="col-xl-5">
         <div class="d-flex flex-column gap-4">
-            <div class="dental-card border-0 shadow-sm p-4">
+            <div class="glass-panel shadow-sm border-0 rounded-4 p-4">
                 <h2 class="h6 fw-bold text-dark mb-3">Saved Images</h2>
                 <div class="d-flex flex-column gap-3">
                     <div>
@@ -120,7 +120,7 @@
                 </div>
             </div>
 
-            <div class="dental-card border-0 shadow-sm p-4">
+            <div class="glass-panel shadow-sm border-0 rounded-4 p-4">
                 <h2 class="h6 fw-bold text-dark mb-3">Clinical Notes</h2>
                 @if (clinicalNotes.Any())
                 {
@@ -154,7 +154,7 @@
 
     <div class="col-xl-7">
         <div class="d-flex flex-column gap-4">
-            <div class="dental-card border-0 shadow-sm p-4">
+            <div class="glass-panel shadow-sm border-0 rounded-4 p-4">
                 <h2 class="h6 fw-bold text-dark mb-3">Summary</h2>
                 <p class="small text-secondary mb-0" style="white-space: pre-wrap;">@Model.Summary</p>
                 @if (!string.IsNullOrWhiteSpace(Model.ReviewNotes))
@@ -166,7 +166,7 @@
                 }
             </div>
 
-            <div class="dental-card border-0 shadow-sm p-4">
+            <div class="glass-panel shadow-sm border-0 rounded-4 p-4">
                 <h2 class="h6 fw-bold text-dark mb-3">Measurements</h2>
                 @if (measurements.Any())
                 {
@@ -202,7 +202,7 @@
                 }
             </div>
 
-            <div class="dental-card border-0 shadow-sm p-4">
+            <div class="glass-panel shadow-sm border-0 rounded-4 p-4">
                 <h2 class="h6 fw-bold text-dark mb-3">Treatment Options</h2>
                 @if (treatments.Any())
                 {
@@ -229,7 +229,7 @@
                 }
             </div>
 
-            <div class="dental-card border-0 shadow-sm p-4">
+            <div class="glass-panel shadow-sm border-0 rounded-4 p-4">
                 <h2 class="h6 fw-bold text-dark mb-3">Landmarks</h2>
                 @if (landmarks.Any())
                 {
@@ -265,7 +265,7 @@
 
             @if (skeletalDifferential.Any())
             {
-                <div class="dental-card border-0 shadow-sm p-4">
+                <div class="glass-panel shadow-sm border-0 rounded-4 p-4">
                     <h2 class="h6 fw-bold text-dark mb-3">Skeletal Differential</h2>
                     <div class="row g-2">
                         @foreach (var item in skeletalDifferential.OrderByDescending(i => i.Value))

@@ -39,7 +39,7 @@
 
     <input type="hidden" id="selectedPatientId" value="@(selectedPatientId?.ToString() ?? string.Empty)" />
 
-    <div class="dental-card border-0 shadow-sm p-4 mb-4 workstation-card">
+    <div class="glass-panel border-0 shadow-sm rounded-4 p-4 mb-4 workstation-card">
         @if (selectedPatient is null)
         {
             <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap">
@@ -52,7 +52,7 @@
                         <p class="dental-caption mb-0">Open analysis from an X-Ray appointment or patient profile to attach the report to a patient.</p>
                     </div>
                 </div>
-                <a asp-action="Dashboard" class="dental-btn dental-btn-primary py-2 px-3">
+                <a asp-action="Dashboard" class="btn btn-primary bg-gradient fw-bold rounded-pill hover-lift shadow-sm py-2 px-3">
                     <i class="fas fa-calendar-day me-1"></i> Dashboard
                 </a>
             </div>
@@ -105,7 +105,7 @@
     <div class="row g-4">
         <div class="col-xl-3 col-lg-4">
             <div class="d-flex flex-column gap-4">
-                <div class="dental-card border-0 shadow-sm p-0 overflow-hidden workstation-card">
+                <div class="glass-panel border-0 shadow-sm rounded-4 p-0 overflow-hidden workstation-card">
                     <div id="dropZone"
                          class="p-5 text-center border-2 border-dashed"
                          style="border:2px dashed #d1d5db;cursor:pointer;transition:background .2s;"
@@ -134,7 +134,7 @@
                     </div>
                 </div>
 
-                <div class="dental-card border-0 shadow-sm p-4 workstation-card">
+                <div class="glass-panel border-0 shadow-sm rounded-4 p-4 workstation-card">
                     <h3 class="h6 fw-bold text-dark mb-4 d-flex align-items-center gap-2">
                         <i class="fas fa-sliders-h text-primary"></i> Analysis Settings
                     </h3>
@@ -203,7 +203,7 @@
         </div>
 
         <div class="col-xl-9 col-lg-8">
-            <div id="loadingPanel" class="dental-card border-0 shadow-sm p-5 text-center d-none workstation-card">
+            <div id="loadingPanel" class="glass-panel border-0 shadow-sm rounded-4 p-5 text-center d-none workstation-card">
                 <div class="spinner-border text-primary mb-4" style="width:3rem;height:3rem;" role="status"></div>
                 <h3 class="h5 fw-bold text-dark mb-2">Running AI Analysis...</h3>
                 <p class="dental-caption" id="loadingStep">Detecting landmarks...</p>
@@ -222,7 +222,7 @@
                 </div>
             </div>
 
-            <div id="emptyPanel" class="dental-card border-0 shadow-sm p-5 text-center workstation-card">
+            <div id="emptyPanel" class="glass-panel border-0 shadow-sm rounded-4 p-5 text-center workstation-card">
                 <div class="dental-avatar bg-light text-secondary mx-auto mb-4" style="width:72px;height:72px;border-radius:20px;">
                     <i class="fas fa-x-ray fs-3"></i>
                 </div>
@@ -231,7 +231,7 @@
             </div>
 
             <div id="resultsPanel" class="d-none d-flex flex-column gap-4">
-                <div id="reviewGate" class="dental-card border-0 shadow-sm p-3 review-gate workstation-card">
+                <div id="reviewGate" class="glass-panel border-0 shadow-sm rounded-4 p-3 review-gate workstation-card">
                     <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
                         <div>
                             <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
@@ -264,7 +264,7 @@
                     <div id="reportActionMessage" class="mt-3 d-none"></div>
                 </div>
 
-                <div class="dental-card border-0 shadow-sm p-3 workstation-card">
+                <div class="glass-panel border-0 shadow-sm rounded-4 p-3 workstation-card">
                     <ul class="nav nav-pills gap-2" id="analysisTabs" role="tablist">
                         <li class="nav-item"><button class="nav-link active" data-bs-toggle="pill" data-bs-target="#tabWorkspace" type="button">Workspace</button></li>
                         <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#tabSummary" type="button">Clinical Summary</button></li>
@@ -279,7 +279,7 @@
                     <div class="tab-pane fade show active" id="tabWorkspace">
                         <div class="row g-4">
                             <div class="col-xl-8">
-                                <div class="dental-card border-0 shadow-sm p-0 overflow-hidden workstation-card">
+                                <div class="glass-panel border-0 shadow-sm rounded-4 p-0 overflow-hidden workstation-card">
                                     <div class="viewer-toolbar p-3 bg-light d-flex flex-wrap justify-content-between align-items-center gap-2">
                                         <div class="d-flex flex-wrap gap-2">
                                             <button class="btn btn-sm btn-outline-secondary rounded-pill" onclick="zoomViewer(1.2)" title="Zoom in"><i class="fas fa-search-plus"></i></button>
@@ -298,7 +298,7 @@
                                 </div>
                             </div>
                             <div class="col-xl-4">
-                                <div class="dental-card border-0 shadow-sm p-0 overflow-hidden workstation-card">
+                                <div class="glass-panel border-0 shadow-sm rounded-4 p-0 overflow-hidden workstation-card">
                                     <div class="p-3 bg-light border-bottom d-flex justify-content-between align-items-center">
                                         <span class="fw-bold small text-dark">Landmarks</span>
                                         <span id="landmarkCount" class="badge bg-primary-subtle text-primary rounded-pill">0</span>
@@ -322,7 +322,7 @@
                     </div>
 
                     <div class="tab-pane fade" id="tabSummary">
-                        <div class="dental-card border-0 shadow-sm p-4 workstation-card">
+                        <div class="glass-panel border-0 shadow-sm rounded-4 p-4 workstation-card">
                             <div class="row g-3 mb-4">
                                 <div class="col-md-3"><div class="metric-tile"><p class="dental-caption mb-1">Skeletal Class</p><p id="resSkeletalClass" class="fw-bold text-dark mb-0">-</p></div></div>
                                 <div class="col-md-3"><div class="metric-tile"><p class="dental-caption mb-1">Vertical Pattern</p><p id="resVerticalPattern" class="fw-bold text-dark mb-0">-</p></div></div>
@@ -344,7 +344,7 @@
                     </div>
 
                     <div class="tab-pane fade" id="tabMeasurements">
-                        <div class="dental-card border-0 shadow-sm p-0 overflow-hidden workstation-card">
+                        <div class="glass-panel border-0 shadow-sm rounded-4 p-0 overflow-hidden workstation-card">
                             <div class="p-3 bg-light border-bottom d-flex align-items-center justify-content-between">
                                 <span class="fw-bold small text-dark">Cephalometric Measurements</span>
                                 <span class="badge bg-primary-subtle text-primary rounded-pill" id="measureCount">0 measurements</span>
@@ -368,14 +368,14 @@
                     </div>
 
                     <div class="tab-pane fade" id="tabTreatment">
-                        <div class="dental-card border-0 shadow-sm p-4 workstation-card">
+                        <div class="glass-panel border-0 shadow-sm rounded-4 p-4 workstation-card">
                             <h3 class="h6 fw-bold text-dark mb-4">Treatment Suggestions</h3>
                             <div id="treatmentList" class="d-flex flex-column gap-3"></div>
                         </div>
                     </div>
 
                     <div class="tab-pane fade" id="tabXai">
-                        <div class="dental-card border-0 shadow-sm p-4 workstation-card">
+                        <div class="glass-panel border-0 shadow-sm rounded-4 p-4 workstation-card">
                             <div class="d-flex justify-content-between align-items-center gap-3 mb-3">
                                 <div>
                                     <h3 class="h6 fw-bold text-dark mb-1">Explainable AI Reasoning</h3>
@@ -392,13 +392,13 @@
                     <div class="tab-pane fade" id="tabExports">
                         <div class="row g-4">
                             <div class="col-lg-6">
-                                <div class="dental-card border-0 shadow-sm p-4 workstation-card h-100">
+                                <div class="glass-panel border-0 shadow-sm rounded-4 p-4 workstation-card h-100">
                                     <h3 class="h6 fw-bold text-dark mb-3">EHR Clinical Report</h3>
                                     <div id="ehrReport" class="mono-box"></div>
                                 </div>
                             </div>
                             <div class="col-lg-6">
-                                <div class="dental-card border-0 shadow-sm p-4 workstation-card h-100">
+                                <div class="glass-panel border-0 shadow-sm rounded-4 p-4 workstation-card h-100">
                                     <h3 class="h6 fw-bold text-dark mb-3">Research Exports</h3>
                                     <div class="d-grid gap-2">
                                         <button class="btn btn-outline-primary fw-bold rounded-pill" onclick="downloadJson()">

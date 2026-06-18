@@ -1,52 +1,69 @@
 @model DentalCare.ViewModels.RegisterViewModel
 @{
     ViewData["Title"] = "Register";
+    Layout = "_AuthLayout";
 }
 
-<div class="row justify-content-center">
-    <div class="col-12 col-md-8 col-lg-6">
-        <div class="dental-card shadow-sm border-0">
-            <div class="text-center mb-4">
+<div class="row g-0 bg-white rounded-5 shadow-lg overflow-hidden my-4" style="min-height: 700px;">
+    <!-- Left Side - Form -->
+    <div class="col-lg-7 d-flex flex-column justify-content-center p-5 p-xl-5">
+        <div class="w-100" style="max-width: 500px; margin: 0 auto;">
+            <div class="text-center mb-5">
                 <div class="dental-avatar bg-primary-subtle text-primary mx-auto mb-3" style="width: 64px; height: 64px; border-radius: 1.25rem;">
                     <i class="fas fa-user-plus fs-4"></i>
                 </div>
-                <h1 class="h3 fw-bold text-dark">Create Account</h1>
-                <p class="dental-caption">Join the DentalCare professional network</p>
+                <h1 class="h2 fw-bold text-dark tracking-tight">Create Account</h1>
+                <p class="text-secondary small">Join the DentalCare professional network</p>
             </div>
 
             <form asp-controller="Account" asp-action="Register" asp-route-returnUrl="@ViewData["ReturnUrl"]" method="post">
                 <div asp-validation-summary="ModelOnly" class="text-danger small fw-bold mb-3" role="alert"></div>
 
-                <div class="row g-3">
-                    <div class="col-12">
-                        <label asp-for="Email" class="dental-label">Email Address</label>
-                        <input asp-for="Email" class="dental-input" autocomplete="username" aria-required="true" placeholder="name@example.com" />
-                        <span asp-validation-for="Email" class="text-danger small fw-bold"></span>
-                    </div>
+                <div class="form-floating mb-4">
+                    <input asp-for="Email" class="form-control rounded-4 bg-light border-0 px-4" autocomplete="username" aria-required="true" placeholder="name@example.com" />
+                    <label asp-for="Email" class="px-4 text-secondary small">Email Address</label>
+                    <span asp-validation-for="Email" class="text-danger small fw-bold mt-1 d-block px-2"></span>
+                </div>
 
+                <div class="row g-3 mb-4">
                     <div class="col-md-6">
-                        <label asp-for="Password" class="dental-label">Password</label>
-                        <input asp-for="Password" type="password" class="dental-input" autocomplete="new-password" aria-required="true" placeholder="••••••••" />
-                        <span asp-validation-for="Password" class="text-danger small fw-bold"></span>
+                        <div class="form-floating">
+                            <input asp-for="Password" type="password" class="form-control rounded-4 bg-light border-0 px-4" autocomplete="new-password" aria-required="true" placeholder="Password" />
+                            <label asp-for="Password" class="px-4 text-secondary small">Password</label>
+                            <span asp-validation-for="Password" class="text-danger small fw-bold mt-1 d-block px-2"></span>
+                        </div>
                     </div>
-
                     <div class="col-md-6">
-                        <label asp-for="ConfirmPassword" class="dental-label">Confirm Password</label>
-                        <input asp-for="ConfirmPassword" type="password" class="dental-input" autocomplete="new-password" aria-required="true" placeholder="••••••••" />
-                        <span asp-validation-for="ConfirmPassword" class="text-danger small fw-bold"></span>
+                        <div class="form-floating">
+                            <input asp-for="ConfirmPassword" type="password" class="form-control rounded-4 bg-light border-0 px-4" autocomplete="new-password" aria-required="true" placeholder="Confirm Password" />
+                            <label asp-for="ConfirmPassword" class="px-4 text-secondary small">Confirm Password</label>
+                            <span asp-validation-for="ConfirmPassword" class="text-danger small fw-bold mt-1 d-block px-2"></span>
+                        </div>
                     </div>
                 </div>
 
-                <div class="my-4">
-                    <button type="submit" class="dental-btn dental-btn-primary w-100 py-3 shadow-sm">
-                        Register
-                    </button>
-                </div>
+                <button type="submit" class="btn btn-primary w-100 py-3 rounded-pill fw-bold shadow-sm hover-lift text-uppercase tracking-wider mt-2">
+                    Complete Registration
+                </button>
 
-                <p class="text-center small text-secondary mt-3 mb-0 fw-bold text-uppercase tracking-widest" style="font-size: 10px;">
-                    Already have an account? <a asp-action="Login" asp-route-returnUrl="@ViewData["ReturnUrl"]" class="text-primary text-decoration-none">Log in</a>
-                </p>
+                <div class="text-center mt-5">
+                    <p class="small text-secondary fw-semibold">
+                        Already have an account? 
+                        <a asp-action="Login" asp-route-returnUrl="@ViewData["ReturnUrl"]" class="text-primary text-decoration-none fw-bold ms-1">Sign In</a>
+                    </p>
+                </div>
             </form>
+        </div>
+    </div>
+    
+    <!-- Right Side - Image/Branding -->
+    <div class="col-lg-5 d-none d-lg-block position-relative p-3">
+        <div class="bg-success h-100 rounded-5 w-100 position-relative overflow-hidden" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+            <div class="position-absolute top-0 start-0 w-100 h-100 d-flex flex-column justify-content-center align-items-center text-center p-5 z-1">
+                <i class="fas fa-shield-alt text-white opacity-25 mb-4" style="font-size: 8rem;"></i>
+                <h2 class="text-white fw-bold display-6 mb-3">Secure & Compliant</h2>
+                <p class="text-white-50 fs-5 mx-auto" style="max-width: 400px;">Your data is protected with enterprise-grade security and full healthcare compliance.</p>
+            </div>
         </div>
     </div>
 </div>
