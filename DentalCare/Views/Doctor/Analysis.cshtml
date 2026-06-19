@@ -447,7 +447,8 @@
 
     function formatPct(value) {
         if (typeof value !== 'number' || Number.isNaN(value)) return '-';
-        return `${Math.round(normalizeProbability(value) * 100)}%`;
+        const pct = Math.round(normalizeProbability(value) * 100);
+        return pct + '%';
     }
 
     function normalizeProbability(value) {

@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace DentalCare.Controllers
 {
-    [Authorize(Roles = "Doctor,Staff")]
+    [Authorize(Roles = "Doctor,Staff,Admin")]
     public class PatientController : Controller
     {
         private readonly IRepository<Patient> _patientRepository;
@@ -51,13 +51,11 @@ namespace DentalCare.Controllers
             return View(pagedItems);
         }
 
-        [Authorize(Roles = "Staff,Admin")]
         public IActionResult Create()
         {
             return View();
         }
 
-        [Authorize(Roles = "Staff,Admin")]
         [HttpPost]
         public async Task<IActionResult> Create(Patient patient)
         {
@@ -70,7 +68,6 @@ namespace DentalCare.Controllers
             return View(patient);
         }
         
-        [Authorize(Roles = "Doctor,Staff,Admin")]
         public async Task<IActionResult> Edit(int id)
         {
             var patient = await _patientRepository.GetByIdAsync(id);
@@ -78,7 +75,6 @@ namespace DentalCare.Controllers
             return View(patient);
         }
 
-        [Authorize(Roles = "Doctor,Staff,Admin")]
         [HttpPost]
         public async Task<IActionResult> Edit(Patient patient)
         {
@@ -136,7 +132,7 @@ namespace DentalCare.Controllers
             }).ToList();
         }
 
-        // AJAX Action to return JSON data if needed
+        // AJAX Action to return JSON data of patients for dynamic UI updates
         [HttpGet]
         public async Task<JsonResult> GetData()
         {

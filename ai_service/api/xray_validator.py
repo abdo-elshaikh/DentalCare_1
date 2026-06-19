@@ -15,7 +15,7 @@ from .utils import postprocess_landmarks, preprocess_image
 
 CLASS_NAMES = ("lateral_ceph", "other_xray", "non_xray")
 SUPPORTED_FORMATS = {"JPEG", "PNG", "BMP", "TIFF"}
-MAX_IMAGE_PIXELS = 40_000_000 # 40 megapixels, to avoid decompression bomb DoS attacks
+MAX_IMAGE_PIXELS = 40_000_000 
 
 
 class XrayValidator:

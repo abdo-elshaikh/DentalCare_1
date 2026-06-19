@@ -8,3 +8,4 @@ document.querySelectorAll('.password-toggle').forEach((button) => {
         button.querySelector('i').className = isHidden ? 'fa-regular fa-eye-slash' : 'fa-regular fa-eye';
     });
 });
+

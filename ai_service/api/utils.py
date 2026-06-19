@@ -120,7 +120,9 @@ def postprocess_landmarks(heatmaps, original_size, target_size=(768, 768), offse
             "y": round(float(y_scaled), 2),
             "score": round(score, 4)
         })
-        
+
+    # print(f"Postprocessed {len(landmarks)} landmarks to original image size {original_size}")
+    # print(f"Landmarks: {landmarks}")  
     return landmarks
 
 

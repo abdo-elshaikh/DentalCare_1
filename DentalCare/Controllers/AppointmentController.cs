@@ -38,7 +38,7 @@ namespace DentalCare.Controllers
             var appointment = new Appointment
             {
                 PatientId = patientId,
-                Date = DateTime.Today,
+                Date = GetNextAppointmentTime(),
                 Status = "Pending"
             };
 
@@ -49,14 +49,24 @@ namespace DentalCare.Controllers
         [HttpPost]
         public async Task<IActionResult> Create(Appointment appointment)
         {
+            ValidateAppointmentDate(appointment.Date);
+
             if (ModelState.IsValid)
             {
                 if (string.IsNullOrEmpty(appointment.Status)) appointment.Status = "Pending";
 
-                await _appointmentRepository.AddAsync(appointment);
-                await _appointmentRepository.SaveAsync();
+                if (await HasScheduleConflictAsync(appointment))
+                {
+                    ModelState.AddModelError(nameof(appointment.Date),
+                        "This time is already booked for the selected doctor or patient.");
+                }
+                else
+                {
+                    await _appointmentRepository.AddAsync(appointment);
+                    await _appointmentRepository.SaveAsync();
 
-                return RedirectToAction("Index", "Patient");
+                    return RedirectToAction("Index", "Patient");
+                }
             }
 
             var patient = await _patientRepository.GetByIdAsync(appointment.PatientId);
@@ -92,6 +102,8 @@ namespace DentalCare.Controllers
         [HttpPost]
         public async Task<IActionResult> Edit(Appointment appointment)
         {
+            ValidateAppointmentDate(appointment.Date);
+
             if (ModelState.IsValid)
             {
                 var existing = await _appointmentRepository.GetByIdAsync(appointment.Id);
@@ -104,18 +116,26 @@ namespace DentalCare.Controllers
                 }
                 else
                 {
-                    existing.Date = appointment.Date;
-                    existing.DoctorId = appointment.DoctorId;
-                    existing.Type = appointment.Type;
-                    existing.Status = appointment.Status;
-
-                    await _appointmentRepository.SaveAsync();
-
-                    if (User.IsInRole("Staff") || User.IsInRole("Admin"))
+                    if (await HasScheduleConflictAsync(appointment))
                     {
-                        return RedirectToAction("Dashboard", "Staff");
+                        ModelState.AddModelError(nameof(appointment.Date),
+                            "This time is already booked for the selected doctor or patient.");
                     }
-                    return RedirectToAction("Dashboard", "Doctor");
+                    else
+                    {
+                        existing.Date = appointment.Date;
+                        existing.DoctorId = appointment.DoctorId;
+                        existing.Type = appointment.Type;
+                        existing.Status = appointment.Status;
+
+                        await _appointmentRepository.SaveAsync();
+
+                        if (User.IsInRole("Staff") || User.IsInRole("Admin"))
+                        {
+                            return RedirectToAction("Dashboard", "Staff");
+                        }
+                        return RedirectToAction("Dashboard", "Doctor");
+                    }
                 }
             }
 
@@ -124,6 +144,65 @@ namespace DentalCare.Controllers
             var doctors = await GetDoctorsAsync();
             ViewBag.DoctorList = new SelectList(doctors, "Id", "Name", appointment.DoctorId);
             return View(appointment);
+        }
+
+        [Authorize(Roles = "Staff,Admin")]
+        [AcceptVerbs("GET", "POST")]
+        public async Task<IActionResult> IsTimeAvailable(
+            DateTime date,
+            string? doctorId,
+            int patientId,
+            int id = 0)
+        {
+            if (date == default || string.IsNullOrWhiteSpace(doctorId) || patientId <= 0)
+            {
+                return Json(true);
+            }
+
+            var appointment = new Appointment
+            {
+                Id = id,
+                Date = date,
+                DoctorId = doctorId,
+                PatientId = patientId
+            };
+
+            return await HasScheduleConflictAsync(appointment)
+                ? Json("This time is already booked for the selected doctor or patient.")
+                : Json(true);
+        }
+
+        private async Task<bool> HasScheduleConflictAsync(Appointment appointment)
+        {
+            var conflicts = await _appointmentRepository.FindAsync(existing =>
+                existing.Id != appointment.Id &&
+                existing.Date == appointment.Date &&
+                existing.Status != "Cancelled" &&
+                (existing.DoctorId == appointment.DoctorId ||
+                 existing.PatientId == appointment.PatientId));
+
+            return conflicts.Any();
+        }
+
+        private void ValidateAppointmentDate(DateTime appointmentDate)
+        {
+            if (appointmentDate < DateTime.Now)
+            {
+                ModelState.AddModelError(nameof(Appointment.Date),
+                    "Appointment date and time cannot be in the past.");
+            }
+        }
+
+        private static DateTime GetNextAppointmentTime()
+        {
+            var nextHour = DateTime.Now.AddHours(1);
+            return new DateTime(
+                nextHour.Year,
+                nextHour.Month,
+                nextHour.Day,
+                nextHour.Hour,
+                nextHour.Minute,
+                0);
         }
 
         private async Task<List<dynamic>> GetDoctorsAsync()

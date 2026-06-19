@@ -22,7 +22,8 @@
             <div class="workspace-form-grid">
                 <div class="workspace-field--wide">
                     <label asp-for="Date" class="form-label dental-label">Appointment date and time</label>
-                    <input asp-for="Date" type="datetime-local" class="form-control" required />
+                    <input asp-for="Date" type="datetime-local" class="form-control"
+                           min="@DateTime.Now.AddMinutes(1).ToString("yyyy-MM-ddTHH:mm")" required />
                     <span asp-validation-for="Date" class="field-error"></span>
                 </div>
                 <div>

@@ -15,7 +15,7 @@
             </div>
         </header>
 
-        <form asp-action="Create" method="post" class="workspace-form-body">
+        <form asp-action="Create" method="post" class="workspace-form-body" novalidate>
             <div asp-validation-summary="ModelOnly" class="auth-validation mb-3" role="alert"></div>
             <div class="workspace-form-grid">
                 <div class="workspace-field--wide">
@@ -30,7 +30,11 @@
                 </div>
                 <div>
                     <label asp-for="Gender" class="form-label dental-label">Gender</label>
-                    <select asp-for="Gender" class="form-select"><option value="Male">Male</option><option value="Female">Female</option></select>
+                    <select asp-for="Gender" class="form-select">
+                        <option value="">Select gender</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                    </select>
                     <span asp-validation-for="Gender" class="field-error"></span>
                 </div>
                 <div>

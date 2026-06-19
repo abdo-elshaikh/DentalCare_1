@@ -21,7 +21,8 @@
             <div class="workspace-form-grid">
                 <div class="workspace-field--wide">
                     <label asp-for="Date" class="form-label dental-label">Appointment date and time</label>
-                    <input asp-for="Date" type="datetime-local" class="form-control" required />
+                    <input asp-for="Date" type="datetime-local" class="form-control"
+                           min="@DateTime.Now.AddMinutes(1).ToString("yyyy-MM-ddTHH:mm")" required />
                     <span asp-validation-for="Date" class="field-error"></span>
                 </div>
                 <div>
@@ -41,11 +42,11 @@
                 {
                     <input type="hidden" asp-for="DoctorId" />
                 }
-                <div>
+                @* <div>
                     <label asp-for="Status" class="form-label dental-label">Initial status</label>
                     <select asp-for="Status" class="form-select"><option value="Pending">Pending confirmation</option><option value="Confirmed">Confirmed</option></select>
                     <span asp-validation-for="Status" class="field-error"></span>
-                </div>
+                </div> *@
             </div>
             <div class="workspace-actions">
                 <a asp-controller="Patient" asp-action="Details" asp-route-id="@Model.PatientId" class="btn btn-light px-4">Cancel</a>

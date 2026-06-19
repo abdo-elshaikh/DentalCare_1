@@ -49,7 +49,7 @@
                             {
                                 <a asp-controller="Staff" asp-action="Dashboard" class="nav-link @ActiveLink("Staff")">Reception</a>
                             }
-                            @if (User.IsInRole("Doctor") || User.IsInRole("Staff"))
+                            @if (User.IsInRole("Doctor") || User.IsInRole("Staff") || User.IsInRole("Admin"))
                             {
                                 <a asp-controller="Patient" asp-action="Index" class="nav-link @ActiveLink("Patient")">Patients</a>
                             }

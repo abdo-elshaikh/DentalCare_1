@@ -266,6 +266,8 @@ async def detect_landmarks_endpoint(request: LandmarkDetectionRequest):
         tensor, original_size = preprocess_image(image_bytes)
         heatmaps, offsets = run_inference(ml_models["hrnet"], tensor)
         landmarks = postprocess_landmarks(heatmaps, original_size, offsets=offsets)
+        print(f"Detected {len(landmarks)} landmarks in image of size {original_size}")
+        print(f"Landmarks: {landmarks}")
         
         mapped_landmarks = landmark_ids_to_response_dict(landmarks)
         return LandmarkDetectionResponse(landmarks=mapped_landmarks)
