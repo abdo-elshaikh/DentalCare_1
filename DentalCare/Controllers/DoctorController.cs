@@ -302,6 +302,25 @@ namespace DentalCare.Controllers
                 using var ms = new MemoryStream();
                 await xrayFile.CopyToAsync(ms);
                 var imageBytes = ms.ToArray();
+
+                var validation = await _cephService.ValidateXrayAsync(
+                    imageBytes,
+                    xrayFile.ContentType,
+                    xrayFile.FileName);
+
+                if (validation == null)
+                    return StatusCode(503, new { error = "X-ray validation service is unavailable." });
+
+                if (!validation.Accepted)
+                {
+                    return BadRequest(new
+                    {
+                        error = validation.Reason ?? "Only lateral cephalometric X-rays are accepted.",
+                        detectedType = validation.Label,
+                        confidence = validation.Confidence
+                    });
+                }
+
                 using var stream = new MemoryStream(imageBytes);
                 var result = await _cephService.AnalyzeXrayAsync(
                     stream, xrayFile.ContentType, pxToMm, ethnicProfile, patientAge, patientSex, protocolId);

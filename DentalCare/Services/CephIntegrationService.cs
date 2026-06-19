@@ -42,9 +42,11 @@ namespace DentalCare.Services
 
                 var body = await resp.Content.ReadAsStringAsync();
                 using var doc = JsonDocument.Parse(body);
-                return doc.RootElement.TryGetProperty("model_loaded", out var loaded)
-                    ? loaded.ValueKind == JsonValueKind.True
-                    : true;
+                var modelLoaded = !doc.RootElement.TryGetProperty("model_loaded", out var loaded)
+                    || loaded.ValueKind == JsonValueKind.True;
+                var validatorLoaded = !doc.RootElement.TryGetProperty("xray_validator_loaded", out var validator)
+                    || validator.ValueKind == JsonValueKind.True;
+                return modelLoaded && validatorLoaded;
             }
             catch { return false; }
         }
@@ -56,6 +58,42 @@ namespace DentalCare.Services
         // ─────────────────────────────────────────────────────────────
         // X-RAY PIPELINE
         // ─────────────────────────────────────────────────────────────
+
+        /// <summary>Checks whether an upload is a lateral cephalometric X-ray.</summary>
+        public async Task<XrayValidationResult?> ValidateXrayAsync(
+            byte[] imageBytes,
+            string contentType,
+            string fileName)
+        {
+            try
+            {
+                using var form = new MultipartFormDataContent();
+                var imageContent = new ByteArrayContent(imageBytes);
+                imageContent.Headers.ContentType = new MediaTypeHeaderValue(contentType);
+                form.Add(
+                    imageContent,
+                    "file",
+                    string.IsNullOrWhiteSpace(fileName) ? "xray.jpg" : Path.GetFileName(fileName));
+
+                var response = await _httpClient.PostAsync("/validate-xray", form);
+                if (!response.IsSuccessStatusCode)
+                {
+                    var error = await response.Content.ReadAsStringAsync();
+                    _logger.LogWarning(
+                        "X-ray validation failed ({StatusCode}): {Error}",
+                        response.StatusCode,
+                        error);
+                    return null;
+                }
+
+                return await response.Content.ReadFromJsonAsync<XrayValidationResult>(_json);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "X-ray validation request failed");
+                return null;
+            }
+        }
 
         /// <summary>
         /// Runs the full AI pipeline on an X-ray image:
@@ -955,6 +993,14 @@ namespace DentalCare.Services
         public List<string> UncertaintyFactors { get; set; } = new();
         public string ClinicalConfidence { get; set; } = "";
         public string AlternativeInterpretation { get; set; } = "";
+    }
+
+    public class XrayValidationResult
+    {
+        public bool Accepted { get; set; }
+        public string Label { get; set; } = "";
+        public double Confidence { get; set; }
+        public string? Reason { get; set; }
     }
 
     public class CephXaiStep

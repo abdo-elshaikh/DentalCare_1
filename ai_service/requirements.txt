@@ -22,3 +22,4 @@ openai
 python-dotenv
 scipy
 pydantic-settings
+pytest>=8.0.0

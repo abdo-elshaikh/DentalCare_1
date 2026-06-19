@@ -35,6 +35,7 @@ from .protocols import get_protocol, get_protocol_norms_preview, list_protocols,
 from .norms import list_reference_protocols, get_norm_tuple
 from .treatment_engine import build_treatment_plan
 from .measurements import summary_report
+from .xray_validator import LandmarkXrayValidator, XrayValidator
 
 # Schemas and helpers
 from .schemas import *
@@ -53,6 +54,7 @@ from .drawing import pil_to_base64, draw_wiggle_chart, draw_measurement_table, d
 
 # Global model storage
 ml_models = {}
+MAX_XRAY_BYTES = 15 * 1024 * 1024
 
 
 def _severity_from_measurements(measurements: dict[str, float]) -> str:
@@ -84,6 +86,23 @@ async def lifespan(app: FastAPI):
         ml_models["hrnet"] = load_model(model_path)
     else:
         print(f"Warning: Model file not found at {model_path}")
+
+    validator_path = os.getenv("XRAY_VALIDATOR_MODEL_PATH") or os.path.join(
+        os.path.dirname(__file__), "..", "models", "xray_validator.pt"
+    )
+    if os.path.exists(validator_path):
+        threshold = float(os.getenv("XRAY_VALIDATOR_THRESHOLD", "0.90"))
+        ml_models["xray_validator"] = XrayValidator(validator_path, threshold=threshold)
+        ml_models["xray_validator_mode"] = "classifier"
+    elif "hrnet" in ml_models:
+        ml_models["xray_validator"] = LandmarkXrayValidator(ml_models["hrnet"])
+        ml_models["xray_validator_mode"] = "landmark_fallback"
+        print(
+            "Warning: X-ray classifier model not found; "
+            "using landmark-based validation fallback."
+        )
+    else:
+        print(f"Warning: X-ray validator model not found at {validator_path}")
     
     yield
     
@@ -101,10 +120,35 @@ def read_root():
 @app.get("/health")
 def health_check():
     model_loaded = "hrnet" in ml_models
+    validator_loaded = "xray_validator" in ml_models
     return {
-        "status": "ok" if model_loaded else "degraded",
+        "status": "ok" if model_loaded and validator_loaded else "degraded",
         "model_loaded": model_loaded,
+        "xray_validator_loaded": validator_loaded,
+        "xray_validator_mode": ml_models.get("xray_validator_mode", "unavailable"),
     }
+
+
+@app.post("/validate-xray")
+async def validate_xray(file: UploadFile = File(...)):
+    """Accept only images classified as lateral cephalometric X-rays."""
+    validator = ml_models.get("xray_validator")
+    if validator is None:
+        raise HTTPException(
+            status_code=503,
+            detail="X-ray validation model is unavailable.",
+        )
+
+    contents = await file.read(MAX_XRAY_BYTES + 1)
+    if not contents:
+        raise HTTPException(status_code=400, detail="Empty image file.")
+    if len(contents) > MAX_XRAY_BYTES:
+        raise HTTPException(status_code=413, detail="Image exceeds 15 MB.")
+
+    try:
+        return validator.validate(contents)
+    except ValueError as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 @app.get("/protocols")
 async def protocols():
