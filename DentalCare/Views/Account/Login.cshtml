@@ -1,76 +1,49 @@
 @model DentalCare.ViewModels.LoginViewModel
 @{
-    ViewData["Title"] = "Log in";
+    ViewData["Title"] = "Sign in";
     Layout = "_AuthLayout";
 }
 
-<div class="row g-0 bg-white rounded-5 shadow-lg overflow-hidden my-4" style="min-height: 700px;">
-    <!-- Left Side - Form -->
-    <div class="col-lg-6 d-flex flex-column justify-content-center p-5 p-xl-5">
-        <div class="w-100" style="max-width: 450px; margin: 0 auto;">
-            <div class="text-center mb-5">
-                <div class="dental-avatar bg-primary-subtle text-primary mx-auto mb-3" style="width: 64px; height: 64px; border-radius: 1.25rem;">
-                    <i class="fas fa-lock fs-4"></i>
+<section class="auth-content">
+    <div class="auth-form-pane">
+        <div class="auth-form-wrap">
+            <div class="section-kicker"><i class="fa-solid fa-lock"></i> Secure clinic access</div>
+            <h1>Welcome back.</h1>
+            <p class="auth-lead">Sign in to continue to your DentalCare workspace.</p>
+
+            @if (TempData["InfoMessage"] is string infoMessage)
+            {
+                <div class="auth-alert auth-alert--info" role="status"><i class="fa-solid fa-circle-info"></i><span>@infoMessage</span></div>
+            }
+            <form asp-controller="Account" asp-action="Login" asp-route-returnUrl="@ViewData["ReturnUrl"]" method="post" class="auth-form">
+                <div asp-validation-summary="ModelOnly" class="auth-validation" role="alert"></div>
+                <div class="field-group">
+                    <label asp-for="Email">Email address</label>
+                    <div class="field-control"><i class="fa-regular fa-envelope"></i><input asp-for="Email" autocomplete="username" aria-required="true" placeholder="name@clinic.com" /></div>
+                    <span asp-validation-for="Email" class="field-error"></span>
                 </div>
-                <h1 class="h2 fw-bold text-dark tracking-tight">Welcome Back</h1>
-                <p class="text-secondary small">Please sign in to continue to DentalCare</p>
-            </div>
-
-            <form asp-controller="Account" asp-action="Login" asp-route-returnUrl="@ViewData["ReturnUrl"]" method="post">
-                @if (TempData["InfoMessage"] is string infoMessage)
-                {
-                    <div class="alert alert-info small fw-semibold border-0 rounded-3 shadow-sm" role="status">
-                        @infoMessage
-                    </div>
-                }
-
-                <div asp-validation-summary="ModelOnly" class="text-danger small fw-bold mb-3" role="alert"></div>
-
-                <div class="form-floating mb-4">
-                    <input asp-for="Email" class="form-control rounded-4 bg-light border-0 px-4" autocomplete="username" aria-required="true" placeholder="name@example.com" />
-                    <label asp-for="Email" class="px-4 text-secondary small">Email Address</label>
-                    <span asp-validation-for="Email" class="text-danger small fw-bold mt-1 d-block px-2"></span>
+                <div class="field-group">
+                    <label asp-for="Password">Password</label>
+                    <div class="field-control"><i class="fa-solid fa-key"></i><input asp-for="Password" type="password" autocomplete="current-password" aria-required="true" placeholder="Enter your password" /><button type="button" class="password-toggle" aria-label="Show password" title="Show password"><i class="fa-regular fa-eye"></i></button></div>
+                    <span asp-validation-for="Password" class="field-error"></span>
                 </div>
-
-                <div class="form-floating mb-4">
-                    <input asp-for="Password" type="password" class="form-control rounded-4 bg-light border-0 px-4" autocomplete="current-password" aria-required="true" placeholder="Password" />
-                    <label asp-for="Password" class="px-4 text-secondary small">Password</label>
-                    <span asp-validation-for="Password" class="text-danger small fw-bold mt-1 d-block px-2"></span>
-                </div>
-
-                <div class="d-flex align-items-center justify-content-between mb-5 px-2">
-                    <div class="form-check">
-                        <input asp-for="RememberMe" class="form-check-input shadow-none" />
-                        <label asp-for="RememberMe" class="form-check-label small fw-semibold text-secondary user-select-none">Remember me</label>
-                    </div>
-                </div>
-
-                <button type="submit" class="btn btn-primary w-100 py-3 rounded-pill fw-bold shadow-sm hover-lift text-uppercase tracking-wider">
-                    Sign In to Dashboard
-                </button>
-
-                <div class="text-center mt-5">
-                    <p class="small text-secondary fw-semibold">
-                        Don't have an account yet? 
-                        <a asp-action="Register" asp-route-returnUrl="@ViewData["ReturnUrl"]" class="text-primary text-decoration-none fw-bold ms-1">Create Account</a>
-                    </p>
-                </div>
+                <label class="remember-control"><input asp-for="RememberMe" /> <span>Keep me signed in on this device</span></label>
+                <button type="submit" class="btn btn-brand btn-lg auth-submit">Sign in <i class="fa-solid fa-arrow-right"></i></button>
             </form>
+            <p class="auth-switch">New to DentalCare? <a asp-action="Register" asp-route-returnUrl="@ViewData["ReturnUrl"]">Request an account</a></p>
         </div>
     </div>
-    
-    <!-- Right Side - Image/Branding -->
-    <div class="col-lg-6 d-none d-lg-block position-relative p-3">
-        <div class="bg-primary h-100 rounded-5 w-100 position-relative overflow-hidden hero-gradient-bg">
-            <div class="position-absolute top-0 start-0 w-100 h-100 d-flex flex-column justify-content-center align-items-center text-center p-5 z-1">
-                <i class="fas fa-tooth text-white opacity-25 mb-4" style="font-size: 8rem;"></i>
-                <h2 class="text-dark fw-bold display-6 mb-3">Precision Dental Management</h2>
-                <p class="text-secondary fs-5 mx-auto" style="max-width: 400px;">Streamline your clinic operations and leverage AI-driven insights for better patient care.</p>
+    <aside class="auth-story auth-story--login">
+        <div class="auth-story__content">
+            <span class="auth-story__eyebrow">Your clinical day, connected</span>
+            <h2>Move from schedule to patient record to analysis without breaking focus.</h2>
+            <div class="auth-story__features">
+                <div><i class="fa-regular fa-calendar-check"></i><span><strong>Appointments</strong>Visit type, doctor, date, and status</span></div>
+                <div><i class="fa-solid fa-notes-medical"></i><span><strong>Medical records</strong>Diagnosis and visit history in context</span></div>
+                <div><i class="fa-solid fa-wand-magic-sparkles"></i><span><strong>AI reports</strong>Measurements, findings, and review notes</span></div>
             </div>
         </div>
-    </div>
-</div>
+    </aside>
+</section>
 
-@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
-}
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

@@ -12,18 +12,18 @@
 }
 
 <style>
-    .analysis-shell .workstation-card { border-radius: 12px; }
-    .analysis-shell .nav-pills .nav-link { border-radius: 8px; color: #64748b; font-size: 12px; font-weight: 800; }
-    .analysis-shell .nav-pills .nav-link.active { background: #0d6efd; color: #fff; }
-    .viewer-stage { background: #101827; border-radius: 8px; min-height: 460px; position: relative; overflow: hidden; }
+    .analysis-shell .workstation-card { border-radius: 7px; }
+    .analysis-shell .nav-pills .nav-link { border-radius: 5px; color: #64748b; font-size: 12px; font-weight: 800; }
+    .analysis-shell .nav-pills .nav-link.active { background: #087f78; color: #fff; }
+    .viewer-stage { background: #152526; border-radius: 6px; min-height: 460px; position: relative; overflow: hidden; }
     #cephViewer { display: block; width: 100%; height: 460px; cursor: grab; }
     #cephViewer.dragging { cursor: grabbing; }
     .viewer-toolbar { border-bottom: 1px solid #e5e7eb; }
-    .metric-tile { background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; }
-    .landmark-row.active { background: #eff6ff; }
+    .metric-tile { background: #f7faf8; border: 1px solid #dce5e1; border-radius: 6px; padding: 12px; }
+    .landmark-row.active { background: #e8f4f0; }
     .review-gate { border-left: 4px solid #f59e0b; }
     .review-gate.reviewed { border-left-color: #16a34a; }
-    .mono-box { background: #0f172a; color: #dbeafe; border-radius: 8px; padding: 14px; font-size: 12px; white-space: pre-wrap; max-height: 360px; overflow: auto; }
+    .mono-box { background: #142728; color: #d8ebe7; border-radius: 6px; padding: 14px; font-size: 12px; white-space: pre-wrap; max-height: 360px; overflow: auto; }
 </style>
 
 <div class="analysis-shell">
@@ -427,6 +427,20 @@
     let viewerImage = new Image();
     const viewer = { scale: 1, offsetX: 0, offsetY: 0, draggingPoint: false, panning: false, lastX: 0, lastY: 0 };
 
+    function apiFetch(url, options = {}) {
+        const method = (options.method || 'GET').toUpperCase();
+        if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
+            const token = document.querySelector('meta[name="request-verification-token"]')?.content;
+            if (!token) return Promise.reject(new Error('The security token is missing. Refresh the page and try again.'));
+
+            const headers = new Headers(options.headers || {});
+            headers.set('RequestVerificationToken', token);
+            options = { ...options, headers };
+        }
+
+        return fetch(url, options);
+    }
+
     function escapeHtml(value) {
         return (value ?? '').toString().replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     }
@@ -554,7 +568,7 @@
         let stepIdx = 0;
         const timer = setInterval(() => stepIdx < steps.length && setProgress(...steps[stepIdx++]), 1500);
         try {
-            const resp = await fetch('/Doctor/UploadXray', { method: 'POST', body: form });
+            const resp = await apiFetch('/Doctor/UploadXray', { method: 'POST', body: form });
             clearInterval(timer);
             setProgress(100, 'Done!');
             if (!resp.ok) throw new Error((await resp.json().catch(() => ({}))).error || resp.statusText);
@@ -888,7 +902,7 @@
             const form = new FormData();
             form.append('xrayFile', selectedFile);
             form.append('tickIntervalMm', '10');
-            const resp = await fetch('/Doctor/AutoCalibrate', { method: 'POST', body: form });
+            const resp = await apiFetch('/Doctor/AutoCalibrate', { method: 'POST', body: form });
             if (!resp.ok) throw new Error((await resp.json().catch(() => ({}))).error || resp.statusText);
             const data = await resp.json();
             const calibration = data.calibration || data.Calibration || data;
@@ -912,7 +926,7 @@
         try {
             btn.disabled = true;
             btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Refining';
-            const resp = await fetch('/Doctor/RefineLandmarks', {
+            const resp = await apiFetch('/Doctor/RefineLandmarks', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -941,7 +955,7 @@
         showPanel('loading');
         setProgress(15, 'Submitting reviewed landmarks...');
         try {
-            const resp = await fetch('/Doctor/RecalculateAnalysis', {
+            const resp = await apiFetch('/Doctor/RecalculateAnalysis', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -1032,7 +1046,7 @@
             const payload = buildReportPayload();
             btn.disabled = true;
             btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Saving...';
-            const resp = await fetch('/Doctor/SaveAnalysisReport', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            const resp = await apiFetch('/Doctor/SaveAnalysisReport', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
             const data = await resp.json().catch(() => ({}));
             if (!resp.ok) throw new Error(data.error || 'Could not save analysis.');
             const detailsUrl = `/Doctor/AnalysisDetails/${data.analysisReportId}`;
@@ -1051,7 +1065,7 @@
             const payload = buildReportPayload();
             btn.disabled = true;
             btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Exporting...';
-            const resp = await fetch('/Doctor/ExportAnalysisPdf', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            const resp = await apiFetch('/Doctor/ExportAnalysisPdf', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
             if (!resp.ok) throw new Error((await resp.json().catch(() => ({}))).error || 'Could not export PDF.');
             const blob = await resp.blob();
             const url = URL.createObjectURL(blob);
@@ -1078,7 +1092,7 @@
         box.innerHTML = '<div class="alert alert-info border-0">Generating explanation...</div>';
         try {
             const primary = (currentAnalysis.treatments || []).find(t => t.isPrimary) || (currentAnalysis.treatments || [])[0] || {};
-            const resp = await fetch('/Doctor/ExplainDecision', {
+            const resp = await apiFetch('/Doctor/ExplainDecision', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -1118,7 +1132,7 @@
         panel.classList.remove('d-none');
         text.textContent = 'Generating patient explanation...';
         try {
-            const resp = await fetch('/Doctor/GetAiNarrative', {
+            const resp = await apiFetch('/Doctor/GetAiNarrative', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: params

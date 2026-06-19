@@ -269,7 +269,7 @@ coverage.xml
 .hypothesis/
 .pytest_cache/
 cover/
-
+.agents
 # Jupyter Notebook
 .ipynb_checkpoints
 

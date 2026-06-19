@@ -1,75 +1,52 @@
-﻿@model DentalCare.Models.Appointment
+@model DentalCare.Models.Appointment
 @{
     ViewData["Title"] = "Reschedule Appointment";
 }
 
-<div class="container py-4">
-    <div class="mb-4">
-        <a asp-controller="Staff" asp-action="Dashboard" class="btn btn-link text-primary fw-bold text-decoration-none p-0 d-flex align-items-center gap-2 small">
-            <i class="fas fa-arrow-left"></i> Back to Dashboard
-        </a>
-    </div>
+<div class="workspace-form-page">
+    <a asp-controller="Staff" asp-action="Dashboard" class="workspace-back"><i class="fas fa-arrow-left"></i> Back to reception</a>
 
-    <div class="row justify-content-center">
-        <div class="col-lg-7">
-            <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
-                <div class="bg-primary p-4 p-md-5 text-white">
-                    <h1 class="h3 fw-bold mb-2">Reschedule Appointment</h1>
-                    <p class="mb-0 fw-bold opacity-75">Managing appointment for <span class="text-white border-bottom border-white border-opacity-50">@ViewBag.PatientName</span></p>
-                </div>
-
-                <form asp-action="Edit" method="post" class="p-4 p-md-5 bg-white">
-                    <input type="hidden" asp-for="Id" />
-                    <input type="hidden" asp-for="PatientId" />
-
-                    <div class="mb-4">
-                        <label asp-for="Date" class="form-label dental-label">New Date & Time</label>
-                        <input asp-for="Date" type="datetime-local" class="dental-input border shadow-none" required />
-                        <span asp-validation-for="Date" class="text-danger small fw-bold mt-1 d-block ms-1"></span>
-                    </div>
-
-                    <div class="mb-4">
-                        <label asp-for="Type" class="form-label dental-label">Visit Category</label>
-                        <select asp-for="Type" class="form-select dental-input border shadow-none">
-                            <option value="Checkup">General Checkup</option>
-                            <option value="Cleaning">Teeth Cleaning</option>
-                            <option value="X-Ray">X-Ray Analysis</option>
-                            <option value="Extraction">Extraction</option>
-                            <option value="Root Canal">Root Canal</option>
-                        </select>
-                        <span asp-validation-for="Type" class="text-danger small fw-bold mt-1 d-block ms-1"></span>
-                    </div>
-
-                    <div class="mb-4">
-                        <label asp-for="DoctorId" class="form-label dental-label">Assigned Doctor</label>
-                        <select asp-for="DoctorId" class="form-select dental-input border shadow-none" asp-items="ViewBag.DoctorList">
-                            <option value="">-- Select Doctor --</option>
-                        </select>
-                        <span asp-validation-for="DoctorId" class="text-danger small fw-bold mt-1 d-block ms-1"></span>
-                    </div>
-
-                    <div class="mb-5">
-                        <label asp-for="Status" class="form-label dental-label">Update Status</label>
-                        <select asp-for="Status" class="form-select dental-input border shadow-none">
-                            <option value="Pending">Pending Confirmation</option>
-                            <option value="Confirmed">Confirmed</option>
-                            <option value="Completed">Completed</option>
-                            <option value="Cancelled">Cancelled</option>
-                        </select>
-                        <span asp-validation-for="Status" class="text-danger small fw-bold mt-1 d-block ms-1"></span>
-                    </div>
-
-                    <div class="d-grid shadow-sm rounded-3 overflow-hidden">
-                        <button type="submit" class="btn btn-primary fw-bold py-3 text-uppercase border-0" style="letter-spacing: 1px;">
-                            Save Changes
-                        </button>
-                    </div>
-                </form>
+    <section class="workspace-form-card glass-panel">
+        <header class="workspace-form-header">
+            <div class="dental-avatar"><i class="fas fa-calendar-day"></i></div>
+            <div>
+                <h1>Edit appointment</h1>
+                <p>Update the visit scheduled for <strong>@ViewBag.PatientName</strong>.</p>
             </div>
-        </div>
-    </div>
+        </header>
+
+        <form asp-action="Edit" method="post" class="workspace-form-body">
+            <input type="hidden" asp-for="Id" />
+            <input type="hidden" asp-for="PatientId" />
+            <div asp-validation-summary="ModelOnly" class="auth-validation mb-3" role="alert"></div>
+            <div class="workspace-form-grid">
+                <div class="workspace-field--wide">
+                    <label asp-for="Date" class="form-label dental-label">Appointment date and time</label>
+                    <input asp-for="Date" type="datetime-local" class="form-control" required />
+                    <span asp-validation-for="Date" class="field-error"></span>
+                </div>
+                <div>
+                    <label asp-for="Type" class="form-label dental-label">Visit category</label>
+                    <select asp-for="Type" class="form-select"><option value="Checkup">General checkup</option><option value="Cleaning">Teeth cleaning</option><option value="X-Ray">X-ray analysis</option><option value="Extraction">Extraction</option><option value="Root Canal">Root canal</option></select>
+                    <span asp-validation-for="Type" class="field-error"></span>
+                </div>
+                <div>
+                    <label asp-for="DoctorId" class="form-label dental-label">Assigned doctor</label>
+                    <select asp-for="DoctorId" class="form-select" asp-items="ViewBag.DoctorList"><option value="">Select doctor</option></select>
+                    <span asp-validation-for="DoctorId" class="field-error"></span>
+                </div>
+                <div>
+                    <label asp-for="Status" class="form-label dental-label">Status</label>
+                    <select asp-for="Status" class="form-select"><option value="Pending">Pending confirmation</option><option value="Confirmed">Confirmed</option><option value="Completed">Completed</option><option value="Cancelled">Cancelled</option></select>
+                    <span asp-validation-for="Status" class="field-error"></span>
+                </div>
+            </div>
+            <div class="workspace-actions">
+                <a asp-controller="Staff" asp-action="Dashboard" class="btn btn-light px-4">Cancel</a>
+                <button type="submit" class="btn btn-primary px-4"><i class="fas fa-floppy-disk"></i> Save appointment</button>
+            </div>
+        </form>
+    </section>
 </div>
 
-@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
-}
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

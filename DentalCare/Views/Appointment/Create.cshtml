@@ -3,87 +3,56 @@
     ViewData["Title"] = "New Appointment";
 }
 
-<div class="container py-5 animate-fade-in-up">
-    <div class="mb-4">
-        <a asp-controller="Patient" asp-action="Index" class="btn btn-white text-secondary border-secondary-subtle btn-sm fw-bold px-3 rounded-pill transition hover-lift d-inline-flex align-items-center gap-2">
-            <i class="fas fa-arrow-left"></i> Back to Patients
-        </a>
-    </div>
+<div class="workspace-form-page">
+    <a asp-controller="Patient" asp-action="Index" class="workspace-back"><i class="fas fa-arrow-left"></i> Back to patients</a>
 
-    <div class="row justify-content-center">
-        <div class="col-lg-8 col-xl-7">
-            <div class="glass-panel shadow-lg border-0 rounded-5 overflow-hidden">
-                <div class="bg-primary p-4 p-md-5 text-white position-relative overflow-hidden hero-gradient-bg">
-                    <!-- Decorative element -->
-                    <div class="position-absolute top-0 end-0 bg-white opacity-10" style="width: 150px; height: 150px; border-radius: 50%; transform: translate(30%, -30%); z-index: 0;"></div>
-                    
-                    <div class="position-relative z-1 d-flex align-items-center gap-4">
-                        <div class="dental-avatar bg-white bg-opacity-25 text-white rounded-3 shadow-sm" style="width: 64px; height: 64px;">
-                            <i class="far fa-calendar-check fs-3"></i>
-                        </div>
-                        <div>
-                            <h1 class="h3 fw-bold mb-1 tracking-tight">Book Appointment</h1>
-                            <p class="mb-0 fw-medium opacity-75 small text-uppercase tracking-widest">For <span class="text-white fw-bold">@ViewBag.PatientName</span></p>
-                        </div>
-                    </div>
-                </div>
-
-                <form asp-action="Create" method="post" class="p-4 p-md-5 bg-white bg-opacity-75">
-                    <input type="hidden" asp-for="PatientId" />
-
-                    <div class="form-floating mb-4">
-                        <input asp-for="Date" type="datetime-local" class="form-control rounded-4 bg-white border-0 shadow-sm px-4" required />
-                        <label asp-for="Date" class="text-secondary small px-4">Appointment Date & Time</label>
-                        <span asp-validation-for="Date" class="text-danger small fw-bold mt-1 d-block ms-1"></span>
-                    </div>
-
-                    <div class="form-floating mb-4">
-                        <select asp-for="Type" class="form-select rounded-4 bg-white border-0 shadow-sm px-4">
-                            <option value="Checkup">General Checkup</option>
-                            <option value="Cleaning">Teeth Cleaning</option>
-                            <option value="X-Ray">X-Ray Analysis</option>
-                            <option value="Extraction">Extraction</option>
-                            <option value="Root Canal">Root Canal</option>
-                        </select>
-                        <label asp-for="Type" class="text-secondary small px-4">Visit Category</label>
-                        <span asp-validation-for="Type" class="text-danger small fw-bold mt-1 d-block ms-1"></span>
-                    </div>
-
-                    @if (User.IsInRole("Staff"))
-                    {
-                        <div class="form-floating mb-4">
-                            <select asp-for="DoctorId" class="form-select rounded-4 bg-white border-0 shadow-sm px-4" asp-items="ViewBag.DoctorList">
-                                <option value="">-- Select Doctor --</option>
-                            </select>
-                            <label asp-for="DoctorId" class="text-secondary small px-4">Assign Doctor</label>
-                            <span asp-validation-for="DoctorId" class="text-danger small fw-bold mt-1 d-block ms-1"></span>
-                        </div>
-                    }
-                    else
-                    {
-                        <input type="hidden" asp-for="DoctorId" />
-                    }
-
-                    <div class="form-floating mb-5">
-                        <select asp-for="Status" class="form-select rounded-4 bg-white border-0 shadow-sm px-4">
-                            <option value="Pending">Pending Confirmation</option>
-                            <option value="Confirmed">Confirmed</option>
-                        </select>
-                        <label asp-for="Status" class="text-secondary small px-4">Initial Status</label>
-                        <span asp-validation-for="Status" class="text-danger small fw-bold mt-1 d-block ms-1"></span>
-                    </div>
-
-                    <div class="d-grid pt-2">
-                        <button type="submit" class="btn btn-primary fw-bold py-3 text-uppercase shadow-sm border-0 rounded-pill hover-lift tracking-wider">
-                            Confirm Appointment
-                        </button>
-                    </div>
-                </form>
+    <section class="workspace-form-card glass-panel">
+        <header class="workspace-form-header">
+            <div class="dental-avatar"><i class="far fa-calendar-check"></i></div>
+            <div>
+                <h1>Book appointment</h1>
+                <p>Schedule a visit for <strong>@ViewBag.PatientName</strong>.</p>
             </div>
-        </div>
-    </div>
+        </header>
+
+        <form asp-action="Create" method="post" class="workspace-form-body">
+            <input type="hidden" asp-for="PatientId" />
+            <div asp-validation-summary="ModelOnly" class="auth-validation mb-3" role="alert"></div>
+            <div class="workspace-form-grid">
+                <div class="workspace-field--wide">
+                    <label asp-for="Date" class="form-label dental-label">Appointment date and time</label>
+                    <input asp-for="Date" type="datetime-local" class="form-control" required />
+                    <span asp-validation-for="Date" class="field-error"></span>
+                </div>
+                <div>
+                    <label asp-for="Type" class="form-label dental-label">Visit category</label>
+                    <select asp-for="Type" class="form-select"><option value="Checkup">General checkup</option><option value="Cleaning">Teeth cleaning</option><option value="X-Ray">X-ray analysis</option><option value="Extraction">Extraction</option><option value="Root Canal">Root canal</option></select>
+                    <span asp-validation-for="Type" class="field-error"></span>
+                </div>
+                @if (User.IsInRole("Staff"))
+                {
+                    <div>
+                        <label asp-for="DoctorId" class="form-label dental-label">Assigned doctor</label>
+                        <select asp-for="DoctorId" class="form-select" asp-items="ViewBag.DoctorList"><option value="">Select doctor</option></select>
+                        <span asp-validation-for="DoctorId" class="field-error"></span>
+                    </div>
+                }
+                else
+                {
+                    <input type="hidden" asp-for="DoctorId" />
+                }
+                <div>
+                    <label asp-for="Status" class="form-label dental-label">Initial status</label>
+                    <select asp-for="Status" class="form-select"><option value="Pending">Pending confirmation</option><option value="Confirmed">Confirmed</option></select>
+                    <span asp-validation-for="Status" class="field-error"></span>
+                </div>
+            </div>
+            <div class="workspace-actions">
+                <a asp-controller="Patient" asp-action="Details" asp-route-id="@Model.PatientId" class="btn btn-light px-4">Cancel</a>
+                <button type="submit" class="btn btn-primary px-4"><i class="fas fa-calendar-plus"></i> Confirm appointment</button>
+            </div>
+        </form>
+    </section>
 </div>
 
-@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
-}
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

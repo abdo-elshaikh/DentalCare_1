@@ -3,72 +3,54 @@
     ViewData["Title"] = "Edit Patient Profile";
 }
 
-<div class="container py-5 animate-fade-in-up">
-    <div class="row justify-content-center">
-        <div class="col-lg-8 col-xl-7">
-            <div class="glass-panel border-0 shadow-lg p-4 p-md-5 rounded-5 position-relative overflow-hidden">
-                <!-- Decorative background element -->
-                <div class="position-absolute top-0 end-0 bg-dark opacity-10" style="width: 200px; height: 200px; border-radius: 50%; filter: blur(50px); transform: translate(30%, -30%); z-index: 0;"></div>
-                
-                <div class="position-relative z-1">
-                    <div class="mb-4">
-                        <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-white text-secondary border-secondary-subtle btn-sm fw-bold px-3 rounded-pill transition hover-lift">
-                            <i class="fas fa-arrow-left me-1"></i> Back to Profile
-                        </a>
-                    </div>
+<div class="workspace-form-page">
+    <a asp-action="Details" asp-route-id="@Model.Id" class="workspace-back"><i class="fas fa-arrow-left"></i> Back to patient profile</a>
 
-                    <div class="text-center mb-5">
-                        <div class="dental-avatar bg-dark text-white mx-auto mb-3 shadow-sm" style="width: 64px; height: 64px; border-radius: 1.25rem;">
-                            <i class="fas fa-user-edit fs-4"></i>
-                        </div>
-                        <h1 class="h3 fw-bold mb-2 text-dark tracking-tight">Edit Patient Information</h1>
-                        <p class="text-secondary small">Update the details for patient #@Model.Id</p>
-                    </div>
+    <section class="workspace-form-card glass-panel">
+        <header class="workspace-form-header">
+            <div class="dental-avatar"><i class="fas fa-user-pen"></i></div>
+            <div>
+                <h1>Edit patient</h1>
+                <p>Update contact and demographic details for patient #@Model.Id.</p>
+            </div>
+        </header>
 
-                    <form asp-action="Edit" method="post" class="needs-validation">
-                        <input type="hidden" asp-for="Id" />
-
-                        <div class="form-floating mb-4">
-                            <input asp-for="Name" class="form-control rounded-4 bg-white border-0 shadow-sm px-4" placeholder="Enter patient's full name" required />
-                            <label asp-for="Name" class="text-secondary small px-4">Full Name</label>
-                        </div>
-
-                        <div class="row g-4 mb-4">
-                            <div class="col-md-6">
-                                <div class="form-floating">
-                                    <input asp-for="Age" type="number" class="form-control rounded-4 bg-white border-0 shadow-sm px-4" placeholder="Age" required />
-                                    <label asp-for="Age" class="text-secondary small px-4">Age</label>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-floating">
-                                    <select asp-for="Gender" class="form-select rounded-4 bg-white border-0 shadow-sm px-4">
-                                        <option value="Male">Male</option>
-                                        <option value="Female">Female</option>
-                                    </select>
-                                    <label asp-for="Gender" class="text-secondary small px-4">Gender</label>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="form-floating mb-4">
-                            <input asp-for="Phone" class="form-control rounded-4 bg-white border-0 shadow-sm px-4" placeholder="+1 (555) 000-0000" required />
-                            <label asp-for="Phone" class="text-secondary small px-4">Phone Number</label>
-                        </div>
-
-                        <div class="form-floating mb-5">
-                            <input asp-for="Email" type="email" class="form-control rounded-4 bg-white border-0 shadow-sm px-4" placeholder="email@example.com" />
-                            <label asp-for="Email" class="text-secondary small px-4">Email Address</label>
-                        </div>
-
-                        <div class="d-grid pt-2">
-                            <button type="submit" class="btn btn-dark fw-bold py-3 text-uppercase shadow-sm border-0 rounded-pill hover-lift tracking-wider">
-                                Save Changes
-                            </button>
-                        </div>
-                    </form>
+        <form asp-action="Edit" method="post" class="workspace-form-body">
+            <input type="hidden" asp-for="Id" />
+            <div asp-validation-summary="ModelOnly" class="auth-validation mb-3" role="alert"></div>
+            <div class="workspace-form-grid">
+                <div class="workspace-field--wide">
+                    <label asp-for="Name" class="form-label dental-label">Full name</label>
+                    <input asp-for="Name" class="form-control" autocomplete="name" required />
+                    <span asp-validation-for="Name" class="field-error"></span>
+                </div>
+                <div>
+                    <label asp-for="Age" class="form-label dental-label">Age</label>
+                    <input asp-for="Age" type="number" class="form-control" min="1" max="120" required />
+                    <span asp-validation-for="Age" class="field-error"></span>
+                </div>
+                <div>
+                    <label asp-for="Gender" class="form-label dental-label">Gender</label>
+                    <select asp-for="Gender" class="form-select"><option value="Male">Male</option><option value="Female">Female</option></select>
+                    <span asp-validation-for="Gender" class="field-error"></span>
+                </div>
+                <div>
+                    <label asp-for="Phone" class="form-label dental-label">Phone number</label>
+                    <input asp-for="Phone" class="form-control" autocomplete="tel" required />
+                    <span asp-validation-for="Phone" class="field-error"></span>
+                </div>
+                <div>
+                    <label asp-for="Email" class="form-label dental-label">Email address <span class="fw-normal text-secondary">(optional)</span></label>
+                    <input asp-for="Email" type="email" class="form-control" autocomplete="email" />
+                    <span asp-validation-for="Email" class="field-error"></span>
                 </div>
             </div>
-        </div>
-    </div>
+            <div class="workspace-actions">
+                <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-light px-4">Cancel</a>
+                <button type="submit" class="btn btn-primary px-4"><i class="fas fa-floppy-disk"></i> Save changes</button>
+            </div>
+        </form>
+    </section>
 </div>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

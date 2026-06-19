@@ -624,6 +624,64 @@ namespace DentalCare.Controllers
             return File(pdf, "application/pdf", $"{safePatientName}_AI_Cephalometric_Report.pdf");
         }
 
+        /// <summary>
+        /// Download an existing AI cephalometric report as a PDF.
+        /// </summary>
+        [HttpGet]
+        [Authorize(Roles = "Doctor")]
+        public async Task<IActionResult> DownloadAnalysisPdf(int id)
+        {
+            var report = await _aiAnalysisReportRepository.GetByIdAsync(id);
+            if (report == null)
+                return NotFound();
+
+            var patient = await _patientRepository.GetByIdAsync(report.PatientId);
+            if (patient == null)
+                return NotFound();
+
+            var request = new AiAnalysisReportRequest
+            {
+                PatientId = report.PatientId,
+                SkeletalClass = report.SkeletalClass ?? "",
+                VerticalPattern = report.VerticalPattern ?? "",
+                Summary = report.Summary ?? "",
+                ProtocolId = report.ProtocolId ?? "core_lateral",
+                ProtocolName = report.ProtocolName ?? "Core Lateral Screening",
+                ConfidenceScore = report.ConfidenceScore,
+                Landmarks = SafeDeserialize(report.LandmarksJson, new List<AiLandmarkReportItem>()),
+                ClinicalNotes = SafeDeserialize(report.ClinicalNotesJson, new List<string>()),
+                SkeletalDifferential = SafeDeserialize(report.SkeletalDifferentialJson, new Dictionary<string, float>()),
+                Warnings = SafeDeserialize(report.WarningsJson, new List<string>()),
+                Measurements = SafeDeserialize(report.MeasurementsJson, new Dictionary<string, float>()),
+                MeasurementRows = SafeDeserialize(report.MeasurementRowsJson, new List<AiMeasurementReportItem>()),
+                Treatments = SafeDeserialize(report.TreatmentsJson, new List<AiTreatmentReportItem>()),
+                IsDoctorReviewed = true,
+                ReviewNotes = report.ReviewNotes ?? "",
+                OverlayImageBase64 = report.OverlayImage != null ? Convert.ToBase64String(report.OverlayImage) : null
+            };
+
+            var doctorName = await GetDoctorDisplayNameAsync(report.DoctorId);
+            var pdf = AiAnalysisPdfBuilder.Build(patient, request, doctorName, report.CreatedAt);
+            var safePatientName = new string(patient.Name.Where(c => char.IsLetterOrDigit(c) || c == '-' || c == '_').ToArray());
+            if (string.IsNullOrWhiteSpace(safePatientName))
+                safePatientName = $"Patient{patient.Id}";
+
+            return File(pdf, "application/pdf", $"{safePatientName}_AI_Cephalometric_Report.pdf");
+        }
+
+        private static T SafeDeserialize<T>(string? json, T fallback)
+        {
+            if (string.IsNullOrWhiteSpace(json)) return fallback;
+            try
+            {
+                return JsonSerializer.Deserialize<T>(json, ReportJsonOptions) ?? fallback;
+            }
+            catch
+            {
+                return fallback;
+            }
+        }
+
         private static string BuildAnalysisDiagnosis(AiAnalysisReportRequest request)
         {
             var skeletalClass = string.IsNullOrWhiteSpace(request.SkeletalClass) ? "Unclassified" : request.SkeletalClass;

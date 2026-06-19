@@ -17,10 +17,14 @@ namespace DentalCare.Controllers
 
         public async Task<IActionResult> Index()
         {
+            var today = DateTime.Today;
+            var tomorrow = today.AddDays(1);
             var model = new HomeIndexViewModel
             {
                 TotalPatients = await _context.Patients.CountAsync(),
-                TotalAppointments = await _context.Appointments.CountAsync(),
+                AppointmentsToday = await _context.Appointments.CountAsync(appointment =>
+                    appointment.Date >= today && appointment.Date < tomorrow),
+                TotalMedicalRecords = await _context.MedicalRecords.CountAsync(),
                 TotalAiAnalyses = await _context.AiAnalysisReports.CountAsync()
             };
 

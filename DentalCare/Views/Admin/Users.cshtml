@@ -1,132 +1,82 @@
 @model DentalCare.ViewModels.AdminUsersViewModel
 @{
-    ViewData["Title"] = "Manage Users";
+    ViewData["Title"] = "Team Management";
 }
 
-<div class="d-flex align-items-center justify-content-between gap-3 flex-wrap mb-4 animate-fade-in-up">
-    <div>
-        <h1 class="h3 fw-bold text-dark mb-1 tracking-tight">Manage Users</h1>
-        <p class="text-secondary small mb-0">Create clinic users and control their access roles.</p>
-    </div>
-    <span class="badge bg-primary-subtle text-primary rounded-pill px-4 py-2 fw-bold shadow-sm">
-        <i class="fas fa-users me-2"></i> @Model.Users.Count Active Users
-    </span>
-</div>
-
-@if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
-{
-    <div class="alert alert-info border-0 rounded-4 shadow-sm small fw-medium animate-fade-in-up delay-100">
-        <i class="fas fa-info-circle me-2"></i> @Model.StatusMessage
-    </div>
-}
-
-<div asp-validation-summary="All" class="text-danger small mb-3 fw-bold animate-fade-in-up"></div>
-
-<div class="row g-4">
-    <div class="col-lg-4 animate-fade-in-up delay-100">
-        <div class="glass-panel border-0 rounded-4 p-4 h-100 hover-lift">
-            <div class="d-flex align-items-center gap-3 mb-4">
-                <div class="dental-avatar bg-primary text-white rounded-3 shadow-sm">
-                    <i class="fas fa-user-plus fs-5"></i>
-                </div>
-                <h2 class="h5 fw-bold text-dark mb-0">New User</h2>
-            </div>
-            
-            <form asp-action="CreateUser" method="post" class="d-flex flex-column gap-3">
-                <div class="form-floating">
-                    <input asp-for="NewUser.Email" class="form-control rounded-3 bg-white border-0 shadow-sm px-4" autocomplete="email" placeholder="Email" />
-                    <label asp-for="NewUser.Email" class="text-secondary small px-4">Email Address</label>
-                    <span asp-validation-for="NewUser.Email" class="text-danger small fw-bold px-2 mt-1 d-block"></span>
-                </div>
-                <div class="form-floating">
-                    <input asp-for="NewUser.Password" class="form-control rounded-3 bg-white border-0 shadow-sm px-4" autocomplete="new-password" placeholder="Password" />
-                    <label asp-for="NewUser.Password" class="text-secondary small px-4">Password</label>
-                    <span asp-validation-for="NewUser.Password" class="text-danger small fw-bold px-2 mt-1 d-block"></span>
-                </div>
-                <div class="form-floating">
-                    <select asp-for="NewUser.Role" class="form-select rounded-3 bg-white border-0 shadow-sm px-4">
-                        @foreach (var role in Model.Roles)
-                        {
-                            <option value="@role">@role</option>
-                        }
-                    </select>
-                    <label asp-for="NewUser.Role" class="text-secondary small px-4">Role</label>
-                    <span asp-validation-for="NewUser.Role" class="text-danger small fw-bold px-2 mt-1 d-block"></span>
-                </div>
-                <button type="submit" class="btn btn-primary fw-bold py-3 rounded-pill mt-2 shadow-sm hover-lift text-uppercase tracking-wider">
-                    Create User
-                </button>
-            </form>
+<div class="d-flex flex-column gap-4">
+    <header class="d-flex flex-column flex-md-row align-items-md-end justify-content-between gap-3">
+        <div>
+            <div class="section-kicker"><i class="fas fa-user-shield"></i> Administration</div>
+            <h1 class="mb-2 mt-2">Clinic team</h1>
+            <p class="text-secondary small mb-0">Create user accounts and control role-based access.</p>
         </div>
-    </div>
+        <span class="badge bg-primary-subtle"><i class="fas fa-users me-1"></i> @Model.Users.Count active users</span>
+    </header>
 
-    <div class="col-lg-8 animate-fade-in-up delay-200">
-        <div class="glass-panel border-0 rounded-4 p-0 overflow-hidden h-100 shadow-sm">
-            <div class="p-4 border-bottom bg-white bg-opacity-75 d-flex justify-content-between align-items-center">
-                <h2 class="h6 fw-bold text-dark mb-0 text-uppercase tracking-widest">Clinic Users</h2>
-            </div>
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0 border-white border-opacity-25">
-                    <thead class="bg-light bg-opacity-50 text-uppercase tracking-widest text-secondary" style="font-size: 10px; font-weight: 800;">
-                        <tr>
-                            <th class="px-4 py-3 border-0">User Details</th>
-                            <th class="px-4 py-3 border-0">Current Role</th>
-                            <th class="px-4 py-3 border-0">Update Role</th>
-                            <th class="px-4 py-3 text-end border-0">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody class="border-top-0">
-                        @foreach (var user in Model.Users)
+    @if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
+    {
+        <div class="alert alert-info mb-0" role="status"><i class="fas fa-circle-info me-2"></i>@Model.StatusMessage</div>
+    }
+    <div asp-validation-summary="ModelOnly" class="auth-validation" role="alert"></div>
+
+    <div class="row g-4 align-items-start">
+        <div class="col-lg-4">
+            <section class="glass-panel p-4">
+                <div class="d-flex align-items-center gap-3 mb-4">
+                    <div class="dental-avatar bg-primary-subtle"><i class="fas fa-user-plus"></i></div>
+                    <div><h2 class="h5 mb-1 fw-bold">Add team member</h2><p class="small text-secondary mb-0">Create credentials and assign access.</p></div>
+                </div>
+                <form asp-action="CreateUser" method="post" class="d-grid gap-3">
+                    <div>
+                        <label asp-for="NewUser.Email" class="form-label dental-label">Email address</label>
+                        <input asp-for="NewUser.Email" class="form-control" autocomplete="email" placeholder="name@clinic.com" />
+                        <span asp-validation-for="NewUser.Email" class="field-error"></span>
+                    </div>
+                    <div>
+                        <label asp-for="NewUser.Password" class="form-label dental-label">Temporary password</label>
+                        <div class="field-control"><i class="fas fa-key"></i><input asp-for="NewUser.Password" class="form-control" autocomplete="new-password" placeholder="At least 8 characters" /><button type="button" class="password-toggle" aria-label="Show password" title="Show password"><i class="far fa-eye"></i></button></div>
+                        <span asp-validation-for="NewUser.Password" class="field-error"></span>
+                    </div>
+                    <div>
+                        <label asp-for="NewUser.Role" class="form-label dental-label">Clinic role</label>
+                        <select asp-for="NewUser.Role" class="form-select">@foreach (var role in Model.Roles) { <option value="@role">@role</option> }</select>
+                        <span asp-validation-for="NewUser.Role" class="field-error"></span>
+                    </div>
+                    <button type="submit" class="btn btn-primary mt-2"><i class="fas fa-plus"></i> Create user</button>
+                </form>
+            </section>
+        </div>
+
+        <div class="col-lg-8">
+            <section class="glass-panel overflow-hidden">
+                <div class="p-4 border-bottom"><h2 class="h5 fw-bold mb-1">Current users</h2><p class="small text-secondary mb-0">Roles take effect on the user's next request.</p></div>
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <thead><tr><th class="px-4">User</th><th>Role</th><th>Change role</th><th class="text-end px-4">Remove</th></tr></thead>
+                        <tbody>
+                        @if (!Model.Users.Any())
                         {
-                            var currentRole = user.Roles.FirstOrDefault() ?? "No role";
-                            <tr class="transition" style="background-color: transparent;">
-                                <td class="px-4 py-3 border-bottom border-light">
-                                    <div class="d-flex align-items-center gap-3">
-                                        <div class="dental-avatar bg-secondary bg-opacity-10 text-secondary rounded-circle" style="width: 36px; height: 36px; font-size: 12px;">
-                                            @user.Email?.FirstOrDefault().ToString().ToUpper()
-                                        </div>
-                                        <div>
-                                            <p class="small fw-bold text-dark mb-0">@user.Email</p>
-                                            <p class="dental-caption text-muted mb-0" style="font-size:10px;">ID: @user.Id.Substring(0, 8)...</p>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="px-4 py-3 border-bottom border-light">
-                                    <span class="badge @(currentRole == "Admin" ? "bg-danger-subtle text-danger" : currentRole == "Doctor" ? "bg-success-subtle text-success" : "bg-primary-subtle text-primary") rounded-pill px-3 py-1 fw-bold">
-                                        @currentRole
-                                    </span>
-                                </td>
-                                <td class="px-4 py-3 border-bottom border-light">
-                                    <form asp-action="UpdateRole" method="post" class="d-flex align-items-center gap-2">
-                                        <input type="hidden" name="userId" value="@user.Id" />
-                                        <select name="role" class="form-select form-select-sm rounded-pill bg-white shadow-none border-secondary-subtle" style="min-width:110px; font-size: 12px; font-weight: 600;">
-                                            @foreach (var role in Model.Roles)
-                                            {
-                                                <option value="@role" selected="@(user.Roles.Contains(role) ? "selected" : null)">@role</option>
-                                            }
-                                        </select>
-                                        <button type="submit" class="btn btn-light border btn-sm fw-bold rounded-pill px-3 text-primary transition hover-lift" style="font-size: 12px;">
-                                            Save
-                                        </button>
-                                    </form>
-                                </td>
-                                <td class="px-4 py-3 text-end border-bottom border-light">
-                                    <form asp-action="DeleteUser" method="post" onsubmit="return confirm('Are you sure you want to completely remove this user?');">
-                                        <input type="hidden" name="userId" value="@user.Id" />
-                                        <button type="submit" class="btn btn-white text-danger border-danger-subtle btn-sm fw-bold rounded-pill px-3 transition hover-lift" title="Delete User">
-                                            <i class="fas fa-trash-alt"></i>
-                                        </button>
-                                    </form>
-                                </td>
-                            </tr>
+                            <tr><td colspan="4" class="text-center text-secondary py-5">No clinic users found.</td></tr>
                         }
-                    </tbody>
-                </table>
-            </div>
+                        else
+                        {
+                            @foreach (var user in Model.Users)
+                            {
+                                var currentRole = user.Roles.FirstOrDefault() ?? "No role";
+                                <tr>
+                                    <td class="px-4 py-3"><div class="d-flex align-items-center gap-3"><div class="dental-avatar bg-secondary-subtle">@(string.IsNullOrEmpty(user.Email) ? "?" : user.Email[..1].ToUpperInvariant())</div><div><div class="small fw-bold text-dark">@user.Email</div><div class="dental-caption">ID @user.Id[..Math.Min(8, user.Id.Length)]</div></div></div></td>
+                                    <td><span class="badge @(currentRole == "Admin" ? "bg-danger-subtle" : currentRole == "Doctor" ? "bg-success-subtle" : "bg-primary-subtle")">@currentRole</span></td>
+                                    <td><form asp-action="UpdateRole" method="post" class="d-flex align-items-center gap-2"><input type="hidden" name="userId" value="@user.Id" /><select name="role" class="form-select form-select-sm" style="min-width:110px">@foreach (var role in Model.Roles) { <option value="@role" selected="@(user.Roles.Contains(role) ? "selected" : null)">@role</option> }</select><button type="submit" class="btn btn-light btn-sm">Save</button></form></td>
+                                    <td class="text-end px-4"><form asp-action="DeleteUser" method="post" onsubmit="return confirm('Remove this user from DentalCare?');"><input type="hidden" name="userId" value="@user.Id" /><button type="submit" class="icon-button text-danger" title="Delete user" aria-label="Delete @user.Email"><i class="fas fa-trash-alt"></i></button></form></td>
+                                </tr>
+                            }
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            </section>
         </div>
     </div>
 </div>
 
-@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
-}
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

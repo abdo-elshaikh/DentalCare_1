@@ -1,252 +1,143 @@
 @model DentalCare.ViewModels.HomeIndexViewModel
 @{
-    ViewData["Title"] = "DentalCare — Digital Practice Management";
+    ViewData["Title"] = "Clinical practice, connected";
+    ViewData["BodyClass"] = "landing-page";
 }
 
-<style>
-    :root {
-        --primary-gradient: linear-gradient(135deg, #0d6efd 0%, #0dcaf0 100%);
-        --glass-bg: rgba(255, 255, 255, 0.85);
-        --glass-border: rgba(255, 255, 255, 0.4);
-        --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
-    }
-    
-    .hero-section {
-        background: radial-gradient(circle at top right, rgba(13, 110, 253, 0.1) 0%, rgba(255,255,255,0) 50%),
-                    radial-gradient(circle at bottom left, rgba(13, 202, 240, 0.1) 0%, rgba(255,255,255,0) 50%);
-        padding: 6rem 0;
-        position: relative;
-        overflow: hidden;
-    }
-
-    .display-font {
-        font-family: 'DM Serif Display', serif;
-    }
-
-    .hero-title {
-        font-size: clamp(2.5rem, 5vw, 4rem);
-        line-height: 1.1;
-        letter-spacing: -0.02em;
-        color: #1a1d20;
-    }
-
-    .hero-title em {
-        background: var(--primary-gradient);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        font-style: normal;
-    }
-
-    .glass-card {
-        background: var(--glass-bg);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        border: 1px solid var(--glass-border);
-        box-shadow: var(--glass-shadow);
-        border-radius: 1.5rem;
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-    
-    .glass-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.12);
-    }
-
-    .stat-number {
-        font-size: clamp(2.5rem, 4vw, 3.5rem);
-        font-weight: 800;
-        background: var(--primary-gradient);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        line-height: 1;
-    }
-
-    .badge-soft {
-        background-color: rgba(13, 110, 253, 0.1);
-        color: #0d6efd;
-        font-weight: 600;
-        padding: 0.5rem 1rem;
-        border-radius: 50rem;
-    }
-
-    .feature-icon-wrapper {
-        width: 70px;
-        height: 70px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 1.2rem;
-        font-size: 2rem;
-        margin-bottom: 1.5rem;
-        transition: transform 0.3s ease;
-    }
-    
-    .feature-card:hover .feature-icon-wrapper {
-        transform: scale(1.1);
-    }
-
-    .bg-soft-primary { background: rgba(13, 110, 253, 0.1); color: #0d6efd; }
-    .bg-soft-success { background: rgba(25, 135, 84, 0.1); color: #198754; }
-    .bg-soft-purple { background: rgba(111, 66, 193, 0.1); color: #6f42c1; }
-
-    .btn-gradient {
-        background: var(--primary-gradient);
-        color: white;
-        border: none;
-        transition: opacity 0.3s ease, transform 0.2s ease;
-    }
-    
-    .btn-gradient:hover {
-        opacity: 0.9;
-        color: white;
-        transform: translateY(-2px);
-    }
-    
-    .btn-outline-custom {
-        border: 2px solid #dee2e6;
-        color: #495057;
-        transition: all 0.3s ease;
-    }
-    
-    .btn-outline-custom:hover {
-        border-color: #0d6efd;
-        color: #0d6efd;
-        background: rgba(13, 110, 253, 0.05);
-        transform: translateY(-2px);
-    }
-</style>
-
-<div class="hero-section">
-    <div class="container">
-        <div class="row align-items-center gy-5">
-            <div class="col-lg-6 text-center text-lg-start">
-                <div class="d-inline-flex align-items-center badge-soft mb-4">
-                    <span class="spinner-grow spinner-grow-sm me-2 text-primary" role="status" aria-hidden="true"></span>
-                    AI-Powered Ceph Analysis is live
-                </div>
-                
-                <h1 class="hero-title mb-4 display-font">
-                    The modern OS<br>for your <em>dental practice</em>
-                </h1>
-                
-                <p class="lead text-muted mb-5 pe-lg-5" style="font-size: 1.25rem;">
-                    Unified scheduling, patient records, and AI diagnostics — built for clinics that want to move faster without sacrificing clinical accuracy.
-                </p>
-                
-                <div class="d-flex flex-column flex-sm-row gap-3 justify-content-center justify-content-lg-start">
-                    <a asp-controller="Account" asp-action="Register" class="btn btn-gradient btn-lg px-5 rounded-pill shadow-sm fw-bold">
-                        Start Free Trial
+<section class="home-hero">
+    <div class="container home-hero__inner">
+        <div class="home-hero__copy">
+            <div class="section-kicker"><i class="fa-solid fa-wave-square"></i> Clinical operations + cephalometric AI</div>
+            <h1>One workspace for every patient decision.</h1>
+            <p>DentalCare connects appointments, medical records, patient profiles, and AI-assisted cephalometric analysis in a focused clinical workflow.</p>
+            <div class="home-hero__actions">
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <a asp-controller="Admin" asp-action="Users" class="btn btn-brand btn-lg">Manage clinic team <i class="fa-solid fa-arrow-right"></i></a>
+                    }
+                    else if (User.IsInRole("Doctor"))
+                    {
+                        <a asp-controller="Doctor" asp-action="Dashboard" class="btn btn-brand btn-lg">Open doctor workspace <i class="fa-solid fa-arrow-right"></i></a>
+                    }
+                    else
+                    {
+                        <a asp-controller="Staff" asp-action="Dashboard" class="btn btn-brand btn-lg">Open reception workspace <i class="fa-solid fa-arrow-right"></i></a>
+                    }
+                }
+                else
+                {
+                    <a asp-controller="Account" asp-action="Register" class="btn btn-brand btn-lg">
+                        Create clinic account <i class="fa-solid fa-arrow-right"></i>
                     </a>
-                    <a href="#features" class="btn btn-outline-custom btn-lg px-5 rounded-pill fw-bold">
-                        Explore Features
-                    </a>
-                </div>
+                    <a asp-controller="Account" asp-action="Login" class="btn btn-quiet btn-lg">Sign in</a>
+                }
             </div>
+            <div class="home-hero__assurance" aria-label="Platform capabilities">
+                <span><i class="fa-solid fa-check"></i> Role-based access</span>
+                <span><i class="fa-solid fa-check"></i> Unified clinical history</span>
+                <span><i class="fa-solid fa-check"></i> AI report archive</span>
+            </div>
+        </div>
 
-            <!-- Actual Data Statistics Dashboard -->
-            <div class="col-lg-6">
-                <div class="row g-4">
-                    <div class="col-sm-6">
-                        <div class="glass-card p-4 h-100 d-flex flex-column justify-content-center text-center">
-                            <i class="fas fa-users fs-2 text-primary mb-3 opacity-75"></i>
-                            <div class="stat-number mb-2">@(Model?.TotalPatients ?? 0)</div>
-                            <div class="text-muted fw-bold text-uppercase tracking-wider small">Registered Patients</div>
-                        </div>
-                    </div>
-                    <div class="col-sm-6">
-                        <div class="glass-card p-4 h-100 d-flex flex-column justify-content-center text-center">
-                            <i class="fas fa-calendar-check fs-2 text-success mb-3 opacity-75"></i>
-                            <div class="stat-number mb-2">@(Model?.TotalAppointments ?? 0)</div>
-                            <div class="text-muted fw-bold text-uppercase tracking-wider small">Appointments Booked</div>
-                        </div>
-                    </div>
-                    <div class="col-sm-12">
-                        <div class="glass-card p-4 d-flex flex-column flex-sm-row align-items-center justify-content-between text-center text-sm-start gap-3">
-                            <div>
-                                <div class="d-flex align-items-center justify-content-center justify-content-sm-start mb-2">
-                                    <i class="fas fa-robot text-info me-2 fs-4"></i>
-                                    <div class="text-muted fw-bold text-uppercase tracking-wider small">AI Analyses Run</div>
-                                </div>
-                                <div class="stat-number">@(Model?.TotalAiAnalyses ?? 0)</div>
-                            </div>
-                            <div>
-                                <div class="badge bg-soft-primary text-primary fw-bold rounded-pill px-4 py-2 fs-6">
-                                    <i class="fas fa-arrow-trend-up me-2"></i> Growing
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+        <div class="clinical-visual">
+            <img src="~/images/ceph-analysis-workspace.png" alt="Cephalometric radiograph with landmark tracing on a clinical workstation" />
+            <div class="clinical-visual__status">
+                <span class="status-dot"></span>
+                <div><strong>Ceph analysis</strong><small>Integrated into the patient record</small></div>
+                <i class="fa-solid fa-shield-halved"></i>
             </div>
         </div>
     </div>
-</div>
+</section>
 
-<div class="container pb-5">
-    <!-- Platform Impact / Features -->
-    <section id="features" class="py-5 mt-5">
-        <div class="text-center mb-5">
-            <span class="text-primary fw-bold tracking-widest text-uppercase small d-block mb-2">Platform Capabilities</span>
-            <h2 class="display-font display-5 mb-3 text-dark">Everything your clinic needs,<br>nothing it doesn't</h2>
-            <p class="lead text-muted mx-auto" style="max-width: 600px;">
-                Designed for dental and orthodontic practices that want clinical-grade tools without the complexity of legacy systems.
-            </p>
+<section class="live-metrics" aria-labelledby="activity-title">
+    <div class="container">
+        <div class="live-metrics__heading">
+            <div><span class="section-kicker">Live clinic activity</span><h2 id="activity-title">The system, at a glance.</h2></div>
+            <p>Current totals are read directly from this DentalCare installation.</p>
         </div>
-
-        <div class="row g-4">
-            <div class="col-md-4">
-                <div class="card feature-card h-100 border-0 bg-transparent shadow-none">
-                    <div class="card-body p-4 text-center">
-                        <div class="feature-icon-wrapper bg-soft-primary mx-auto">
-                            <i class="fas fa-calendar-alt"></i>
-                        </div>
-                        <h3 class="h4 fw-bold mb-3 display-font">Smart Scheduling</h3>
-                        <p class="text-muted" style="line-height: 1.7;">Conflict-free online bookings with real-time availability, automated reminders, and chair-time optimization.</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-4">
-                <div class="card feature-card h-100 border-0 bg-transparent shadow-none">
-                    <div class="card-body p-4 text-center">
-                        <div class="feature-icon-wrapper bg-soft-success mx-auto">
-                            <i class="fas fa-shield-alt"></i>
-                        </div>
-                        <h3 class="h4 fw-bold mb-3 display-font">Secure Records</h3>
-                        <p class="text-muted" style="line-height: 1.7;">Compliant digital storage for histories, X-rays, and treatment plans — accessible only to authorized staff.</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-4">
-                <div class="card feature-card h-100 border-0 bg-transparent shadow-none">
-                    <div class="card-body p-4 text-center">
-                        <div class="feature-icon-wrapper bg-soft-purple mx-auto">
-                            <i class="fas fa-brain"></i>
-                        </div>
-                        <h3 class="h4 fw-bold mb-3 display-font">AI Ceph Analysis</h3>
-                        <p class="text-muted" style="line-height: 1.7;">Machine-learning models detect skeletal patterns in cephalometric radiographs before they progress clinically.</p>
-                    </div>
-                </div>
-            </div>
+        <div class="metrics-grid metrics-grid--four">
+            <article class="metric-item">
+                <div class="metric-icon metric-icon--teal"><i class="fa-solid fa-user-group"></i></div>
+                <div><strong>@Model.TotalPatients.ToString("N0")</strong><span>Patient profiles</span></div>
+            </article>
+            <article class="metric-item">
+                <div class="metric-icon metric-icon--blue"><i class="fa-regular fa-calendar-check"></i></div>
+                <div><strong>@Model.AppointmentsToday.ToString("N0")</strong><span>Appointments today</span></div>
+            </article>
+            <article class="metric-item">
+                <div class="metric-icon metric-icon--violet"><i class="fa-solid fa-file-waveform"></i></div>
+                <div><strong>@Model.TotalMedicalRecords.ToString("N0")</strong><span>Medical records</span></div>
+            </article>
+            <article class="metric-item">
+                <div class="metric-icon metric-icon--coral"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+                <div><strong>@Model.TotalAiAnalyses.ToString("N0")</strong><span>AI analysis reports</span></div>
+            </article>
         </div>
-    </section>
+    </div>
+</section>
 
-    <!-- Call To Action -->
-    <section class="py-5 my-5">
-        <div class="glass-card p-5 text-center position-relative overflow-hidden shadow-lg border-0" style="background: var(--primary-gradient);">
-            <div class="position-relative z-1 py-4">
-                <h2 class="display-font display-4 text-white mb-4">Ready to modernize your practice?</h2>
-                <p class="lead text-white mb-5 mx-auto opacity-75" style="max-width: 600px;">
-                    Join dental professionals across Egypt who trust DentalCare for daily management and AI-assisted diagnostics.
-                </p>
-                <a asp-controller="Account" asp-action="Register" class="btn btn-light btn-lg px-5 py-3 rounded-pill shadow fw-bold text-primary transition" style="transform: translateY(0);" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
-                    Create Free Account
-                </a>
-            </div>
-            <!-- Decorative elements -->
-            <div class="position-absolute top-0 start-0 translate-middle rounded-circle bg-white opacity-10" style="width: 400px; height: 400px;"></div>
-            <div class="position-absolute bottom-0 end-0 translate-middle rounded-circle bg-white opacity-10" style="width: 300px; height: 300px; margin-bottom: -150px; margin-right: -150px;"></div>
+<section class="workflow-section" id="capabilities">
+    <div class="container">
+        <div class="workflow-intro">
+            <span class="section-kicker">Built around the visit</span>
+            <h2>From reception to clinical review, without losing context.</h2>
+            <p>Each part of the project supports a real step in the clinic’s day, with access shaped around Admin, Doctor, and Staff roles.</p>
         </div>
-    </section>
-</div>
+        <div class="workflow-grid">
+            <article class="workflow-item">
+                <span>01</span><i class="fa-regular fa-calendar"></i>
+                <h3>Coordinate appointments</h3>
+                <p>Create, update, and track visits with patient, doctor, visit type, date, and status in one schedule.</p>
+            </article>
+            <article class="workflow-item">
+                <span>02</span><i class="fa-solid fa-notes-medical"></i>
+                <h3>Build a clinical history</h3>
+                <p>Keep diagnoses, visit notes, treatment context, and medical records connected to each patient profile.</p>
+            </article>
+            <article class="workflow-item">
+                <span>03</span><i class="fa-solid fa-head-side-virus"></i>
+                <h3>Review ceph intelligence</h3>
+                <p>Store landmarks, measurements, skeletal findings, confidence, treatment guidance, and review notes.</p>
+            </article>
+        </div>
+    </div>
+</section>
+
+<section class="role-band">
+    <div class="container role-band__inner">
+        <div><span class="section-kicker section-kicker--light">Designed for the whole clinic</span><h2>One platform. Clear responsibilities.</h2></div>
+        <div class="role-list">
+            <div><i class="fa-solid fa-user-doctor"></i><span><strong>Doctors</strong>Patient care and AI review</span></div>
+            <div><i class="fa-solid fa-clipboard-user"></i><span><strong>Staff</strong>Reception and scheduling</span></div>
+            <div><i class="fa-solid fa-user-gear"></i><span><strong>Admins</strong>Users and role control</span></div>
+        </div>
+    </div>
+</section>
+
+<section class="home-cta">
+    <div class="container home-cta__inner">
+        <div><span class="section-kicker">Ready for a clearer clinic day?</span><h2>Bring your clinical workflow into focus.</h2></div>
+        @if (User.Identity?.IsAuthenticated == true)
+        {
+            @if (User.IsInRole("Admin"))
+            {
+                <a asp-controller="Admin" asp-action="Users" class="btn btn-brand btn-lg">Manage clinic team <i class="fa-solid fa-arrow-right"></i></a>
+            }
+            else if (User.IsInRole("Doctor"))
+            {
+                <a asp-controller="Doctor" asp-action="Dashboard" class="btn btn-brand btn-lg">Open doctor workspace <i class="fa-solid fa-arrow-right"></i></a>
+            }
+            else
+            {
+                <a asp-controller="Staff" asp-action="Dashboard" class="btn btn-brand btn-lg">Open reception workspace <i class="fa-solid fa-arrow-right"></i></a>
+            }
+        }
+        else
+        {
+            <a asp-controller="Account" asp-action="Register" class="btn btn-brand btn-lg">Create an account <i class="fa-solid fa-arrow-right"></i></a>
+        }
+    </div>
+</section>

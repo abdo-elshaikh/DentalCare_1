@@ -3,22 +3,13 @@
     Layout = "_AuthLayout";
 }
 
-<div class="text-center">
-    <div class="mb-4">
-        <div class="dental-avatar bg-danger bg-opacity-10 text-danger mx-auto mb-4" style="width: 80px; height: 80px; border-radius: 20px;">
-            <i class="fas fa-lock fs-2"></i>
-        </div>
+<section class="system-state">
+    <div class="system-state__icon system-state__icon--danger"><i class="fas fa-lock"></i></div>
+    <div class="section-kicker">Protected workspace</div>
+    <h1>Access denied.</h1>
+    <p>Your current clinic role does not include permission for this area. Return to your workspace or sign in with another authorized account.</p>
+    <div class="system-state__actions">
+        <a asp-controller="Account" asp-action="Login" class="btn btn-quiet px-4"><i class="fas fa-arrow-right-to-bracket"></i> Change account</a>
+        <a asp-controller="Home" asp-action="Index" class="btn btn-brand px-4"><i class="fas fa-house"></i> Return home</a>
     </div>
-    <h1 class="h3 fw-bold text-dark mb-3 tracking-tight">Access Denied</h1>
-    <p class="text-secondary mb-4 px-md-3">
-        You do not have permission to view this resource. This area is restricted to authorized personnel only.
-    </p>
-    <div class="d-flex flex-column gap-3">
-        <a asp-controller="Home" asp-action="Index" class="btn btn-primary bg-gradient fw-bold rounded-pill py-3 hover-lift shadow-sm tracking-wider text-uppercase w-100" style="font-size: 0.9rem;">
-            <i class="fas fa-home me-2"></i> Return to Home
-        </a>
-        <a asp-controller="Account" asp-action="Login" class="btn btn-white text-secondary border-secondary-subtle fw-bold rounded-pill py-3 hover-lift transition w-100" style="font-size: 0.9rem;">
-            <i class="fas fa-sign-in-alt me-2"></i> Sign In as Different User
-        </a>
-    </div>
-</div>
+</section>

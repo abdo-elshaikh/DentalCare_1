@@ -34,7 +34,25 @@
 }
 
 <style>
-    .metric-tile { background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; }
+    .metric-tile {
+        background: #f8fafc;
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+        padding: 16px;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .metric-tile:hover { box-shadow: 0 6px 16px rgba(24,54,56,0.06); }
+    .text-gradient {
+        color: #172b2d;
+    }
+    .glass-panel {
+        background: #fff;
+        border: 1px solid #dce5e1;
+        box-shadow: 0 10px 30px rgba(24,54,56,0.055);
+    }
+    .font-serif {
+        font-family: 'DM Serif Display', serif;
+    }
 </style>
 
 <div class="mb-4 d-flex align-items-center justify-content-between gap-3 flex-wrap">
@@ -42,15 +60,20 @@
        class="btn btn-link text-primary fw-bold text-decoration-none p-0 d-flex align-items-center gap-2 small">
         <i class="fas fa-arrow-left"></i> Back to Patient
     </a>
-    <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-2 small fw-bold">
-        Analysis #@Model.Id
-    </span>
+    <div class="d-flex align-items-center gap-3">
+        <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-2 small fw-bold">
+            Analysis #@Model.Id
+        </span>
+        <a asp-action="DownloadAnalysisPdf" asp-route-id="@Model.Id" class="btn btn-primary rounded-pill px-4 shadow-sm fw-bold">
+            <i class="fas fa-file-pdf me-2"></i> Download PDF
+        </a>
+    </div>
 </div>
 
-<div class="glass-panel shadow-sm border-0 rounded-4 p-4 mb-4">
+<div class="glass-panel rounded-4 p-4 mb-4">
     <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
         <div>
-            <h1 class="h4 fw-bold text-dark mb-1">AI Cephalometric Analysis</h1>
+            <h1 class="h3 fw-bold font-serif text-gradient mb-1">AI Cephalometric Analysis</h1>
             <p class="dental-caption mb-0">
                 @(patient?.Name ?? $"Patient #{Model.PatientId}") · @Model.CreatedAt.ToString("dd MMM yyyy, hh:mm tt") · @doctorName
             </p>
@@ -64,20 +87,29 @@
     <div class="row g-3 mt-3">
         <div class="col-md-4">
             <div class="metric-tile h-100">
-                <p class="dental-caption mb-1">Skeletal Class</p>
-                <p class="fw-bold text-dark mb-0">@Model.SkeletalClass</p>
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <i class="fas fa-bone text-primary opacity-75"></i>
+                    <p class="dental-caption mb-0">Skeletal Class</p>
+                </div>
+                <p class="fs-5 fw-bold text-dark mb-0">@Model.SkeletalClass</p>
             </div>
         </div>
         <div class="col-md-4">
             <div class="metric-tile h-100">
-                <p class="dental-caption mb-1">Vertical Pattern</p>
-                <p class="fw-bold text-dark mb-0">@Model.VerticalPattern</p>
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <i class="fas fa-arrows-alt-v text-info opacity-75"></i>
+                    <p class="dental-caption mb-0">Vertical Pattern</p>
+                </div>
+                <p class="fs-5 fw-bold text-dark mb-0">@Model.VerticalPattern</p>
             </div>
         </div>
         <div class="col-md-4">
             <div class="metric-tile h-100">
-                <p class="dental-caption mb-1">Confidence</p>
-                <p class="fw-bold text-dark mb-0">@(Model.ConfidenceScore.HasValue ? Model.ConfidenceScore.Value.ToString("P0") : "N/A")</p>
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <i class="fas fa-brain text-purple opacity-75"></i>
+                    <p class="dental-caption mb-0">Confidence</p>
+                </div>
+                <p class="fs-5 fw-bold text-dark mb-0">@(Model.ConfidenceScore.HasValue ? Model.ConfidenceScore.Value.ToString("P0") : "N/A")</p>
             </div>
         </div>
     </div>
@@ -86,48 +118,52 @@
 <div class="row g-4">
     <div class="col-xl-5">
         <div class="d-flex flex-column gap-4">
-            <div class="glass-panel shadow-sm border-0 rounded-4 p-4">
-                <h2 class="h6 fw-bold text-dark mb-3">Saved Images</h2>
-                <div class="d-flex flex-column gap-3">
+            <div class="glass-panel rounded-4 p-4">
+                <h2 class="h5 fw-bold font-serif text-dark mb-4">Saved Images</h2>
+                <div class="d-flex flex-column gap-4">
                     <div>
                         <p class="dental-caption mb-2">Original X-Ray</p>
                         @if (Model.OriginalImage is { Length: > 0 })
                         {
-                            <img src="@originalImageUrl" alt="Original X-Ray" class="img-fluid rounded-3 border bg-light mb-2" />
-                            <a href="@originalImageUrl" class="btn btn-outline-primary btn-sm fw-bold rounded-pill px-3">
+                            <img src="@originalImageUrl" alt="Original X-Ray" class="img-fluid rounded-3 border bg-light mb-3 shadow-sm" />
+                            <a href="@originalImageUrl" class="btn btn-outline-primary btn-sm fw-bold rounded-pill px-3 w-100">
                                 <i class="fas fa-download me-1"></i> Open Original
                             </a>
                         }
                         else
                         {
-                            <p class="small text-muted mb-0">No original image was saved.</p>
+                            <div class="p-3 bg-light rounded-3 text-center border border-dashed">
+                                <p class="small text-muted mb-0">No original image was saved.</p>
+                            </div>
                         }
                     </div>
                     <div>
                         <p class="dental-caption mb-2">AI Overlay</p>
                         @if (Model.OverlayImage is { Length: > 0 })
                         {
-                            <img src="@overlayImageUrl" alt="AI Overlay" class="img-fluid rounded-3 border bg-light mb-2" />
-                            <a href="@overlayImageUrl" class="btn btn-outline-primary btn-sm fw-bold rounded-pill px-3">
+                            <img src="@overlayImageUrl" alt="AI Overlay" class="img-fluid rounded-3 border bg-light mb-3 shadow-sm" />
+                            <a href="@overlayImageUrl" class="btn btn-outline-primary btn-sm fw-bold rounded-pill px-3 w-100">
                                 <i class="fas fa-eye me-1"></i> Open Overlay
                             </a>
                         }
                         else
                         {
-                            <p class="small text-muted mb-0">No overlay image was saved.</p>
+                            <div class="p-3 bg-light rounded-3 text-center border border-dashed">
+                                <p class="small text-muted mb-0">No overlay image was saved.</p>
+                            </div>
                         }
                     </div>
                 </div>
             </div>
 
-            <div class="glass-panel shadow-sm border-0 rounded-4 p-4">
-                <h2 class="h6 fw-bold text-dark mb-3">Clinical Notes</h2>
+            <div class="glass-panel rounded-4 p-4">
+                <h2 class="h5 fw-bold font-serif text-dark mb-3">Clinical Notes</h2>
                 @if (clinicalNotes.Any())
                 {
-                    <ul class="small text-secondary mb-0">
+                    <ul class="small text-secondary mb-0 list-group list-group-flush border-0">
                         @foreach (var note in clinicalNotes)
                         {
-                            <li>@note</li>
+                            <li class="list-group-item bg-transparent px-0 border-0 py-1"><i class="fas fa-check text-success me-2"></i>@note</li>
                         }
                     </ul>
                 }
@@ -138,9 +174,9 @@
 
                 @if (warnings.Any())
                 {
-                    <div class="alert alert-warning border-0 rounded-3 small mt-3 mb-0">
-                        <p class="fw-bold mb-2">Warnings</p>
-                        <ul class="mb-0">
+                    <div class="alert alert-warning border-0 rounded-3 small mt-4 mb-0 shadow-sm">
+                        <p class="fw-bold mb-2 text-warning-emphasis"><i class="fas fa-exclamation-triangle me-2"></i>Warnings</p>
+                        <ul class="mb-0 text-warning-emphasis">
                             @foreach (var warning in warnings)
                             {
                                 <li>@warning</li>
@@ -154,42 +190,50 @@
 
     <div class="col-xl-7">
         <div class="d-flex flex-column gap-4">
-            <div class="glass-panel shadow-sm border-0 rounded-4 p-4">
-                <h2 class="h6 fw-bold text-dark mb-3">Summary</h2>
-                <p class="small text-secondary mb-0" style="white-space: pre-wrap;">@Model.Summary</p>
+            <div class="glass-panel rounded-4 p-4">
+                <h2 class="h5 fw-bold font-serif text-dark mb-3">Summary</h2>
+                <p class="text-secondary mb-0" style="white-space: pre-wrap; font-size: 0.95rem; line-height: 1.6;">@Model.Summary</p>
                 @if (!string.IsNullOrWhiteSpace(Model.ReviewNotes))
                 {
-                    <div class="p-3 bg-light rounded-3 mt-3">
-                        <p class="dental-caption mb-1">Doctor Review Notes</p>
-                        <p class="small text-secondary mb-0">@Model.ReviewNotes</p>
+                    <div class="p-4 bg-light rounded-3 mt-4 border-start border-4 border-primary">
+                        <p class="dental-caption mb-1"><i class="fas fa-user-md me-1"></i> Doctor Review Notes</p>
+                        <p class="small text-secondary mb-0 fw-medium">@Model.ReviewNotes</p>
                     </div>
                 }
             </div>
 
-            <div class="glass-panel shadow-sm border-0 rounded-4 p-4">
-                <h2 class="h6 fw-bold text-dark mb-3">Measurements</h2>
+            <div class="glass-panel rounded-4 p-4">
+                <h2 class="h5 fw-bold font-serif text-dark mb-3">Measurements</h2>
                 @if (measurements.Any())
                 {
                     <div class="table-responsive">
-                        <table class="table table-sm align-middle mb-0">
-                            <thead>
-                                <tr class="dental-caption">
-                                    <th>Measurement</th>
-                                    <th>Value</th>
-                                    <th>Norm</th>
-                                    <th>Diff</th>
-                                    <th>Status</th>
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr class="dental-caption text-secondary">
+                                    <th class="ps-3 border-0 rounded-start">Measurement</th>
+                                    <th class="border-0">Value</th>
+                                    <th class="border-0">Norm</th>
+                                    <th class="border-0">Diff</th>
+                                    <th class="pe-3 border-0 rounded-end text-center">Status</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach (var item in measurements.OrderBy(m => m.MeasurementName))
                                 {
                                     <tr>
-                                        <td class="fw-bold small">@item.MeasurementName</td>
-                                        <td class="small">@item.Value.ToString("0.0") @item.Unit</td>
-                                        <td class="small">@(item.NormalValue.HasValue ? item.NormalValue.Value.ToString("0.0") : "N/A")</td>
-                                        <td class="small">@(item.Difference.HasValue ? item.Difference.Value.ToString("+0.0;-0.0;0.0") : "N/A")</td>
-                                        <td><span class="badge bg-light text-dark border rounded-pill">@item.Status</span></td>
+                                        <td class="fw-bold small ps-3">@item.MeasurementName</td>
+                                        <td class="small fw-medium">@item.Value.ToString("0.0") @item.Unit</td>
+                                        <td class="small text-muted">@(item.NormalValue.HasValue ? item.NormalValue.Value.ToString("0.0") : "N/A")</td>
+                                        <td class="small text-muted">@(item.Difference.HasValue ? item.Difference.Value.ToString("+0.0;-0.0;0.0") : "N/A")</td>
+                                        <td class="pe-3 text-center">
+                                            @{
+                                                var bgClass = item.Status.Equals("Normal", StringComparison.OrdinalIgnoreCase) ? "bg-success-subtle text-success" :
+                                                              item.Status.Equals("Increased", StringComparison.OrdinalIgnoreCase) ? "bg-warning-subtle text-warning" :
+                                                              item.Status.Equals("Decreased", StringComparison.OrdinalIgnoreCase) ? "bg-info-subtle text-info" :
+                                                              "bg-light text-dark";
+                                            }
+                                            <span class="badge @bgClass border-0 rounded-pill px-3 py-2 w-100" style="max-width: 100px;">@item.Status</span>
+                                        </td>
                                     </tr>
                                 }
                             </tbody>
@@ -202,23 +246,32 @@
                 }
             </div>
 
-            <div class="glass-panel shadow-sm border-0 rounded-4 p-4">
-                <h2 class="h6 fw-bold text-dark mb-3">Treatment Options</h2>
+            <div class="glass-panel rounded-4 p-4">
+                <h2 class="h5 fw-bold font-serif text-dark mb-4">Treatment Options</h2>
                 @if (treatments.Any())
                 {
                     <div class="d-flex flex-column gap-3">
                         @foreach (var treatment in treatments)
                         {
-                            <div class="p-3 bg-light rounded-3">
-                                <div class="d-flex justify-content-between gap-3 flex-wrap">
-                                    <p class="fw-bold text-dark small mb-1">@treatment.TreatmentName</p>
+                            <div class="metric-tile">
+                                <div class="d-flex justify-content-between align-items-center gap-3 flex-wrap mb-2">
+                                    <p class="fw-bold text-dark mb-0 fs-6">@treatment.TreatmentName</p>
                                     @if (treatment.IsPrimary)
                                     {
-                                        <span class="badge bg-success-subtle text-success rounded-pill">Primary</span>
+                                        <span class="badge bg-primary text-white rounded-pill px-3 py-1 shadow-sm"><i class="fas fa-star me-1 small"></i> Primary</span>
                                     }
                                 </div>
-                                <p class="small text-secondary mb-2">@treatment.Description</p>
-                                <p class="dental-caption mb-0">@treatment.DurationMonths months · @treatment.EvidenceLevel</p>
+                                <p class="small text-secondary mb-3" style="line-height: 1.5;">@treatment.Description</p>
+                                <div class="d-flex align-items-center gap-4">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <i class="far fa-clock text-muted"></i>
+                                        <span class="dental-caption mb-0">@treatment.DurationMonths months</span>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <i class="fas fa-book-medical text-muted"></i>
+                                        <span class="dental-caption mb-0">@treatment.EvidenceLevel</span>
+                                    </div>
+                                </div>
                             </div>
                         }
                     </div>
@@ -229,28 +282,59 @@
                 }
             </div>
 
-            <div class="glass-panel shadow-sm border-0 rounded-4 p-4">
-                <h2 class="h6 fw-bold text-dark mb-3">Landmarks</h2>
+            @if (skeletalDifferential.Any())
+            {
+                <div class="glass-panel rounded-4 p-4">
+                    <h2 class="h5 fw-bold font-serif text-dark mb-4">Skeletal Differential</h2>
+                    <div class="row g-3">
+                        @foreach (var item in skeletalDifferential.OrderByDescending(i => i.Value))
+                        {
+                            <div class="col-md-4">
+                                <div class="metric-tile text-center h-100">
+                                    <p class="dental-caption mb-2">@item.Key</p>
+                                    <div class="progress mb-2" style="height: 6px;">
+                                        <div class="progress-bar bg-primary rounded-pill" role="progressbar" style="width: @(item.Value * 100)%" aria-valuenow="@(item.Value * 100)" aria-valuemin="0" aria-valuemax="100"></div>
+                                    </div>
+                                    <p class="fw-bold text-dark mb-0">@item.Value.ToString("P0")</p>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+
+            <div class="glass-panel rounded-4 p-4">
+                <h2 class="h5 fw-bold font-serif text-dark mb-3">Landmarks</h2>
                 @if (landmarks.Any())
                 {
-                    <div class="table-responsive" style="max-height: 360px;">
-                        <table class="table table-sm align-middle mb-0">
-                            <thead>
-                                <tr class="dental-caption">
-                                    <th>Name</th>
-                                    <th>X</th>
-                                    <th>Y</th>
-                                    <th>Confidence</th>
+                    <div class="table-responsive border rounded-3" style="max-height: 360px;">
+                        <table class="table table-sm table-hover align-middle mb-0">
+                            <thead class="table-light position-sticky top-0 shadow-sm" style="z-index: 1;">
+                                <tr class="dental-caption text-secondary">
+                                    <th class="ps-3 border-0">Name</th>
+                                    <th class="border-0">X</th>
+                                    <th class="border-0">Y</th>
+                                    <th class="pe-3 border-0">Confidence</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach (var landmark in landmarks.OrderBy(l => l.Name))
                                 {
                                     <tr>
-                                        <td class="fw-bold small">@landmark.Name</td>
-                                        <td class="small">@landmark.X.ToString("0.0")</td>
-                                        <td class="small">@landmark.Y.ToString("0.0")</td>
-                                        <td class="small">@(landmark.Confidence.HasValue ? landmark.Confidence.Value.ToString("P0") : "N/A")</td>
+                                        <td class="fw-bold small ps-3">@landmark.Name</td>
+                                        <td class="small text-muted">@landmark.X.ToString("0.0")</td>
+                                        <td class="small text-muted">@landmark.Y.ToString("0.0")</td>
+                                        <td class="small pe-3">
+                                            @if (landmark.Confidence.HasValue)
+                                            {
+                                                var confColor = landmark.Confidence.Value > 0.8 ? "text-success" : landmark.Confidence.Value > 0.5 ? "text-warning" : "text-danger";
+                                                <span class="@confColor fw-medium">@landmark.Confidence.Value.ToString("P0")</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">N/A</span>
+                                            }
+                                        </td>
                                     </tr>
                                 }
                             </tbody>
@@ -262,24 +346,6 @@
                     <p class="small text-muted mb-0">No landmarks saved.</p>
                 }
             </div>
-
-            @if (skeletalDifferential.Any())
-            {
-                <div class="glass-panel shadow-sm border-0 rounded-4 p-4">
-                    <h2 class="h6 fw-bold text-dark mb-3">Skeletal Differential</h2>
-                    <div class="row g-2">
-                        @foreach (var item in skeletalDifferential.OrderByDescending(i => i.Value))
-                        {
-                            <div class="col-md-4">
-                                <div class="metric-tile">
-                                    <p class="dental-caption mb-1">@item.Key</p>
-                                    <p class="fw-bold text-dark mb-0">@item.Value.ToString("P0")</p>
-                                </div>
-                            </div>
-                        }
-                    </div>
-                </div>
-            }
         </div>
     </div>
 </div>

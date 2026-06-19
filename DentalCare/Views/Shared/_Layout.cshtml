@@ -1,6 +1,14 @@
 @inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
 @{
     var antiforgeryToken = Antiforgery.GetAndStoreTokens(Context).RequestToken;
+    var bodyClass = ViewData["BodyClass"] as string ?? string.Empty;
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+    string ActiveLink(string controller, string? action = null) =>
+        string.Equals(currentController, controller, StringComparison.OrdinalIgnoreCase) &&
+        (action is null || string.Equals(currentAction, action, StringComparison.OrdinalIgnoreCase))
+            ? "active"
+            : string.Empty;
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -9,155 +17,94 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="request-verification-token" content="@antiforgeryToken" />
     <title>@ViewData["Title"] - DentalCare</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Newsreader:opsz,wght@6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <style>
-        .text-gradient {
-            background: linear-gradient(135deg, #0d6efd 0%, #0dcaf0 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        .footer-gradient {
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
-        }
-        .glass-header {
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
-        }
-    </style>
 </head>
-<body class="bg-surface font-sans">
-    <div class="min-vh-100 d-flex flex-column">
-        <!-- Top Navigation Bar -->
-        <header class="glass-header sticky-top z-3 text-nowrap">
-            <div class="container">
-                <div class="d-flex justify-content-between align-items-center py-3">
-                    <!-- Logo -->
-                    <div class="d-flex align-items-center gap-2 text-primary">
-                        <i class="fas fa-tooth fs-3"></i>
-                        <span class="fs-3 fw-bold font-serif text-gradient tracking-tighter" style="line-height: 1;">DentalCare</span>
-                    </div>
-
-                    <!-- Main Navigation Links -->
-                    <nav class="d-none d-md-flex align-items-center gap-4">
-                        <a asp-controller="Home" asp-action="Index" class="text-secondary text-decoration-none hover-primary fw-bold small text-uppercase tracking-widest transition">Home</a>
-
+<body class="@bodyClass">
+    <div class="site-shell">
+        <header class="site-header">
+            <nav class="navbar navbar-expand-lg container" aria-label="Main navigation">
+                <a asp-controller="Home" asp-action="Index" class="brand-mark" aria-label="DentalCare home">
+                    <span class="brand-symbol"><i class="fa-solid fa-tooth"></i></span>
+                    <span>DentalCare<small>Clinical intelligence</small></span>
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavigation" aria-controls="mainNavigation" aria-expanded="false" aria-label="Toggle navigation">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+                <div class="collapse navbar-collapse" id="mainNavigation">
+                    <div class="navbar-nav main-links mx-auto">
+                        <a asp-controller="Home" asp-action="Index" class="nav-link @ActiveLink("Home", "Index")">Home</a>
                         @if (User.Identity?.IsAuthenticated == true)
                         {
                             @if (User.IsInRole("Doctor"))
                             {
-                                <a asp-controller="Doctor" asp-action="Dashboard" class="text-secondary text-decoration-none hover-primary fw-bold small text-uppercase tracking-widest transition">My Dashboard</a>
-                                <a asp-controller="Doctor" asp-action="Analysis" class="text-secondary text-decoration-none hover-primary fw-bold small text-uppercase tracking-widest transition">AI Analysis</a>
+                                <a asp-controller="Doctor" asp-action="Dashboard" class="nav-link @ActiveLink("Doctor", "Dashboard")">Dashboard</a>
+                                <a asp-controller="Doctor" asp-action="Analysis" class="nav-link @ActiveLink("Doctor", "Analysis")">AI analysis</a>
                             }
-
                             @if (User.IsInRole("Staff") || User.IsInRole("Admin"))
                             {
-                                <a asp-controller="Staff" asp-action="Dashboard" class="text-secondary text-decoration-none hover-primary fw-bold small text-uppercase tracking-widest transition">Reception</a>
+                                <a asp-controller="Staff" asp-action="Dashboard" class="nav-link @ActiveLink("Staff")">Reception</a>
                             }
-
+                            @if (User.IsInRole("Doctor") || User.IsInRole("Staff"))
+                            {
+                                <a asp-controller="Patient" asp-action="Index" class="nav-link @ActiveLink("Patient")">Patients</a>
+                            }
                             @if (User.IsInRole("Admin"))
                             {
-                                <a asp-controller="Admin" asp-action="Users" class="text-secondary text-decoration-none hover-primary fw-bold small text-uppercase tracking-widest transition">Users</a>
+                                <a asp-controller="Admin" asp-action="Users" class="nav-link @ActiveLink("Admin")">Team</a>
                             }
-
-                            <a asp-controller="Patient" asp-action="Index" class="text-secondary text-decoration-none hover-primary fw-bold small text-uppercase tracking-widest transition">Patients List</a>
                         }
-                    </nav>
-
-                    <!-- User Actions / Login Partial -->
-                    <div class="d-flex align-items-center">
-                        <partial name="_LoginPartial" />
+                        else
+                        {
+                            <a asp-controller="Home" asp-action="Index" asp-fragment="capabilities" class="nav-link">Capabilities</a>
+                            <a asp-controller="Account" asp-action="Login" class="nav-link d-lg-none">Sign in</a>
+                        }
                     </div>
+                    <div class="header-actions"><partial name="_LoginPartial" /></div>
                 </div>
-            </div>
+            </nav>
         </header>
 
-        <!-- Main Content Area -->
-        <main class="flex-grow-1">
-            <div class="container py-5">
-                @RenderBody()
-            </div>
-        </main>
+        <main class="site-main">@RenderBody()</main>
 
-        <!-- Footer -->
-        <footer class="footer-gradient text-white py-5 mt-auto">
-            <div class="container">
-                <div class="row gy-4">
-                    <div class="col-lg-4 col-md-6">
-                        <div class="d-flex align-items-center gap-2 text-white mb-3">
-                            <i class="fas fa-tooth fs-3" style="color: #0dcaf0;"></i>
-                            <span class="fs-3 fw-bold font-serif tracking-tighter" style="line-height: 1;">DentalCare</span>
-                        </div>
-                        <p class="small text-white-50 pe-md-4">
-                            Precision dental management software empowering clinics with AI-driven insights, seamless appointments, and secure medical records.
-                        </p>
-                    </div>
-                    <div class="col-lg-2 col-md-6">
-                        <h5 class="fw-bold text-white mb-3 small text-uppercase tracking-widest">Platform</h5>
-                        <ul class="list-unstyled mb-0">
-                            <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none hover-primary transition small">Features</a></li>
-                            <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none hover-primary transition small">AI Analysis</a></li>
-                            <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none hover-primary transition small">Pricing</a></li>
-                        </ul>
-                    </div>
-                    <div class="col-lg-3 col-md-6">
-                        <h5 class="fw-bold text-white mb-3 small text-uppercase tracking-widest">Contact</h5>
-                        <ul class="list-unstyled mb-0">
-                            <li class="mb-2 text-white-50 small"><i class="fas fa-map-marker-alt me-2 text-primary"></i> 123 Health Ave, Medical City</li>
-                            <li class="mb-2 text-white-50 small"><i class="fas fa-phone me-2 text-primary"></i> +1 (234) 567-890</li>
-                            <li class="mb-2 text-white-50 small"><i class="fas fa-envelope me-2 text-primary"></i> contact@dentalcare.com</li>
-                        </ul>
-                    </div>
-                    <div class="col-lg-3 col-md-6">
-                        <h5 class="fw-bold text-white mb-3 small text-uppercase tracking-widest">Follow Us</h5>
-                        <div class="d-flex gap-3">
-                            <a href="#" class="text-white-50 hover-primary transition"><i class="fab fa-facebook fs-5"></i></a>
-                            <a href="#" class="text-white-50 hover-primary transition"><i class="fab fa-twitter fs-5"></i></a>
-                            <a href="#" class="text-white-50 hover-primary transition"><i class="fab fa-instagram fs-5"></i></a>
-                            <a href="#" class="text-white-50 hover-primary transition"><i class="fab fa-linkedin fs-5"></i></a>
-                        </div>
-                    </div>
+        <footer class="site-footer">
+            <div class="container footer-grid">
+                <div class="footer-brand">
+                    <a asp-controller="Home" asp-action="Index" class="brand-mark brand-mark--footer">
+                        <span class="brand-symbol"><i class="fa-solid fa-tooth"></i></span><span>DentalCare<small>Clinical intelligence</small></span>
+                    </a>
+                    <p>Clinic operations and cephalometric insight, connected around the patient.</p>
                 </div>
-                <hr class="border-secondary opacity-25 my-4" />
-                <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
-                    <p class="small text-white-50 mb-0">&copy; 2026 DentalCare. All rights reserved.</p>
-                    <div class="d-flex gap-3 mt-3 mt-md-0">
-                        <a href="#" class="small text-white-50 text-decoration-none hover-primary transition">Privacy Policy</a>
-                        <a href="#" class="small text-white-50 text-decoration-none hover-primary transition">Terms of Service</a>
-                    </div>
+                <div>
+                    <h2>Workspace</h2>
+                    @if (User.IsInRole("Doctor"))
+                    {
+                        <a asp-controller="Doctor" asp-action="Dashboard">Doctor dashboard</a><a asp-controller="Patient" asp-action="Index">Patients</a><a asp-controller="Doctor" asp-action="Analysis">AI analysis</a>
+                    }
+                    else if (User.IsInRole("Staff"))
+                    {
+                        <a asp-controller="Staff" asp-action="Dashboard">Reception</a><a asp-controller="Patient" asp-action="Index">Patients</a>
+                    }
+                    else if (User.IsInRole("Admin"))
+                    {
+                        <a asp-controller="Admin" asp-action="Users">Team management</a><a asp-controller="Staff" asp-action="Dashboard">Reception</a>
+                    }
+                    else
+                    {
+                        <a asp-controller="Home" asp-action="Index" asp-fragment="capabilities">Capabilities</a><a asp-controller="Account" asp-action="Register">Create account</a>
+                    }
                 </div>
+                <div><h2>Account</h2>@if (User.Identity?.IsAuthenticated == true) { <a asp-controller="Home" asp-action="Index">Home</a> } else { <a asp-controller="Account" asp-action="Login">Sign in</a><a asp-controller="Account" asp-action="Register">Register</a> }</div>
+                <div class="footer-note"><h2>Built for clinical focus</h2><p>Role-based access for Admin, Doctor, and Staff teams.</p></div>
             </div>
+            <div class="container footer-bottom"><span>&copy; @DateTime.UtcNow.Year DentalCare</span><span>Patient records · Scheduling · AI-assisted analysis</span></div>
         </footer>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        (() => {
-            const tokenMeta = document.querySelector('meta[name="request-verification-token"]');
-            const token = tokenMeta ? tokenMeta.getAttribute('content') : '';
-            if (!token || !window.fetch) return;
-
-            const originalFetch = window.fetch.bind(window);
-            window.fetch = (input, init = {}) => {
-                const method = (init.method || 'GET').toUpperCase();
-                if (!['GET', 'HEAD', 'OPTIONS', 'TRACE'].includes(method)) {
-                    const headers = new Headers(init.headers || {});
-                    if (!headers.has('RequestVerificationToken')) {
-                        headers.set('RequestVerificationToken', token);
-                    }
-                    init = { ...init, headers };
-                }
-                return originalFetch(input, init);
-            };
-        })();
-    </script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
