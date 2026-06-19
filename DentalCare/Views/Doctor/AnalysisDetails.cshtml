@@ -31,6 +31,15 @@
             return fallback;
         }
     }
+
+    private static double NormalizeConfidence(double value)
+    {
+        var normalized = value > 1 ? value / 100d : value;
+        return Math.Clamp(normalized, 0d, 1d);
+    }
+
+    private static string FormatConfidence(double? value) =>
+        value.HasValue ? NormalizeConfidence(value.Value).ToString("P0") : "N/A";
 }
 
 <style>
@@ -109,7 +118,7 @@
                     <i class="fas fa-brain text-purple opacity-75"></i>
                     <p class="dental-caption mb-0">Confidence</p>
                 </div>
-                <p class="fs-5 fw-bold text-dark mb-0">@(Model.ConfidenceScore.HasValue ? Model.ConfidenceScore.Value.ToString("P0") : "N/A")</p>
+                <p class="fs-5 fw-bold text-dark mb-0">@FormatConfidence(Model.ConfidenceScore)</p>
             </div>
         </div>
     </div>
@@ -289,13 +298,14 @@
                     <div class="row g-3">
                         @foreach (var item in skeletalDifferential.OrderByDescending(i => i.Value))
                         {
+                            var normalizedDifferential = NormalizeConfidence(item.Value);
                             <div class="col-md-4">
                                 <div class="metric-tile text-center h-100">
                                     <p class="dental-caption mb-2">@item.Key</p>
                                     <div class="progress mb-2" style="height: 6px;">
-                                        <div class="progress-bar bg-primary rounded-pill" role="progressbar" style="width: @(item.Value * 100)%" aria-valuenow="@(item.Value * 100)" aria-valuemin="0" aria-valuemax="100"></div>
+                                        <div class="progress-bar bg-primary rounded-pill" role="progressbar" style="width: @(normalizedDifferential * 100)%" aria-valuenow="@(normalizedDifferential * 100)" aria-valuemin="0" aria-valuemax="100"></div>
                                     </div>
-                                    <p class="fw-bold text-dark mb-0">@item.Value.ToString("P0")</p>
+                                    <p class="fw-bold text-dark mb-0">@FormatConfidence(item.Value)</p>
                                 </div>
                             </div>
                         }
@@ -327,8 +337,9 @@
                                         <td class="small pe-3">
                                             @if (landmark.Confidence.HasValue)
                                             {
-                                                var confColor = landmark.Confidence.Value > 0.8 ? "text-success" : landmark.Confidence.Value > 0.5 ? "text-warning" : "text-danger";
-                                                <span class="@confColor fw-medium">@landmark.Confidence.Value.ToString("P0")</span>
+                                                var normalizedConfidence = NormalizeConfidence(landmark.Confidence.Value);
+                                                var confColor = normalizedConfidence > 0.8 ? "text-success" : normalizedConfidence > 0.5 ? "text-warning" : "text-danger";
+                                                <span class="@confColor fw-medium">@FormatConfidence(landmark.Confidence)</span>
                                             }
                                             else
                                             {

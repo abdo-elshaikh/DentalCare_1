@@ -517,6 +517,8 @@ namespace DentalCare.Controllers
             if (!request.IsDoctorReviewed)
                 return BadRequest(new { error = "A doctor must review and approve the AI report before it can be saved." });
 
+            request.ConfidenceScore = NormalizeConfidence(request.ConfidenceScore);
+
             var patient = await _patientRepository.GetByIdAsync(request.PatientId);
             if (patient == null)
                 return NotFound(new { error = "Patient not found." });
@@ -610,6 +612,8 @@ namespace DentalCare.Controllers
 
             if (!request.IsDoctorReviewed)
                 return BadRequest(new { error = "A doctor must review and approve the AI report before it can be exported." });
+
+            request.ConfidenceScore = NormalizeConfidence(request.ConfidenceScore);
 
             var patient = await _patientRepository.GetByIdAsync(request.PatientId);
             if (patient == null)
@@ -753,7 +757,7 @@ namespace DentalCare.Controllers
             notes.AppendLine($"Skeletal Class: {request.SkeletalClass}");
             notes.AppendLine($"Vertical Pattern: {request.VerticalPattern}");
             if (request.ConfidenceScore.HasValue)
-                notes.AppendLine($"AI Confidence: {request.ConfidenceScore.Value:P0}");
+                notes.AppendLine($"AI Confidence: {FormatConfidence(request.ConfidenceScore.Value)}");
             notes.AppendLine($"Clinical Review: {(request.IsDoctorReviewed ? "Doctor reviewed and approved" : "Not reviewed")}");
             if (!string.IsNullOrWhiteSpace(request.ReviewNotes))
                 notes.AppendLine($"Review Notes: {request.ReviewNotes}");
@@ -783,7 +787,7 @@ namespace DentalCare.Controllers
                 notes.AppendLine("Reviewed Landmarks:");
                 foreach (var landmark in request.Landmarks.OrderBy(l => l.Name))
                 {
-                    var confidence = landmark.Confidence.HasValue ? $" | Confidence: {landmark.Confidence.Value:P0}" : "";
+                    var confidence = landmark.Confidence.HasValue ? $" | Confidence: {FormatConfidence(landmark.Confidence.Value)}" : "";
                     notes.AppendLine($"- {landmark.Name}: ({landmark.X:0.0}, {landmark.Y:0.0}){confidence}");
                 }
             }
@@ -828,7 +832,7 @@ namespace DentalCare.Controllers
                     if (!string.IsNullOrWhiteSpace(treatment.EvidenceLevel))
                         notes.AppendLine($"  Evidence: {treatment.EvidenceLevel}");
                     if (treatment.SuccessProbability.HasValue)
-                        notes.AppendLine($"  Predicted Success: {treatment.SuccessProbability.Value:P0}");
+                        notes.AppendLine($"  Predicted Success: {FormatConfidence(treatment.SuccessProbability.Value)}");
                     if (!string.IsNullOrWhiteSpace(treatment.Risks))
                         notes.AppendLine($"  Risks: {treatment.Risks}");
                 }
@@ -850,6 +854,21 @@ namespace DentalCare.Controllers
             if (difference.Value < -0.5f)
                 return "decreased";
             return "normal";
+        }
+
+        private static float? NormalizeConfidence(float? value)
+        {
+            if (!value.HasValue)
+                return null;
+
+            var normalized = value.Value > 1f ? value.Value / 100f : value.Value;
+            return Math.Clamp(normalized, 0f, 1f);
+        }
+
+        private static string FormatConfidence(double value)
+        {
+            var normalized = value > 1d ? value / 100d : value;
+            return Math.Clamp(normalized, 0d, 1d).ToString("P0");
         }
 
         private static List<SelectListItem> GetProtocolOptions()

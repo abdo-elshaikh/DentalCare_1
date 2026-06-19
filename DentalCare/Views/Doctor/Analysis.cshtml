@@ -447,8 +447,12 @@
 
     function formatPct(value) {
         if (typeof value !== 'number' || Number.isNaN(value)) return '-';
-        const normalized = value > 1 ? value : value * 100;
-        return `${Math.round(Math.max(0, Math.min(100, normalized)))}%`;
+        return `${Math.round(normalizeProbability(value) * 100)}%`;
+    }
+
+    function normalizeProbability(value) {
+        if (typeof value !== 'number' || Number.isNaN(value)) return 0;
+        return Math.max(0, Math.min(1, value > 1 ? value / 100 : value));
     }
 
     function showPanel(name) {
@@ -633,12 +637,12 @@
         if (rows.length) {
             rows.forEach(r => {
                 const name = r.measurementName || r.measurement || r.name || '-';
-                const unit = r.unit || (name.toLowerCase().includes('mm') ? 'mm' : 'deg');
+                const unit = r.unit || inferMeasurementUnit(name);
                 const value = typeof r.value === 'number' ? r.value.toFixed(1) : '-';
                 const norm = typeof r.normalValue === 'number' ? r.normalValue.toFixed(1) : 'N/A';
                 const sd = typeof r.stdDeviation === 'number' ? r.stdDeviation.toFixed(1) : 'N/A';
                 const diff = typeof r.difference === 'number' ? `${r.difference > 0 ? '+' : ''}${r.difference.toFixed(1)}` : 'N/A';
-                const status = normalizeMeasurementStatus(r.status || r.label || diff);
+                const status = normalizeMeasurementStatus(r.status, r.label, r.difference);
                 const badgeClass = status === 'Severe' ? 'bg-danger-subtle text-danger'
                     : status === 'Mild' ? 'bg-warning-subtle text-warning'
                     : status === 'Increased' ? 'bg-warning-subtle text-warning'
@@ -658,7 +662,7 @@
         }
 
         keys.forEach(k => {
-            const unit = k.toLowerCase().includes('mm') ? 'mm' : 'deg';
+            const unit = inferMeasurementUnit(k);
             tbody.insertAdjacentHTML('beforeend', `
                 <tr>
                     <td class="px-4 fw-bold text-dark">${escapeHtml(k)}</td>
@@ -982,12 +986,21 @@
         }
     }
 
-    function normalizeMeasurementStatus(raw) {
-        const value = (raw || '').toString().toLowerCase();
+    function inferMeasurementUnit(name) {
+        const value = (name || '').toLowerCase();
+        return value.includes('mm') || value.includes('height') || value.includes('distance') ? 'mm' : '°';
+    }
+
+    function normalizeMeasurementStatus(status, label, difference) {
+        const value = `${status || ''} ${label || ''}`.toLowerCase();
         if (value.includes('severe')) return 'Severe';
         if (value.includes('mild')) return 'Mild';
-        if (value.includes('increase') || value.includes('high') || value.startsWith('+')) return 'Increased';
-        if (value.includes('decrease') || value.includes('low') || value.startsWith('-')) return 'Decreased';
+        if (value.includes('increase') || value.includes('high') || value.includes('protrusive')) return 'Increased';
+        if (value.includes('decrease') || value.includes('low') || value.includes('retrusive')) return 'Decreased';
+        if (typeof difference === 'number') {
+            if (difference > 0.5) return 'Increased';
+            if (difference < -0.5) return 'Decreased';
+        }
         return 'Normal';
     }
 
@@ -1010,7 +1023,9 @@
             skeletalClass: currentAnalysis.skeletalClass || '',
             verticalPattern: currentAnalysis.verticalPattern || '',
             summary: currentAnalysis.summary || '',
-            confidenceScore: currentAnalysis.confidenceScore || null,
+            confidenceScore: typeof currentAnalysis.confidenceScore === 'number'
+                ? normalizeProbability(currentAnalysis.confidenceScore)
+                : null,
             protocolId: currentAnalysis.protocolId || document.getElementById('settingProtocol').value,
             protocolName: currentAnalysis.protocolName || document.getElementById('settingProtocol').options[document.getElementById('settingProtocol').selectedIndex].text,
             landmarks: currentAnalysis.landmarks || [],
@@ -1102,7 +1117,7 @@
                     treatmentName: primary.treatmentName || 'Standard care',
                     skeletalDifferential: currentAnalysis.skeletalDifferential || {},
                     successProbability: primary.successProbability || null,
-                    uncertaintyLandmarks: (currentAnalysis.landmarks || []).filter(l => typeof l.confidence === 'number' && l.confidence < 0.75).map(l => l.name)
+                    uncertaintyLandmarks: (currentAnalysis.landmarks || []).filter(l => typeof l.confidence === 'number' && normalizeProbability(l.confidence) < 0.75).map(l => l.name)
                 })
             });
             if (!resp.ok) throw new Error((await resp.json().catch(() => ({}))).error || resp.statusText);
@@ -1164,7 +1179,7 @@
             primary.rationale || '',
             '',
             '[MEASUREMENTS]',
-            ...(data.measurementRows || []).map(m => `${m.measurementName}: ${Number(m.value).toFixed(1)} ${m.unit || ''} | ${normalizeMeasurementStatus(m.status || m.label || '')}`)
+            ...(data.measurementRows || []).map(m => `${m.measurementName}: ${Number(m.value).toFixed(1)} ${m.unit || inferMeasurementUnit(m.measurementName)} | ${normalizeMeasurementStatus(m.status, m.label, m.difference)}`)
         ];
         document.getElementById('ehrReport').textContent = lines.join('\n');
     }

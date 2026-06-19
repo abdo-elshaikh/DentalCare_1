@@ -24,6 +24,7 @@ namespace DentalCare.Services
         private static readonly string Green = "#0C8863";
         private static readonly string Amber = "#CC7508";
         private static readonly string Indigo = "#4C60D9";
+        private static readonly string Red = "#B84A42";
 
         static AiAnalysisPdfBuilder()
         {
@@ -213,10 +214,11 @@ namespace DentalCare.Services
                     table.ColumnsDefinition(columns =>
                     {
                         columns.RelativeColumn(3); // Name
-                        columns.RelativeColumn(2); // Value
-                        columns.RelativeColumn(2); // Norm
-                        columns.RelativeColumn(2); // Diff
-                        columns.RelativeColumn(2); // Status
+                        columns.RelativeColumn(1.7f); // Value
+                        columns.RelativeColumn(1.4f); // Norm
+                        columns.RelativeColumn(1.2f); // SD
+                        columns.RelativeColumn(1.4f); // Diff
+                        columns.RelativeColumn(1.7f); // Status
                     });
 
                     table.Header(header =>
@@ -224,27 +226,34 @@ namespace DentalCare.Services
                         header.Cell().Background(Navy).Padding(5).Text("MEASUREMENT").FontColor(Colors.White).FontSize(8).SemiBold();
                         header.Cell().Background(Navy).Padding(5).Text("VALUE").FontColor(Colors.White).FontSize(8).SemiBold();
                         header.Cell().Background(Navy).Padding(5).Text("NORM").FontColor(Colors.White).FontSize(8).SemiBold();
+                        header.Cell().Background(Navy).Padding(5).Text("SD").FontColor(Colors.White).FontSize(8).SemiBold();
                         header.Cell().Background(Navy).Padding(5).Text("DIFF").FontColor(Colors.White).FontSize(8).SemiBold();
                         header.Cell().Background(Navy).Padding(5).Text("STATUS").FontColor(Colors.White).FontSize(8).SemiBold();
                     });
 
                     if (report.MeasurementRows != null && report.MeasurementRows.Any())
                     {
-                        var sorted = report.MeasurementRows.OrderBy(m => m.MeasurementName).ToList();
-                        for (int i = 0; i < sorted.Count; i++)
+                        for (int i = 0; i < report.MeasurementRows.Count; i++)
                         {
-                            var m = sorted[i];
+                            var m = report.MeasurementRows[i];
                             var unit = string.IsNullOrWhiteSpace(m.Unit) ? InferUnit(m.MeasurementName) : m.Unit;
                             var bg = i % 2 == 0 ? Colors.White.ToString() : Fog;
                             
                             var val = $"{m.Value.ToString("0.0", CultureInfo.InvariantCulture)} {unit}";
                             var norm = m.NormalValue.HasValue ? m.NormalValue.Value.ToString("0.0", CultureInfo.InvariantCulture) : "—";
+                            var sd = m.StdDeviation.HasValue ? m.StdDeviation.Value.ToString("0.0", CultureInfo.InvariantCulture) : "—";
                             var diff = m.Difference.HasValue ? m.Difference.Value.ToString("+0.0;-0.0;0.0", CultureInfo.InvariantCulture) : "—";
                             var status = NormaliseStatus(m.Status, m.Label, m.Difference);
 
-                            table.Cell().Background(bg).BorderBottom(1).BorderColor(Rule).Padding(5).Text(m.MeasurementName).FontSize(9);
+                            table.Cell().Background(bg).BorderBottom(1).BorderColor(Rule).Padding(5).Text(text =>
+                            {
+                                text.Line(m.MeasurementName).FontSize(9);
+                                if (!string.IsNullOrWhiteSpace(m.Interpretation))
+                                    text.Line(m.Interpretation).FontSize(7).FontColor(Slate);
+                            });
                             table.Cell().Background(bg).BorderBottom(1).BorderColor(Rule).Padding(5).Text(val).FontSize(9);
                             table.Cell().Background(bg).BorderBottom(1).BorderColor(Rule).Padding(5).Text(norm).FontSize(9).FontColor(Slate);
+                            table.Cell().Background(bg).BorderBottom(1).BorderColor(Rule).Padding(5).Text(sd).FontSize(9).FontColor(Slate);
                             table.Cell().Background(bg).BorderBottom(1).BorderColor(Rule).Padding(5).Text(diff).FontSize(9).FontColor(Slate);
                             
                             table.Cell().Background(bg).BorderBottom(1).BorderColor(Rule).PaddingVertical(3).PaddingHorizontal(5).Element(c => DrawStatusPill(c, status));
@@ -252,15 +261,16 @@ namespace DentalCare.Services
                     }
                     else if (report.Measurements != null)
                     {
-                        var sorted = report.Measurements.OrderBy(m => m.Key).ToList();
-                        for (int i = 0; i < sorted.Count; i++)
+                        var measurements = report.Measurements.ToList();
+                        for (int i = 0; i < measurements.Count; i++)
                         {
-                            var m = sorted[i];
+                            var m = measurements[i];
                             var unit = InferUnit(m.Key);
                             var bg = i % 2 == 0 ? Colors.White.ToString() : Fog;
                             
                             table.Cell().Background(bg).BorderBottom(1).BorderColor(Rule).Padding(5).Text(m.Key).FontSize(9);
                             table.Cell().Background(bg).BorderBottom(1).BorderColor(Rule).Padding(5).Text($"{m.Value.ToString("0.0", CultureInfo.InvariantCulture)} {unit}").FontSize(9);
+                            table.Cell().Background(bg).BorderBottom(1).BorderColor(Rule).Padding(5).Text("—").FontSize(9).FontColor(Slate);
                             table.Cell().Background(bg).BorderBottom(1).BorderColor(Rule).Padding(5).Text("—").FontSize(9).FontColor(Slate);
                             table.Cell().Background(bg).BorderBottom(1).BorderColor(Rule).Padding(5).Text("—").FontSize(9).FontColor(Slate);
                             table.Cell().Background(bg).BorderBottom(1).BorderColor(Rule).PaddingVertical(3).PaddingHorizontal(5).Element(c => DrawStatusPill(c, "Normal"));
@@ -345,6 +355,10 @@ namespace DentalCare.Services
         private static string NormaliseStatus(string? status, string? label, float? difference)
         {
             var combined = $"{status} {label}".ToLowerInvariant();
+            if (combined.Contains("severe"))
+                return "Severe";
+            if (combined.Contains("mild"))
+                return "Mild";
             if (combined.Contains("increase") || combined.Contains("high") || combined.Contains("protrusive"))
                 return "Increased";
             if (combined.Contains("decrease") || combined.Contains("low") || combined.Contains("retrusive"))
@@ -359,6 +373,8 @@ namespace DentalCare.Services
 
         private static string StatusBg(string status) => status switch
         {
+            "Severe" => Red,
+            "Mild" => Amber,
             "Increased" => Amber,
             "Decreased" => Indigo,
             _           => Green,
